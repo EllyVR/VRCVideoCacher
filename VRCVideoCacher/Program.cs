@@ -50,6 +50,8 @@ internal static class Program
 
         if (ConfigManager.Config.ytdlUseCookies && !IsCookiesEnabledAndValid())
             Log.Warning("No cookies found, please use the browser extension to send cookies or disable \"ytdlUseCookies\" in config.");
+
+        await WinGet.TryInstallPackages();
         
         await Task.Delay(-1);
     }

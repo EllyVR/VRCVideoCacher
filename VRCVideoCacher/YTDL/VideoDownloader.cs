@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net;
 using System.Text;
 using Serilog;
 using VRCVideoCacher.Models;
@@ -130,7 +129,7 @@ public class VideoDownloader
 
         process.Start();
         await process.WaitForExitAsync();
-        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.StandardOutput.ReadToEndAsync();
         var error = await process.StandardError.ReadToEndAsync();
         error = error.Trim();
         if (process.ExitCode != 0)

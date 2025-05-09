@@ -22,7 +22,7 @@ public class Updater
     public static async Task CheckForUpdates()
     {
         Log.Information("Checking for updates...");
-        bool isDebug = false;
+        var isDebug = false;
 #if DEBUG
             isDebug = true;
 #endif
