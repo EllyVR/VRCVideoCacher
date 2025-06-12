@@ -25,8 +25,17 @@ public class WebServer
     {
         Logger.UnregisterLogger<ConsoleLogger>();
         Logger.RegisterLogger<WebServerLogger>();
+
+        var urls = new List<string>
+        {
+            "http://localhost:9696",
+            "http://127.0.0.1:9696"
+        };
+        if (!urls.Contains(url))
+            urls.Add(url);
+        
         var server = new EmbedIO.WebServer(o => o
-                .WithUrlPrefix(url)
+                .WithUrlPrefixes(urls)
                 .WithMode(HttpListenerMode.EmbedIO))
             // First, we will configure our web server by adding Modules.
             .WithWebApi("/api", m => m

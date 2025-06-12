@@ -23,23 +23,11 @@ public class ConfigManager
             var configFilePath = Path.Combine(Program.CurrentProcessPath, ConfigFileName);
             Config = JsonConvert.DeserializeObject<ConfigModel>(File.ReadAllText(configFilePath)) ?? new ConfigModel();
         }
+        if (Config.ytdlWebServerURL.EndsWith('/'))
+            Config.ytdlWebServerURL = Config.ytdlWebServerURL.TrimEnd('/');
+        
         Log.Information("Loaded config.");
         TrySaveConfig();
-
-        try
-        {
-            if (!string.IsNullOrEmpty(Config.CachedAssetPath))
-                Directory.CreateDirectory(Config.CachedAssetPath);
-            else
-                Log.Error("Invalid CachedAssetPath path.");
-
-            var filePath = Path.Combine(Path.GetDirectoryName(FileTools.YtdlPath)!, "localhost.txt");
-            File.WriteAllText(filePath, Config.ytdlWebServerURL);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to create CachedAssetPath directory or localhost.txt file.");
-        }
     }
 
     private static void TrySaveConfig()
@@ -93,7 +81,7 @@ public class ConfigManager
 // ReSharper disable InconsistentNaming
 public class ConfigModel
 {
-    public string ytdlWebServerURL = "http://localhost:9696/";
+    public string ytdlWebServerURL = "http://localhost:9696";
     public string ytdlPath = "Utils/yt-dlp.exe";
     public bool ytdlUseCookies = true;
     public string ytdlAdditionalArgs = string.Empty;
