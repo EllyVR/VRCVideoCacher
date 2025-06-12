@@ -2,17 +2,13 @@
 
 ### What is VRCVideoCacher?
 
-VRCVideoCacher is a tool used to cache VRChat videos to your local disk and fix YouTube videos from failing to load.
+VRCVideoCacher is a tool used to cache VRChat videos to your local disk and/or fix YouTube videos from failing to load.
 
 ### How does it work?
 
-This is done by replacing VRCs yt-dlp.exe with our own stub yt-dlp, this gets replaced on application startup and is restored on exit.
+It replaces VRChats yt-dlp.exe with our own stub yt-dlp, this gets replaced on application startup and is restored on exit.
 
 Auto install missing codecs: [VP9](https://apps.microsoft.com/detail/9n4d0msmp0pt) | [AV1](https://apps.microsoft.com/detail/9mvzqvxjbq9v) | [AC-3](https://apps.microsoft.com/detail/9nvjqjbdkn97)
-
-### How to circumvent YouTube bot detection
-
-In order to fix YouTube videos failing to load, you'll need to install our Chrome extension from [here](https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge) or Firefox from [here](https://addons.mozilla.org/en-GB/android/addon/vrcvideocachercookiesexporter), more info [here](https://github.com/clienthax/VRCVideoCacherBrowserExtension). Visit [YouTube.com](https://www.youtube.com) while signed in, at least once while VRCVideoCacher is running, after VRCVideoCacher has obtained your cookies you can safely uninstall the extension.
 
 ### Are there any risks involved?
 
@@ -20,11 +16,23 @@ From VRC or EAC? no.
 
 From YouTube/Google? maybe, we strongly recommend you use an alternative Google account if possible.
 
-### "Loading failed. File not found, codec not supported, video resolution too high or insufficient system resources."
+### How to circumvent YouTube bot detection
+
+In order to fix YouTube videos failing to load, you'll need to install our Chrome extension from [here](https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge) or Firefox from [here](https://addons.mozilla.org/en-GB/android/addon/vrcvideocachercookiesexporter), more info [here](https://github.com/clienthax/VRCVideoCacherBrowserExtension). Visit [YouTube.com](https://www.youtube.com) while signed in, at least once while VRCVideoCacher is running, after VRCVideoCacher has obtained your cookies you can safely uninstall the extension, although be aware that if you visit YouTube again with the same browser while the account is still logged in, YouTube will refresh you cookies invalidating the cookies stored in VRCVideoCacher. To circumvent this I recommended deleting your YouTube cookies from your browser after VRCVideoCacher has obtained them, or if you're using your main YouTube account leave the extension installed, or maybe even use an entirely separate web browser from your main one to keep things simple.
+
+### Fix YouTube videos sometimes failing to play
+
+> Loading failed. File not found, codec not supported, video resolution too high or insufficient system resources.
 
 Sync system time, Open Windows Settings -> Time & Language -> Date & Time, under "Additional settings" click "Sync now"
 
-Set `ytdlDelay` to something like `10` seconds.
+Edit `Config.json` and set `ytdlDelay` to something like `10` seconds.
+
+### Fix cached videos failing to play in public instances
+
+> Attempted to play an untrusted URL (Domain: localhost) that is not allowlisted for public instances.
+
+Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add this new line `127.0.0.1 localhost.youtube.com` to the bottom of the file, edit `Config.json` and set `ytdlWebServerURL` to `http://localhost.youtube.com:9696`
 
 ### Config Options
 
@@ -45,4 +53,4 @@ Set `ytdlDelay` to something like `10` seconds.
 | AutoUpdate                | When a update is available for VRCVideoCacher it will automatically be installed.                                                                                                                                                                   |
 | PreCacheUrls              | Download all videos from a JSON list format e.g. `[{"fileName":"video.mp4","url":"https:\/\/example.com\/video.mp4","lastModified":1631653260,"size":124029113},...]` "lastModified" and "size" are optional fields used for file integrity.        |
 
-Generate PoToken has unfortunately been [deprecated](https://github.com/iv-org/youtube-trusted-session-generator?tab=readme-ov-file#tool-is-deprecated)
+> Generate PoToken has unfortunately been [deprecated](https://github.com/iv-org/youtube-trusted-session-generator?tab=readme-ov-file#tool-is-deprecated)
