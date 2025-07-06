@@ -21,15 +21,14 @@ public class VideoDownloader
     {
         TempDownloadMp4Path = Path.Combine(ConfigManager.Config.CachedAssetPath, "_tempVideo.mp4");
         TempDownloadWebmPath = Path.Combine(ConfigManager.Config.CachedAssetPath, "_tempVideo.webm");
-        var downloadThread = new Thread(DownloadThread);
-        downloadThread.Start();
+        Task.Run(DownloadThread);
     }
 
-    private static void DownloadThread()
+    private static async Task DownloadThread()
     {
         while (true)
         {
-            Thread.Sleep(100);
+            await Task.Delay(100);
             if (DownloadQueue.IsEmpty)
                 continue;
 
@@ -41,15 +40,15 @@ public class VideoDownloader
             {
                 case UrlType.YouTube:
                     if (ConfigManager.Config.CacheYouTube)
-                        DownloadYouTubeVideo(queueItem).Wait();
+                        await DownloadYouTubeVideo(queueItem);
                     break;
                 case UrlType.PyPyDance:
                     if (ConfigManager.Config.CachePyPyDance)
-                        DownloadVideoWithId(queueItem).Wait();
+                        await DownloadVideoWithId(queueItem);
                     break;
                 case UrlType.VRDancing:
                     if (ConfigManager.Config.CacheVRDancing)
-                        DownloadVideoWithId(queueItem).Wait();
+                        await DownloadVideoWithId(queueItem);
                     break;
                 case UrlType.Other:
                     break;
