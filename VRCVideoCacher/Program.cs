@@ -45,7 +45,7 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
         
         YtdlpHash = GetOurYtdlpHash();
-        await YtdlManager.TryDownloadYtdlp();
+        YtdlManager.StartYtdlDownloadThread();
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
         FileTools.BackupAndReplaceYtdl();

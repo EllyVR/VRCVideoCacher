@@ -20,8 +20,23 @@ public class YtdlManager
     {
         YtdlVersionPath = Path.Combine(Program.CurrentProcessPath, "yt-dlp.version.txt");
     }
+    
+    public static void StartYtdlDownloadThread()
+    {
+        Task.Run(YtdlDownloadTask);
+    }
 
-    public static async Task TryDownloadYtdlp()
+    private static async Task YtdlDownloadTask()
+    {
+        const int interval = 60 * 60 * 1000; // 1 hour
+        while (true)
+        {
+            await TryDownloadYtdlp();
+            await Task.Delay(interval);
+        }
+    }
+
+    private static async Task TryDownloadYtdlp()
     {
         Log.Information("Checking for YT-DLP updates...");
         var response = await HttpClient.GetAsync(YtdlpApiUrl);
