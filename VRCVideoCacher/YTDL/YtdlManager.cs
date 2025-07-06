@@ -13,7 +13,7 @@ public class YtdlManager
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
     private static readonly string YtdlVersionPath;
-    private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
+    private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
     private const string FfmpegUrl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
     
     static YtdlManager()
