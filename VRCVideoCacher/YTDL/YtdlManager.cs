@@ -148,4 +148,21 @@ public class YtdlManager
         }
         throw new Exception("Failed to download YT-DLP");
     }
+    
+    public static bool GlobalYtdlConfigExists()
+    {
+        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp");
+        return File.Exists(Path.Combine(configDir, "config")) ||
+               File.Exists(Path.Combine(configDir, "config.txt"));
+    }
+    
+    public static void DeleteGlobalYtdlConfig()
+    {
+        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp");
+        if (File.Exists(Path.Combine(configDir, "config")))
+            File.Delete(Path.Combine(configDir, "config"));
+        
+        if (File.Exists(Path.Combine(configDir, "config.txt")))
+            File.Delete(Path.Combine(configDir, "config.txt"));
+    }
 }

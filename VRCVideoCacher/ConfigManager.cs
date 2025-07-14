@@ -1,5 +1,7 @@
 using Newtonsoft.Json;
 using Serilog;
+using VRCVideoCacher.YTDL;
+
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace VRCVideoCacher;
@@ -74,6 +76,14 @@ public class ConfigManager
         if (GetUserConfirmation("Would you like to add VRCVideoCacher to VRCX auto start?", true))
         {
             AutoStartShortcut.CreateShortcut();
+        }
+
+        if (YtdlManager.GlobalYtdlConfigExists())
+        {
+            if (GetUserConfirmation(@"Would you like to delete %AppData%\yt-dlp\config?", true))
+            {
+                YtdlManager.DeleteGlobalYtdlConfig();
+            }
         }
     }
 }

@@ -59,6 +59,8 @@ internal static class Program
 
         CacheManager.Init();
         await WinGet.TryInstallPackages();
+        if (YtdlManager.GlobalYtdlConfigExists())
+            Logger.Error("Global yt-dlp config file found in \"%AppData%\\yt-dlp\" please delete it to avoid conflicts with VRCVideoCacher.");
         
         await Task.Delay(-1);
     }
