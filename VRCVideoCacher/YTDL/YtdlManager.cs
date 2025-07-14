@@ -31,12 +31,12 @@ public class YtdlManager
         const int interval = 60 * 60 * 1000; // 1 hour
         while (true)
         {
-            await TryDownloadYtdlp();
             await Task.Delay(interval);
+            await TryDownloadYtdlp();
         }
     }
 
-    private static async Task TryDownloadYtdlp()
+    public static async Task TryDownloadYtdlp()
     {
         Log.Information("Checking for YT-DLP updates...");
         var response = await HttpClient.GetAsync(YtdlpApiUrl);

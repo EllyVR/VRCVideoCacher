@@ -29,6 +29,7 @@ internal static class Program
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
 
+        Directory.CreateDirectory(ConfigManager.Config.CachedAssetPath);
         await Updater.CheckForUpdates();
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
@@ -45,6 +46,7 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
         
         YtdlpHash = GetOurYtdlpHash();
+        await YtdlManager.TryDownloadYtdlp();
         YtdlManager.StartYtdlDownloadThread();
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
