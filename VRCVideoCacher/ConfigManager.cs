@@ -80,7 +80,7 @@ public class ConfigManager
 
         if (YtdlManager.GlobalYtdlConfigExists())
         {
-            if (GetUserConfirmation(@"Would you like to delete %AppData%\yt-dlp\config?", true))
+            if (GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config?", true))
             {
                 YtdlManager.DeleteGlobalYtdlConfig();
             }

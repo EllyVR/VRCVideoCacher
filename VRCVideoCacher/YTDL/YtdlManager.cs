@@ -149,20 +149,27 @@ public class YtdlManager
         throw new Exception("Failed to download YT-DLP");
     }
     
+    private static List<string> _ytdlConfigPaths = new()
+    {
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp.conf"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt")
+    };
+    
     public static bool GlobalYtdlConfigExists()
     {
-        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp");
-        return File.Exists(Path.Combine(configDir, "config")) ||
-               File.Exists(Path.Combine(configDir, "config.txt"));
+        return _ytdlConfigPaths.Any(File.Exists);
     }
     
     public static void DeleteGlobalYtdlConfig()
     {
-        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp");
-        if (File.Exists(Path.Combine(configDir, "config")))
-            File.Delete(Path.Combine(configDir, "config"));
-        
-        if (File.Exists(Path.Combine(configDir, "config.txt")))
-            File.Delete(Path.Combine(configDir, "config.txt"));
+        foreach (var configPath in _ytdlConfigPaths)
+        {
+            if (File.Exists(configPath))
+            {
+                Log.Information("Deleting global YT-DLP config: {ConfigPath}", configPath);
+                File.Delete(configPath);
+            }
+        }
     }
 }
