@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using Serilog;
 using VRCVideoCacher.Models;
@@ -203,6 +204,12 @@ public class VideoDownloader
         Log.Information("Downloading Video: {URL}", videoInfo.VideoUrl);
         var url = videoInfo.VideoUrl;
         var response = await HttpClient.GetAsync(url);
+        if (response.StatusCode == HttpStatusCode.Redirect)
+        {
+            Log.Information("Redirected to: {URL}", response.Headers.Location);
+            url = response.Headers.Location?.ToString();
+            response = await HttpClient.GetAsync(url);
+        }
         if (!response.IsSuccessStatusCode)
         {
             Log.Error("Failed to download video: {URL}", url);
