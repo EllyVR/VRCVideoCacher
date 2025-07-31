@@ -48,6 +48,13 @@ public class ApiController : WebApiController
             return;
         }
         Log.Information("Request URL: {URL}", requestUrl);
+
+        if (requestUrl.StartsWith("https://dmn.moe"))
+        {
+            requestUrl = requestUrl.Replace("/sr/", "/yt/");
+            Log.Information("YTS URL detected, modified to: {URL}", requestUrl);
+        }
+        
         var videoInfo = await VideoId.GetVideoId(requestUrl, avPro);
         if (videoInfo == null)
         {
