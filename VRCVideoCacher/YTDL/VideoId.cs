@@ -15,7 +15,7 @@ public class VideoId
     {
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
-    private static readonly string[] YouTubeHosts = ["youtube.com", "youtu.be", "www.youtube.com"];
+    private static readonly string[] YouTubeHosts = ["youtube.com", "youtu.be", "www.youtube.com", "m.youtube.com", "music.youtube.com"];
     private static readonly Regex YoutubeRegex = new(@"(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|live\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})");
 
     private static bool IsYouTubeUrl(string url)
@@ -203,7 +203,7 @@ public class VideoId
         var url = videoInfo.VideoUrl;
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
         var cookieArg = string.Empty;
-        if (Program.IsCookiesEnabledAndValid() && videoInfo.UrlType == UrlType.YouTube)
+        if (Program.IsCookiesEnabledAndValid())
             cookieArg = "--cookies youtube_cookies.txt";
         
         var languageArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
