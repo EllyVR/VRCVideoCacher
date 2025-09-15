@@ -6,7 +6,8 @@
         <RootNamespace>yt_dlp</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PublishAot>true</PublishAot>
+        <PublishAot>false</PublishAot>
+        <PublishSingleFile>true</PublishSingleFile>
         <PublishTrimmed>true</PublishTrimmed>
         <AssemblyName>yt-dlp-stub</AssemblyName>
         <PackageId>yt-dlp-stub</PackageId>
