@@ -25,6 +25,7 @@ public class ConfigManager
         }
         Log.Information($"Config file path: {configFilePath}");
 
+        Directory.CreateDirectory(Path.GetDirectoryName(configFilePath) ?? throw new Exception("Failed to get config folder path"));
         if (!File.Exists(configFilePath))
         {
             Config = new ConfigModel();
