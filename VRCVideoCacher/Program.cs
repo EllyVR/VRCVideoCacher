@@ -12,9 +12,9 @@ internal static class Program
 {
     public static string YtdlpHash = string.Empty;
     public const string Version = "2025.8.6";
-    public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
+    public static string CurrentProcessPath = string.Empty;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
-    
+
     public static async Task Main(string[] args)
     {
         Console.Title = $"VRCVideoCacher v{Version}";
@@ -29,7 +29,12 @@ internal static class Program
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
 
-        Directory.CreateDirectory(ConfigManager.Config.CachedAssetPath);
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
+        else
+            CurrentProcessPath = Environment.CurrentDirectory;
+
+        Directory.CreateDirectory(CacheManager.CachePath);
         await Updater.CheckForUpdates();
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
@@ -44,23 +49,31 @@ internal static class Program
         }
         Console.CancelKeyPress += (_, _) => ConsoleOnCancelKeyPress();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
-        
+
         YtdlpHash = GetOurYtdlpHash();
-        await YtdlManager.TryDownloadYtdlp();
-        YtdlManager.StartYtdlDownloadThread();
+        if (ConfigManager.Config.ytdlAutoUpdate)
+        {
+            await YtdlManager.TryDownloadYtdlp();
+            YtdlManager.StartYtdlDownloadThread();
+        }
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
         FileTools.BackupAndReplaceYtdl();
         await BulkPreCache.DownloadFileList();
-        _ = YtdlManager.TryDownloadFfmpeg();
 
         if (ConfigManager.Config.ytdlUseCookies && !IsCookiesEnabledAndValid())
             Logger.Warning("No cookies found, please use the browser extension to send cookies or disable \"ytdlUseCookies\" in config.");
 
         CacheManager.Init();
-        await WinGet.TryInstallPackages();
+
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            _ = YtdlManager.TryDownloadFfmpeg();
+            await WinGet.TryInstallPackages();
+        }
+
         if (YtdlManager.GlobalYtdlConfigExists())
-            Logger.Error("Global YT-DLP config file found in \"%AppData%\\yt-dlp\" please delete it to avoid conflicts with VRCVideoCacher.");
+                Logger.Error("Global YT-DLP config file found in \"%AppData%\\yt-dlp\" please delete it to avoid conflicts with VRCVideoCacher.");
         
         await Task.Delay(-1);
     }
@@ -69,12 +82,11 @@ internal static class Program
     {
         if (!ConfigManager.Config.ytdlUseCookies)
             return false;
-        
-        var cookiesPath = Path.Combine(CurrentProcessPath, "youtube_cookies.txt");
-        if (!File.Exists(cookiesPath))
+
+        if (!File.Exists(YtdlManager.CookiesPath))
             return false;
         
-        var cookies = File.ReadAllText(cookiesPath);
+        var cookies = File.ReadAllText(YtdlManager.CookiesPath);
         return IsCookiesValid(cookies);
     }
 
@@ -85,7 +97,7 @@ internal static class Program
 
         if (cookies.Contains("youtube.com") && cookies.Contains("LOGIN_INFO"))
             return true;
-        
+
         return false;
     }
 

@@ -1,4 +1,7 @@
-﻿using Serilog;
+﻿using System.Collections.Immutable;
+
+using Serilog;
+using ValveKeyValue;
 
 namespace VRCVideoCacher;
 
@@ -7,11 +10,85 @@ public class FileTools
     private static readonly ILogger Log = Program.Logger.ForContext<FileTools>();
     public static readonly string YtdlPath;
     private static readonly string BackupPath;
+    private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
+
 
     static FileTools()
     {
-        YtdlPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"Low\VRChat\VRChat\Tools\yt-dlp.exe";
-        BackupPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"Low\VRChat\VRChat\Tools\yt-dlp.exe.bkp";
+        string localLowPath;
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
+        }
+        else if (Environment.OSVersion.Platform == PlatformID.Unix)
+        {
+            var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
+            localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
+        }
+        else
+        {
+            throw new NotImplementedException("Unknown platform");
+        }
+
+        YtdlPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
+        BackupPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
+    }
+
+    // Linux only
+    private static string? GetCompatPath(string appid)
+    {
+        if (Environment.OSVersion.Platform != PlatformID.Unix)
+            throw new InvalidOperationException("GetCompatPath is only supported on Unix");
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        var steamPaths = SteamPaths.Select(path => Path.Join(home, path))
+            .Where(Path.Exists);
+        var steam = steamPaths.First();
+        if (!Path.Exists(steam))
+        {
+            Log.Error("Steam folder doesn't exist!");
+            return null;
+        }
+
+        Log.Debug($"Using steam path: {steam}");
+        var libraryfolders = Path.Join(steam, "steamapps/libraryfolders.vdf");
+        var stream = File.OpenRead(libraryfolders);
+
+        KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
+
+        List<string> libraryPaths = [];
+        foreach (var folder in data)
+        {
+            var label = folder["label"]?.ToString();
+            var name = string.IsNullOrEmpty(label) ? folder.Name : label;
+
+            // See https://github.com/ValveResourceFormat/ValveKeyValue/issues/30#issuecomment-1581924891
+            var apps = (IEnumerable<KVObject>)folder["apps"];
+
+            if (apps.Where(app => app.Name == appid).Any())
+                libraryPaths.Add(folder["path"].ToString()!);
+        }
+
+        var paths = libraryPaths
+            .Select(path => Path.Join(path, $"steamapps/compatdata/{appid}"))
+            .Where(Path.Exists)
+            .ToImmutableList();
+        return paths.Count > 0 ? paths.First() : null;
+    }
+
+    public static string? LocateFile(string filename)
+    {
+        var systemPath = Environment.GetEnvironmentVariable("PATH");
+        if (systemPath == null) return null;
+
+        var systemPaths = systemPath.Split(Path.PathSeparator);
+
+        var paths = systemPaths
+            .Select(path => Path.Combine(path, filename))
+            .Where(Path.Exists)
+            .ToImmutableList();
+        return paths.Count > 0 ? paths.First() : null;
     }
     
     public static void BackupAndReplaceYtdl()

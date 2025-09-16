@@ -13,7 +13,7 @@ public class WebServer
     
     public static void Init()
     {
-        var indexPath = Path.Combine(ConfigManager.Config.CachedAssetPath, "index.html");
+        var indexPath = Path.Combine(CacheManager.CachePath, "index.html");
         if (!File.Exists(indexPath))
             File.WriteAllText(indexPath, "VRCVideoCacher");
         
@@ -40,7 +40,7 @@ public class WebServer
             // First, we will configure our web server by adding Modules.
             .WithWebApi("/api", m => m
                 .WithController<ApiController>())
-            .WithStaticFolder("/", ConfigManager.Config.CachedAssetPath, true, m => m
+            .WithStaticFolder("/", CacheManager.CachePath, true, m => m
                 .WithContentCaching(true));
 
         // Listen for state changes.

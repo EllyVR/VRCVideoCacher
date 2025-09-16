@@ -12,13 +12,33 @@ public class YtdlManager
     {
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
+    public static readonly string CookiesPath;
+    public static readonly string YtdlPath;
     private static readonly string YtdlVersionPath;
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
     private const string FfmpegUrl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
-    
+
     static YtdlManager()
     {
-        YtdlVersionPath = Path.Combine(Program.CurrentProcessPath, "yt-dlp.version.txt");
+        string dataPath;
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            dataPath = Program.CurrentProcessPath;
+        else
+            dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher");
+
+        CookiesPath = Path.Combine(dataPath, "youtube_cookies.txt");
+        if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                YtdlPath = "Utils/yt-dlp.exe";
+            else
+                YtdlPath = FileTools.LocateFile("yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
+        }
+        else
+            YtdlPath = ConfigManager.Config.ytdlPath;
+        YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
+
+        Log.Debug($"Using ytdl path: {YtdlPath}");
     }
     
     public static void StartYtdlDownloadThread()
@@ -65,7 +85,7 @@ public class YtdlManager
             Log.Warning("Failed to check for YT-DLP updates.");
             return;
         }
-        if (!File.Exists(ConfigManager.Config.ytdlPath))
+        if (!File.Exists(YtdlPath))
         {
             Log.Information("YT-DLP is not installed. Downloading...");
             await DownloadYtdl(json);
@@ -86,7 +106,7 @@ public class YtdlManager
     
     public static async Task TryDownloadFfmpeg()
     {
-        var utilsPath = Path.GetDirectoryName(ConfigManager.Config.ytdlPath);
+        var utilsPath = Path.GetDirectoryName(YtdlPath);
         if (string.IsNullOrEmpty(utilsPath))
             throw new Exception("Failed to get YT-DLP path");
         if (!ConfigManager.Config.CacheYouTube ||
@@ -137,11 +157,11 @@ public class YtdlManager
                 continue;
             
             await using var stream = await HttpClient.GetStreamAsync(assetVersion.browser_download_url);
-            var path = Path.GetDirectoryName(ConfigManager.Config.ytdlPath);
+            var path = Path.GetDirectoryName(YtdlPath);
             if (string.IsNullOrEmpty(path))
                 throw new Exception("Failed to get YT-DLP path");
             Directory.CreateDirectory(path);
-            await using var fileStream = new FileStream(ConfigManager.Config.ytdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP");
             return;

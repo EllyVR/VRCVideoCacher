@@ -25,7 +25,7 @@ public class BulkPreCache
 
         public DateTime LastModifiedDate => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
             .AddSeconds(LastModified);
-        public string FilePath => Path.Combine(ConfigManager.Config.CachedAssetPath, FileName);
+        public string FilePath => Path.Combine(CacheManager.CachePath, FileName);
     }
     
     public static async Task DownloadFileList()
