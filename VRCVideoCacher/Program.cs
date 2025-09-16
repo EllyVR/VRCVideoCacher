@@ -45,10 +45,13 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
-        if (ConfigManager.Config.ytdlAutoUpdate)
+        // Updater is currently Windows-only
+        if (ConfigManager.Config.ytdlAutoUpdate && Environment.OSVersion.Platform == PlatformID.Win32NT)
         {
             await YtdlManager.TryDownloadYtdlp();
+            await YtdlManager.TryDownloadFfmpeg();
             YtdlManager.StartYtdlDownloadThread();
+            await WinGet.TryInstallPackages();
         }
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
@@ -60,14 +63,8 @@ internal static class Program
 
         CacheManager.Init();
 
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-        {
-            _ = YtdlManager.TryDownloadFfmpeg();
-            await WinGet.TryInstallPackages();
-        }
-
         if (YtdlManager.GlobalYtdlConfigExists())
-                Logger.Error("Global YT-DLP config file found in \"%AppData%\\yt-dlp\" please delete it to avoid conflicts with VRCVideoCacher.");
+            Logger.Error("Global yt-dlp config file found in \"%AppData%\\yt-dlp\". Please delete it to avoid conflicts with VRCVideoCacher.");
         
         await Task.Delay(-1);
     }
