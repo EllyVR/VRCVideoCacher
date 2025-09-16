@@ -91,8 +91,8 @@ public class YtdlManager
         if (!File.Exists(YtdlPath))
         {
             Log.Information("YT-DLP is not installed. Downloading...");
-            await DownloadYtdl(json);
-            await File.WriteAllTextAsync(YtdlVersionPath, json.tag_name);
+            if (await DownloadYtdl(json))
+                await File.WriteAllTextAsync(YtdlVersionPath, json.tag_name);
             return;
         }
         if (currentYtdlVersion == latestVersion)
@@ -102,20 +102,32 @@ public class YtdlManager
         else
         {
             Log.Information("YT-DLP is outdated. Updating...");
-            await DownloadYtdl(json);
-            await File.WriteAllTextAsync(YtdlVersionPath, json.tag_name);
+            if (await DownloadYtdl(json))
+                await File.WriteAllTextAsync(YtdlVersionPath, json.tag_name);
         }
     }
-    
+
     public static async Task TryDownloadFfmpeg()
     {
         var utilsPath = Path.GetDirectoryName(YtdlPath);
         if (string.IsNullOrEmpty(utilsPath))
             throw new Exception("Failed to get YT-DLP path");
+
+        // Make sure we can write into the folder
+        try
+        {
+            File.Create(Path.Combine(utilsPath, "_temp_permission_prober"), 0, FileOptions.DeleteOnClose);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning($"Skipping ffmpeg download: {ex.GetType().Name}: {ex.Message}");
+            return;
+        }
+
         if (!ConfigManager.Config.CacheYouTube ||
             File.Exists(Path.Combine(utilsPath, "ffmpeg.exe")))
             return;
-        
+
         Directory.CreateDirectory(utilsPath);
         Log.Information("Downloading FFmpeg...");
         using var response = await HttpClient.GetAsync(FfmpegUrl);
@@ -124,14 +136,14 @@ public class YtdlManager
             Log.Information("Failed to download {Url}: {ResponseStatusCode}", FfmpegUrl, response.StatusCode);
             return;
         }
-        
+
         var filePath = Path.Combine(Program.CurrentProcessPath, Path.GetFileName(FfmpegUrl));
         if (File.Exists(filePath))
             File.Delete(filePath);
         var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
         await response.Content.CopyToAsync(fileStream);
         fileStream.Close();
-        
+
         Log.Information("Extracting FFmpeg zip.");
         ZipFile.ExtractToDirectory(filePath, Program.CurrentProcessPath);
         Log.Information("FFmpeg extracted.");
@@ -152,13 +164,19 @@ public class YtdlManager
         Log.Information("FFmpeg downloaded and extracted.");
     }
     
-    private static async Task DownloadYtdl(YtApi json)
+    private static async Task<bool> DownloadYtdl(YtApi json)
     {
+        if (File.Exists(YtdlPath) && (File.GetAttributes(YtdlPath) & FileAttributes.ReadOnly) != 0)
+        {
+            Log.Warning("Skipping yt-dlp download because location is unwritable.");
+            return false;
+        }
+
         foreach (var assetVersion in json.assets)
         {
             if (assetVersion.name != "yt-dlp.exe")
                 continue;
-            
+
             await using var stream = await HttpClient.GetStreamAsync(assetVersion.browser_download_url);
             var path = Path.GetDirectoryName(YtdlPath);
             if (string.IsNullOrEmpty(path))
@@ -167,7 +185,7 @@ public class YtdlManager
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
-            return;
+            return true;
         }
         throw new Exception("Failed to download YT-DLP");
     }
