@@ -41,7 +41,7 @@ internal static class Program
             Console.WriteLine(GetOurYtdlpHash());
             Environment.Exit(0);
         }
-        Console.CancelKeyPress += (_, _) => ConsoleOnCancelKeyPress();
+        Console.CancelKeyPress += (_, _) => Environment.Exit(0);
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
@@ -119,14 +119,6 @@ internal static class Program
     public static string ComputeBinaryContentHash(byte[] base64)
     {
         return Convert.ToBase64String(SHA256.HashData(base64));
-    }
-
-    private static void ConsoleOnCancelKeyPress()
-    {
-        OnAppQuit();
-        Logger.Information("Press any key to continue...");
-        Console.ReadKey();
-        Environment.Exit(0);
     }
 
     private static void OnAppQuit()
