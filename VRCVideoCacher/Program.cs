@@ -12,7 +12,7 @@ internal static class Program
 {
     public static string YtdlpHash = string.Empty;
     public const string Version = "2025.8.6";
-    public static string CurrentProcessPath = string.Empty;
+    public static string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
 
     public static async Task Main(string[] args)
@@ -28,11 +28,6 @@ internal static class Program
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
-
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
-        else
-            CurrentProcessPath = Environment.CurrentDirectory;
 
         Directory.CreateDirectory(CacheManager.CachePath);
         await Updater.CheckForUpdates();
