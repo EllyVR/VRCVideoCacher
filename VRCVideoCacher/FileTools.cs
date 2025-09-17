@@ -87,6 +87,19 @@ public class FileTools
             .ToImmutableList();
         return paths.Count > 0 ? paths.First() : null;
     }
+
+    public static void MarkFileExecutable(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"File not found: {path}");
+
+        if (!OperatingSystem.IsWindows())
+        {
+            var mode = File.GetUnixFileMode(path);
+            mode |= UnixFileMode.UserExecute;
+            File.SetUnixFileMode(path, mode);
+        }
+    }
     
     public static void BackupAndReplaceYtdl()
     {

@@ -27,17 +27,11 @@ public class YtdlManager
             dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher");
 
         CookiesPath = Path.Combine(dataPath, "youtube_cookies.txt");
+
         if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
-        {
-            if (OperatingSystem.IsWindows())
-                YtdlPath = Path.Combine(dataPath, "Utils\\yt-dlp.exe");
-            else
-                YtdlPath = FileTools.LocateFile("yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
-        }
+            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
         else
-        {
             YtdlPath = ConfigManager.Config.ytdlPath;
-        }
 
         YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
@@ -80,7 +74,7 @@ public class YtdlManager
             currentYtdlVersion = await File.ReadAllTextAsync(YtdlVersionPath);
         if (string.IsNullOrEmpty(currentYtdlVersion))
             currentYtdlVersion = "Not Installed";
-        
+
         var latestVersion = json.tag_name;
         Log.Information("YT-DLP Current: {Installed} Latest: {Latest}", currentYtdlVersion, latestVersion);
         if (string.IsNullOrEmpty(latestVersion))
@@ -116,7 +110,10 @@ public class YtdlManager
         // Make sure we can write into the folder
         try
         {
-            File.Create(Path.Combine(utilsPath, "_temp_permission_prober"), 0, FileOptions.DeleteOnClose);
+            var probeFilePath = Path.Combine(utilsPath, "_temp_permission_prober");
+            if (File.Exists(probeFilePath))
+                File.Delete(probeFilePath);
+            File.Create(probeFilePath, 0, FileOptions.DeleteOnClose);
         }
         catch (Exception ex)
         {
@@ -174,7 +171,8 @@ public class YtdlManager
 
         foreach (var assetVersion in json.assets)
         {
-            if (assetVersion.name != "yt-dlp.exe")
+            var assetName = OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp_linux";
+            if (assetVersion.name != assetName)
                 continue;
 
             await using var stream = await HttpClient.GetStreamAsync(assetVersion.browser_download_url);
@@ -185,6 +183,7 @@ public class YtdlManager
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
+            FileTools.MarkFileExecutable(YtdlPath);
             return true;
         }
         throw new Exception("Failed to download YT-DLP");

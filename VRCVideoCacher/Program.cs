@@ -45,12 +45,13 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
-        
-        // Updater is currently Windows-only
-        if (ConfigManager.Config.ytdlAutoUpdate && OperatingSystem.IsWindows())
+
+        if (ConfigManager.Config.ytdlAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
+        {
             await YtdlManager.TryDownloadYtdlp();
-        
-        YtdlManager.StartYtdlDownloadThread();
+            YtdlManager.StartYtdlDownloadThread();
+        }
+
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
         FileTools.BackupAndReplaceYtdl();

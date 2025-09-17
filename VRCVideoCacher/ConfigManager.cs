@@ -99,7 +99,7 @@ public class ConfigManager
 public class ConfigModel
 {
     public string ytdlWebServerURL = "http://localhost:9696";
-    public string ytdlPath = "";
+    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils/yt-dlp.exe" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
     public bool ytdlUseCookies = true;
     public bool ytdlAutoUpdate = true;
     public string ytdlAdditionalArgs = string.Empty;
