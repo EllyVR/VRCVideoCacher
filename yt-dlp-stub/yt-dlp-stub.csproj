@@ -7,13 +7,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
-<!--        <PublishSingleFile>true</PublishSingleFile>-->
         <PublishTrimmed>true</PublishTrimmed>
         <AssemblyName>yt-dlp-stub</AssemblyName>
         <PackageId>yt-dlp-stub</PackageId>
         <Authors>yt-dlp-stub</Authors>
         <Company>yt-dlp-stub</Company>
         <Product>yt-dlp-stub</Product>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="$([System.OperatingSystem]::IsLinux())">
+        <PublishAot>false</PublishAot>
+        <PublishSingleFile>true</PublishSingleFile>
     </PropertyGroup>
 
 </Project>
