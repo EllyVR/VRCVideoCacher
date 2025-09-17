@@ -5,7 +5,7 @@ namespace yt_dlp;
 internal static class Program
 {
     private static string _logFilePath = string.Empty;
-    private const string BaseUrl = "http://localhost:9696";
+    private const string BaseUrl = "http://127.0.0.1:9696";
 
     private static void WriteLog(string message)
     {
@@ -72,8 +72,8 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            WriteLog($"[Error] {ex.Message}");
-            await Console.Error.WriteLineAsync($"ERROR: [VRCVideoCacher] {ex.Message}");
+            WriteLog($"[Error] {ex}");
+            await Console.Error.WriteLineAsync($"ERROR: [VRCVideoCacher] {ex.GetType().Name}: {ex.Message}");
             Environment.ExitCode = 1;
         }
     }

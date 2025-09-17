@@ -8,10 +8,36 @@ public class CacheManager
 {
     private static readonly ILogger Log = Program.Logger.ForContext<CacheManager>();
     private static readonly ConcurrentDictionary<string, VideoCache> CachedAssets = new();
+    public static readonly string CachePath;
 
     static CacheManager()
     {
+        if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                CachePath = "CachedAssets";
+            else
+                CachePath = Path.Combine(GetCacheFolder(), "VRCVideoCacher");
+        }
+        else
+        {
+            CachePath = ConfigManager.Config.CachedAssetPath;
+        }
+        Log.Debug($"Using cache path {CachePath}");
+
         BuildCache();
+    }
+
+    private static string GetCacheFolder()
+    {
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            return Program.CurrentProcessPath;
+
+        var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
+        if (string.IsNullOrEmpty(cachePath))
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
+        else
+            return cachePath;
     }
     
     public static void Init()
@@ -22,7 +48,8 @@ public class CacheManager
     private static void BuildCache()
     {
         CachedAssets.Clear();
-        var files = Directory.GetFiles(ConfigManager.Config.CachedAssetPath);
+        Directory.CreateDirectory(CachePath);
+        var files = Directory.GetFiles(CachePath);
         foreach (var path in files)
         {
             var file = Path.GetFileName(path);
@@ -44,7 +71,7 @@ public class CacheManager
         while (cacheSize >= maxCacheSize && oldestFiles.Count > 0)
         {
             var oldestFile = oldestFiles.First();
-            var filePath = Path.Combine(ConfigManager.Config.CachedAssetPath, oldestFile.Value.FileName);
+            var filePath = Path.Combine(CachePath, oldestFile.Value.FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -57,7 +84,7 @@ public class CacheManager
 
     public static void AddToCache(string fileName)
     {
-        var filePath = Path.Combine(ConfigManager.Config.CachedAssetPath, fileName);
+        var filePath = Path.Combine(CachePath, fileName);
         if (!File.Exists(filePath))
             return;
         

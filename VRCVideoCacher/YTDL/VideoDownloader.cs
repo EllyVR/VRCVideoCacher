@@ -20,8 +20,8 @@ public class VideoDownloader
     
     static VideoDownloader()
     {
-        TempDownloadMp4Path = Path.Combine(ConfigManager.Config.CachedAssetPath, "_tempVideo.mp4");
-        TempDownloadWebmPath = Path.Combine(ConfigManager.Config.CachedAssetPath, "_tempVideo.webm");
+        TempDownloadMp4Path = Path.Combine(CacheManager.CachePath, "_tempVideo.mp4");
+        TempDownloadWebmPath = Path.Combine(CacheManager.CachePath, "_tempVideo.webm");
         Task.Run(DownloadThread);
     }
 
@@ -101,7 +101,7 @@ public class VideoDownloader
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
-            cookieArg = "--cookies youtube_cookies.txt";
+            cookieArg = $"--cookies {YtdlManager.CookiesPath}";
         
         var audioArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
             ? "+ba[acodec=opus][ext=webm]"
@@ -115,7 +115,7 @@ public class VideoDownloader
         {
             StartInfo =
             {
-                FileName = ConfigManager.Config.ytdlPath,
+                FileName = YtdlManager.YtdlPath,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -152,7 +152,7 @@ public class VideoDownloader
         Thread.Sleep(10);
         
         var fileName = $"{videoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(ConfigManager.Config.CachedAssetPath, fileName);
+        var filePath = Path.Combine(CacheManager.CachePath, fileName);
         if (File.Exists(filePath))
         {
             Log.Error("File already exists, canceling...");
@@ -223,7 +223,7 @@ public class VideoDownloader
         await Task.Delay(10);
         
         var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(ConfigManager.Config.CachedAssetPath, fileName);
+        var filePath = Path.Combine(CacheManager.CachePath, fileName);
         if (File.Exists(TempDownloadMp4Path))
         {
             File.Move(TempDownloadMp4Path, filePath);

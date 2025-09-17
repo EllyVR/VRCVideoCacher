@@ -135,13 +135,13 @@ public class VideoId
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
-            cookieArg = "--cookies youtube_cookies.txt";
+            cookieArg = $"--cookies {YtdlManager.CookiesPath}";
 
         var process = new Process
         {
             StartInfo =
             {
-                FileName = ConfigManager.Config.ytdlPath,
+                FileName = YtdlManager.YtdlPath,
                 Arguments = $"--encoding utf-8 --no-playlist --no-warnings {additionalArgs} {cookieArg} -j \"{url}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -189,7 +189,7 @@ public class VideoId
         {
             StartInfo =
             {
-                FileName = ConfigManager.Config.ytdlPath,
+                FileName = YtdlManager.YtdlPath,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -204,7 +204,7 @@ public class VideoId
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
-            cookieArg = "--cookies youtube_cookies.txt";
+            cookieArg = $"--cookies {YtdlManager.CookiesPath}";
         
         var languageArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
             ? string.Empty
