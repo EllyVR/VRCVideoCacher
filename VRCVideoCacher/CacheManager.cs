@@ -23,7 +23,7 @@ public class CacheManager
 
     private static string GetCacheFolder()
     {
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
             return Program.CurrentProcessPath;
 
         var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");

@@ -47,7 +47,7 @@ internal static class Program
         YtdlpHash = GetOurYtdlpHash();
         
         // Updater is currently Windows-only
-        if (ConfigManager.Config.ytdlAutoUpdate && Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (ConfigManager.Config.ytdlAutoUpdate && OperatingSystem.IsWindows())
             await YtdlManager.TryDownloadYtdlp();
         
         YtdlManager.StartYtdlDownloadThread();
@@ -60,7 +60,7 @@ internal static class Program
             Logger.Warning("No cookies found, please use the browser extension to send cookies or disable \"ytdlUseCookies\" in config.");
 
         CacheManager.Init();
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
         {
             // run after init to avoid text spam blocking user input
             _ = YtdlManager.TryDownloadFfmpeg();

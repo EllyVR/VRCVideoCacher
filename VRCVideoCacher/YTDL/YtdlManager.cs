@@ -21,7 +21,7 @@ public class YtdlManager
     static YtdlManager()
     {
         string dataPath;
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
             dataPath = Program.CurrentProcessPath;
         else
             dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher");
@@ -29,7 +29,7 @@ public class YtdlManager
         CookiesPath = Path.Combine(dataPath, "youtube_cookies.txt");
         if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
         {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            if (OperatingSystem.IsWindows())
                 YtdlPath = Path.Combine(dataPath, "Utils\\yt-dlp.exe");
             else
                 YtdlPath = FileTools.LocateFile("yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
