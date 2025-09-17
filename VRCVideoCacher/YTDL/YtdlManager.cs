@@ -30,15 +30,17 @@ public class YtdlManager
         if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                YtdlPath = "Utils/yt-dlp.exe";
+                YtdlPath = Path.Combine(dataPath, "Utils\\yt-dlp.exe");
             else
                 YtdlPath = FileTools.LocateFile("yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
         }
         else
+        {
             YtdlPath = ConfigManager.Config.ytdlPath;
-        YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
+        }
 
-        Log.Debug($"Using ytdl path: {YtdlPath}");
+        YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
+        Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
     }
     
     public static void StartYtdlDownloadThread()
@@ -54,6 +56,7 @@ public class YtdlManager
             await Task.Delay(interval);
             await TryDownloadYtdlp();
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     public static async Task TryDownloadYtdlp()
@@ -79,7 +82,7 @@ public class YtdlManager
             currentYtdlVersion = "Not Installed";
         
         var latestVersion = json.tag_name;
-        Log.Information("YT-DLP latest version: {Latest} Current version: {Installed}", latestVersion, currentYtdlVersion);
+        Log.Information("YT-DLP Current: {Installed} Latest: {Latest}", currentYtdlVersion, latestVersion);
         if (string.IsNullOrEmpty(latestVersion))
         {
             Log.Warning("Failed to check for YT-DLP updates.");
@@ -163,27 +166,27 @@ public class YtdlManager
             Directory.CreateDirectory(path);
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
-            Log.Information("Downloaded YT-DLP");
+            Log.Information("Downloaded YT-DLP.");
             return;
         }
         throw new Exception("Failed to download YT-DLP");
     }
     
-    private static List<string> _ytdlConfigPaths = new()
-    {
+    private static readonly List<string> YtdlConfigPaths =
+    [
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp.conf"),
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config"),
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt")
-    };
+    ];
     
     public static bool GlobalYtdlConfigExists()
     {
-        return _ytdlConfigPaths.Any(File.Exists);
+        return YtdlConfigPaths.Any(File.Exists);
     }
     
     public static void DeleteGlobalYtdlConfig()
     {
-        foreach (var configPath in _ytdlConfigPaths)
+        foreach (var configPath in YtdlConfigPaths)
         {
             if (File.Exists(configPath))
             {

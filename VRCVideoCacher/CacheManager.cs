@@ -13,18 +13,11 @@ public class CacheManager
     static CacheManager()
     {
         if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
-        {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                CachePath = "CachedAssets";
-            else
-                CachePath = Path.Combine(GetCacheFolder(), "VRCVideoCacher");
-        }
+            CachePath = Path.Combine(GetCacheFolder(), "CachedAssets");
         else
-        {
             CachePath = ConfigManager.Config.CachedAssetPath;
-        }
-        Log.Debug($"Using cache path {CachePath}");
-
+        
+        Log.Debug("Using cache path {CachePath}", CachePath);
         BuildCache();
     }
 
@@ -36,8 +29,8 @@ public class CacheManager
         var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
         if (string.IsNullOrEmpty(cachePath))
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
-        else
-            return cachePath;
+        
+        return Path.Combine(cachePath, "VRCVideoCacher");
     }
     
     public static void Init()

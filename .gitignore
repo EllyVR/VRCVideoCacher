@@ -4,3 +4,4 @@ yt-dlp-stub/bin
 yt-dlp-stub/obj
 .idea/
 .vscode/
+*.DotSettings*

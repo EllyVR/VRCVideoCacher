@@ -1,5 +1,5 @@
 ﻿using System.Collections.Immutable;
-
+using System.Globalization;
 using Serilog;
 using ValveKeyValue;
 
@@ -11,8 +11,7 @@ public class FileTools
     public static readonly string YtdlPath;
     private static readonly string BackupPath;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
-
-
+    
     static FileTools()
     {
         string localLowPath;
@@ -51,7 +50,7 @@ public class FileTools
             return null;
         }
 
-        Log.Debug($"Using steam path: {steam}");
+        Log.Debug("Using steam path: {Steam}", steam);
         var libraryfolders = Path.Join(steam, "steamapps/libraryfolders.vdf");
         var stream = File.OpenRead(libraryfolders);
 
@@ -60,14 +59,12 @@ public class FileTools
         List<string> libraryPaths = [];
         foreach (var folder in data)
         {
-            var label = folder["label"]?.ToString();
-            var name = string.IsNullOrEmpty(label) ? folder.Name : label;
-
+            // var label = folder["label"]?.ToString(CultureInfo.InvariantCulture);
+            // var name = string.IsNullOrEmpty(label) ? folder.Name : label;
             // See https://github.com/ValveResourceFormat/ValveKeyValue/issues/30#issuecomment-1581924891
             var apps = (IEnumerable<KVObject>)folder["apps"];
-
-            if (apps.Where(app => app.Name == appid).Any())
-                libraryPaths.Add(folder["path"].ToString()!);
+            if (apps.Any(app => app.Name == appid))
+                libraryPaths.Add(folder["path"].ToString(CultureInfo.InvariantCulture));
         }
 
         var paths = libraryPaths

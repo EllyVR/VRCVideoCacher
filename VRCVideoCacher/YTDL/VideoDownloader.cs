@@ -101,7 +101,7 @@ public class VideoDownloader
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
-            cookieArg = $"--cookies {YtdlManager.CookiesPath}";
+            cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
         
         var audioArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
             ? "+ba[acodec=opus][ext=webm]"

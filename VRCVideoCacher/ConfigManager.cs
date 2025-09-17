@@ -16,14 +16,11 @@ public class ConfigManager
     {
         Log.Information("Loading config...");
         if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-        {
             configFilePath = Path.Combine(Program.CurrentProcessPath, "Config.json");
-        }
         else
-        {
-            configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher/Config.json");
-        }
-        Log.Information($"Config file path: {configFilePath}");
+            configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "VRCVideoCacher/Config.json");
+        Log.Information("Config file path: {ConfigFilePath}", configFilePath);
 
         Directory.CreateDirectory(Path.GetDirectoryName(configFilePath) ?? throw new Exception("Failed to get config folder path"));
         if (!File.Exists(configFilePath))
