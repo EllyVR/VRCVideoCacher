@@ -38,7 +38,7 @@ public class Updater
             return;
         }
         var data = await response.Content.ReadAsStringAsync();
-        var latestRelease = JsonConvert.DeserializeObject<YtApi>(data);
+        var latestRelease = JsonConvert.DeserializeObject<GitHubRelease>(data);
         if (latestRelease == null)
         {
             Log.Error("Failed to parse update response.");
@@ -68,7 +68,7 @@ public class Updater
             File.Delete(BackupFilePath);
     }
         
-    private static async Task UpdateAsync(YtApi release)
+    private static async Task UpdateAsync(GitHubRelease release)
     {
         foreach (var asset in release.assets)
         {

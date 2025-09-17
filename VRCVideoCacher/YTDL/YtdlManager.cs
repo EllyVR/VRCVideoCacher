@@ -1,6 +1,7 @@
-﻿using System.IO.Compression;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 using Serilog;
+using SharpCompress.Readers;
 using VRCVideoCacher.Models;
 
 namespace VRCVideoCacher.YTDL;
@@ -16,7 +17,7 @@ public class YtdlManager
     public static readonly string YtdlPath;
     private static readonly string YtdlVersionPath;
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
-    private const string FfmpegUrl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
+    private const string FfmpegApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
 
     static YtdlManager()
     {
@@ -63,7 +64,7 @@ public class YtdlManager
             return;
         }
         var data = await response.Content.ReadAsStringAsync();
-        var json = JsonConvert.DeserializeObject<YtApi>(data);
+        var json = JsonConvert.DeserializeObject<GitHubRelease>(data);
         if (json == null)
         {
             Log.Error("Failed to parse YT-DLP update response.");
@@ -122,46 +123,87 @@ public class YtdlManager
         }
 
         if (!ConfigManager.Config.CacheYouTube ||
-            File.Exists(Path.Combine(utilsPath, "ffmpeg.exe")))
+            File.Exists(Path.Combine(utilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg")))
             return;
 
-        Directory.CreateDirectory(utilsPath);
+        var apiResponse = await HttpClient.GetAsync(FfmpegApiUrl);
+        if (!apiResponse.IsSuccessStatusCode)
+        {
+            Log.Warning("Failed to get latest ffmpeg release: {ResponseStatusCode}", apiResponse.StatusCode);
+            return;
+        }
+        var data = await apiResponse.Content.ReadAsStringAsync();
+        var json = JsonConvert.DeserializeObject<GitHubRelease>(data);
+        if (json == null)
+        {
+            Log.Error("Failed to parse ffmpeg release response.");
+            return;
+        }
+
+        string assetName;
+        if (OperatingSystem.IsWindows())
+        {
+            assetName = "ffmpeg-master-latest-win64-gpl.zip";
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            switch (RuntimeInformation.OSArchitecture)
+            {
+                case Architecture.X64:
+                    assetName = "ffmpeg-master-latest-linux64-gpl.tar.xz";
+                    break;
+                case Architecture.Arm64:
+                    assetName = "ffmpeg-master-latest-linuxarm64-gpl.tar.xz";
+                    break;
+                default:
+                    Log.Error("Unsupported architecture {OSArchitecture}", RuntimeInformation.OSArchitecture);
+                    return;
+            }
+        }
+        else
+        {
+            Log.Error("Unsupported operating system {OperatingSystem}", Environment.OSVersion);
+            return;
+        }
+        // ffmpeg-master-latest-linux64-gpl.tar.xz -> ffmpeg-master-latest-linux64-gpl
+        var folderName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(assetName));
+
+        var assets = json.assets.Where(asset => asset.name == assetName).ToList();
+        if (assets.Count < 1)
+        {
+            Log.Error("Unable to find ffmpeg asset {AssetName} for this platform.", assetName);
+            return;
+        }
+
         Log.Information("Downloading FFmpeg...");
-        using var response = await HttpClient.GetAsync(FfmpegUrl);
-        if (!response.IsSuccessStatusCode)
+        var url = assets.First().browser_download_url;
+
+        using var response = await HttpClient.GetAsync(url);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        using (var reader = ReaderFactory.Open(responseStream))
         {
-            Log.Information("Failed to download {Url}: {ResponseStatusCode}", FfmpegUrl, response.StatusCode);
-            return;
+            while (reader.MoveToNextEntry())
+            {
+                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                    continue;
+
+                var nameStripped = reader.Entry.Key.Replace($"{folderName}/bin/", string.Empty);
+                if (nameStripped != reader.Entry.Key)
+                {
+                    Log.Debug("Extracting file {Name} ({Size} bytes)", nameStripped, reader.Entry.Size);
+                    var path = Path.Combine(utilsPath, nameStripped);
+                    await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                    using var entryStream = reader.OpenEntryStream();
+                    await entryStream.CopyToAsync(outputStream);
+                    FileTools.MarkFileExecutable(path);
+                }
+            }
         }
 
-        var filePath = Path.Combine(Program.CurrentProcessPath, Path.GetFileName(FfmpegUrl));
-        if (File.Exists(filePath))
-            File.Delete(filePath);
-        var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        await response.Content.CopyToAsync(fileStream);
-        fileStream.Close();
-
-        Log.Information("Extracting FFmpeg zip.");
-        ZipFile.ExtractToDirectory(filePath, Program.CurrentProcessPath);
-        Log.Information("FFmpeg extracted.");
-
-        var ffmpegPath = Path.Combine(Program.CurrentProcessPath, "ffmpeg-master-latest-win64-gpl");
-        var ffmpegBinPath = Path.Combine(ffmpegPath, "bin");
-        var ffmpegFiles = Directory.GetFiles(ffmpegBinPath);
-        foreach (var ffmpegFile in ffmpegFiles)
-        {
-            var fileName = Path.GetFileName(ffmpegFile);
-            var destPath = Path.Combine(utilsPath, fileName);
-            if (File.Exists(destPath))
-                File.Delete(destPath);
-            File.Move(ffmpegFile, destPath);
-        }
-        Directory.Delete(ffmpegPath, true);
-        File.Delete(filePath);
         Log.Information("FFmpeg downloaded and extracted.");
     }
     
-    private static async Task<bool> DownloadYtdl(YtApi json)
+    private static async Task<bool> DownloadYtdl(GitHubRelease json)
     {
         if (File.Exists(YtdlPath) && (File.GetAttributes(YtdlPath) & FileAttributes.ReadOnly) != 0)
         {
@@ -169,9 +211,27 @@ public class YtdlManager
             return false;
         }
 
+        string assetName;
+        if (OperatingSystem.IsWindows())
+        {
+            assetName = "yt-dlp.exe";
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            assetName = RuntimeInformation.OSArchitecture switch
+            {
+                Architecture.X64 => "yt-dlp_linux",
+                Architecture.Arm64 => "yt-dlp_linux_aarch64",
+                _ => throw new Exception($"Unsupported architecture {RuntimeInformation.OSArchitecture}"),
+            };
+        }
+        else
+        {
+            throw new Exception($"Unsupported operating system {Environment.OSVersion}");
+        }
+
         foreach (var assetVersion in json.assets)
         {
-            var assetName = OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp_linux";
             if (assetVersion.name != assetName)
                 continue;
 

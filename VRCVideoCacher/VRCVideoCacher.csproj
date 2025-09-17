@@ -16,6 +16,7 @@
       <PackageReference Include="Serilog.Expressions" Version="4.0.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
       <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
+      <PackageReference Include="SharpCompress" Version="0.40.0" />
       <PackageReference Include="ValveKeyValue" Version="0.20.0.417" />
     </ItemGroup>
 
