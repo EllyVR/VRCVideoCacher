@@ -14,8 +14,10 @@ public class CacheManager
     {
         if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
             CachePath = Path.Combine(GetCacheFolder(), "CachedAssets");
-        else
+        else if (Path.IsPathRooted(ConfigManager.Config.CachedAssetPath))
             CachePath = ConfigManager.Config.CachedAssetPath;
+        else
+            CachePath = Path.Combine(Program.CurrentProcessPath, ConfigManager.Config.CachedAssetPath);
         
         Log.Debug("Using cache path {CachePath}", CachePath);
         BuildCache();

@@ -20,7 +20,7 @@ public class ConfigManager
         else
             configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "VRCVideoCacher/Config.json");
-        Log.Information("Config file path: {ConfigFilePath}", configFilePath);
+        Log.Debug("Using config file path: {ConfigFilePath}", configFilePath);
 
         Directory.CreateDirectory(Path.GetDirectoryName(configFilePath) ?? throw new Exception("Failed to get config folder path"));
         if (!File.Exists(configFilePath))
@@ -85,12 +85,9 @@ public class ConfigManager
             AutoStartShortcut.CreateShortcut();
         }
 
-        if (YtdlManager.GlobalYtdlConfigExists())
+        if (YtdlManager.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config?", true))
         {
-            if (GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config?", true))
-            {
-                YtdlManager.DeleteGlobalYtdlConfig();
-            }
+            YtdlManager.DeleteGlobalYtdlConfig();
         }
     }
 }
@@ -99,7 +96,7 @@ public class ConfigManager
 public class ConfigModel
 {
     public string ytdlWebServerURL = "http://localhost:9696";
-    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils/yt-dlp.exe" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
+    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils\\yt-dlp.exe" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
     public bool ytdlUseCookies = true;
     public bool ytdlAutoUpdate = true;
     public string ytdlAdditionalArgs = string.Empty;

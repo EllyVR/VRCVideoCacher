@@ -28,13 +28,16 @@ public class YtdlManager
             dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher");
 
         CookiesPath = Path.Combine(dataPath, "youtube_cookies.txt");
+        YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
 
+        // try to locate in PATH
         if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
             YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
-        else
+        else if (Path.IsPathRooted(ConfigManager.Config.ytdlPath))
             YtdlPath = ConfigManager.Config.ytdlPath;
-
-        YtdlVersionPath = Path.Combine(dataPath, "yt-dlp.version.txt");
+        else
+            YtdlPath = Path.Combine(dataPath, ConfigManager.Config.ytdlPath);
+        
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
     }
     
@@ -179,24 +182,22 @@ public class YtdlManager
         var url = assets.First().browser_download_url;
 
         using var response = await HttpClient.GetAsync(url);
-        using var responseStream = await response.Content.ReadAsStreamAsync();
-        using (var reader = ReaderFactory.Open(responseStream))
+        await using var responseStream = await response.Content.ReadAsStreamAsync();
+        using var reader = ReaderFactory.Open(responseStream);
+        while (reader.MoveToNextEntry())
         {
-            while (reader.MoveToNextEntry())
-            {
-                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
-                    continue;
+            if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                continue;
 
-                var nameStripped = reader.Entry.Key.Replace($"{folderName}/bin/", string.Empty);
-                if (nameStripped != reader.Entry.Key)
-                {
-                    Log.Debug("Extracting file {Name} ({Size} bytes)", nameStripped, reader.Entry.Size);
-                    var path = Path.Combine(utilsPath, nameStripped);
-                    await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                    using var entryStream = reader.OpenEntryStream();
-                    await entryStream.CopyToAsync(outputStream);
-                    FileTools.MarkFileExecutable(path);
-                }
+            var nameStripped = reader.Entry.Key.Replace($"{folderName}/bin/", string.Empty);
+            if (nameStripped != reader.Entry.Key)
+            {
+                Log.Debug("Extracting file {Name} ({Size} bytes)", nameStripped, reader.Entry.Size);
+                var path = Path.Combine(utilsPath, nameStripped);
+                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var entryStream = reader.OpenEntryStream();
+                await entryStream.CopyToAsync(outputStream);
+                FileTools.MarkFileExecutable(path);
             }
         }
 
@@ -205,7 +206,7 @@ public class YtdlManager
     
     private static async Task<bool> DownloadYtdl(GitHubRelease json)
     {
-        if (File.Exists(YtdlPath) && (File.GetAttributes(YtdlPath) & FileAttributes.ReadOnly) != 0)
+        if (File.Exists(YtdlPath) && File.GetAttributes(YtdlPath).HasFlag(FileAttributes.ReadOnly))
         {
             Log.Warning("Skipping yt-dlp download because location is unwritable.");
             return false;
@@ -253,7 +254,15 @@ public class YtdlManager
     [
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp.conf"),
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt")
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config.txt"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf.txt"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config.txt"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config.txt"),
     ];
     
     public static bool GlobalYtdlConfigExists()
