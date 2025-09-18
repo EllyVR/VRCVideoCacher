@@ -45,12 +45,14 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
-        
-        // Updater is currently Windows-only
-        if (ConfigManager.Config.ytdlAutoUpdate && Environment.OSVersion.Platform == PlatformID.Win32NT)
+
+        if (ConfigManager.Config.ytdlAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
+        {
             await YtdlManager.TryDownloadYtdlp();
-        
-        YtdlManager.StartYtdlDownloadThread();
+            YtdlManager.StartYtdlDownloadThread();
+            _ = YtdlManager.TryDownloadFfmpeg();
+        }
+
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
         FileTools.BackupAndReplaceYtdl();
@@ -60,12 +62,10 @@ internal static class Program
             Logger.Warning("No cookies found, please use the browser extension to send cookies or disable \"ytdlUseCookies\" in config.");
 
         CacheManager.Init();
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-        {
-            // run after init to avoid text spam blocking user input
-            _ = YtdlManager.TryDownloadFfmpeg();
+
+        // run after init to avoid text spam blocking user input
+        if (OperatingSystem.IsWindows())
             _ = WinGet.TryInstallPackages();
-        }
 
         if (YtdlManager.GlobalYtdlConfigExists())
             Logger.Error("Global yt-dlp config file found in \"%AppData%\\yt-dlp\". Please delete it to avoid conflicts with VRCVideoCacher.");

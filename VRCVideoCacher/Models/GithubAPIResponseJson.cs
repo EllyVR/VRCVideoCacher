@@ -41,7 +41,7 @@ public class Author {
     public bool site_admin { get; set; }
 }
 
-public class YtApi {
+public class GitHubRelease {
     public string url { get; set; }
     public string assets_url { get; set; }
     public string upload_url { get; set; }

@@ -15,11 +15,11 @@ public class FileTools
     static FileTools()
     {
         string localLowPath;
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
         {
             localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
         }
-        else if (Environment.OSVersion.Platform == PlatformID.Unix)
+        else if (OperatingSystem.IsLinux())
         {
             var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
             localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
@@ -36,8 +36,8 @@ public class FileTools
     // Linux only
     private static string? GetCompatPath(string appid)
     {
-        if (Environment.OSVersion.Platform != PlatformID.Unix)
-            throw new InvalidOperationException("GetCompatPath is only supported on Unix");
+        if (!OperatingSystem.IsLinux())
+            throw new InvalidOperationException("GetCompatPath is only supported on Linux");
 
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
@@ -86,6 +86,19 @@ public class FileTools
             .Where(Path.Exists)
             .ToImmutableList();
         return paths.Count > 0 ? paths.First() : null;
+    }
+
+    public static void MarkFileExecutable(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"File not found: {path}");
+
+        if (!OperatingSystem.IsWindows())
+        {
+            var mode = File.GetUnixFileMode(path);
+            mode |= UnixFileMode.UserExecute;
+            File.SetUnixFileMode(path, mode);
+        }
     }
     
     public static void BackupAndReplaceYtdl()

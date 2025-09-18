@@ -15,7 +15,7 @@ public class ConfigManager
     static ConfigManager()
     {
         Log.Information("Loading config...");
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
             configFilePath = Path.Combine(Program.CurrentProcessPath, "Config.json");
         else
             configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -80,7 +80,7 @@ public class ConfigManager
         Log.Information("Extension can be found here: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
         Config.ytdlUseCookies = GetUserConfirmation("", true);
 
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT && GetUserConfirmation("Would you like to add VRCVideoCacher to VRCX auto start?", true))
+        if (OperatingSystem.IsWindows() && GetUserConfirmation("Would you like to add VRCVideoCacher to VRCX auto start?", true))
         {
             AutoStartShortcut.CreateShortcut();
         }
@@ -99,7 +99,7 @@ public class ConfigManager
 public class ConfigModel
 {
     public string ytdlWebServerURL = "http://localhost:9696";
-    public string ytdlPath = "";
+    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils/yt-dlp.exe" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
     public bool ytdlUseCookies = true;
     public bool ytdlAutoUpdate = true;
     public string ytdlAdditionalArgs = string.Empty;
