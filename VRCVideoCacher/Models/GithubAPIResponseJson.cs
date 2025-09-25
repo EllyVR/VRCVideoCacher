@@ -15,6 +15,7 @@ public class Asset {
     public string state { get; set; }
     public int size { get; set; }
     public int download_count { get; set; }
+    public string digest { get; set; }
     public DateTime created_at { get; set; }
     public DateTime updated_at { get; set; }
     public string browser_download_url { get; set; }
