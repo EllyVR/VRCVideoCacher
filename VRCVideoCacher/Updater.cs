@@ -14,8 +14,8 @@ public class Updater
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher.Updater" } }
     };
     private static readonly ILogger Log = Program.Logger.ForContext<Updater>();
-    private const string FileName = "VRCVideoCacher.exe";
-    private const string BackupFileName = "VRCVideoCacher.exe.bkp";
+    private static string FileName =  OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
+    private const string BackupFileName = "VRCVideoCacher.bkp";
     private static readonly string FilePath = Path.Combine(Program.CurrentProcessPath, FileName);
     private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, BackupFileName);
         
@@ -74,7 +74,7 @@ public class Updater
         {
             if (asset.name != FileName)
                 continue;
-                
+
             File.Move(FilePath, BackupFilePath);
             try
             {
