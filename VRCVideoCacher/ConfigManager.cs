@@ -10,27 +10,22 @@ public class ConfigManager
 {
     public static readonly ConfigModel Config;
     private static readonly ILogger Log = Program.Logger.ForContext<ConfigManager>();
-    private static readonly string configFilePath;
+    private static readonly string ConfigFilePath;
 
     static ConfigManager()
     {
         Log.Information("Loading config...");
-        if (OperatingSystem.IsWindows())
-            configFilePath = Path.Combine(Program.CurrentProcessPath, "Config.json");
-        else
-            configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "VRCVideoCacher/Config.json");
-        Log.Debug("Using config file path: {ConfigFilePath}", configFilePath);
+        ConfigFilePath = Path.Combine(Program.DataPath, "Config.json");
+        Log.Debug("Using config file path: {ConfigFilePath}", ConfigFilePath);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(configFilePath) ?? throw new Exception("Failed to get config folder path"));
-        if (!File.Exists(configFilePath))
+        if (!File.Exists(ConfigFilePath))
         {
             Config = new ConfigModel();
             FirstRun();
         }
         else
         {
-            Config = JsonConvert.DeserializeObject<ConfigModel>(File.ReadAllText(configFilePath)) ?? new ConfigModel();
+            Config = JsonConvert.DeserializeObject<ConfigModel>(File.ReadAllText(ConfigFilePath)) ?? new ConfigModel();
         }
         if (Config.ytdlWebServerURL.EndsWith('/'))
             Config.ytdlWebServerURL = Config.ytdlWebServerURL.TrimEnd('/');
@@ -42,12 +37,12 @@ public class ConfigManager
     private static void TrySaveConfig()
     {
         var newConfig = JsonConvert.SerializeObject(Config, Formatting.Indented);
-        var oldConfig = File.Exists(configFilePath) ? File.ReadAllText(configFilePath) : string.Empty;
+        var oldConfig = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : string.Empty;
         if (newConfig == oldConfig)
             return;
         
         Log.Information("Config changed, saving...");
-        File.WriteAllText(configFilePath, JsonConvert.SerializeObject(Config, Formatting.Indented));
+        File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         Log.Information("Config saved.");
     }
     

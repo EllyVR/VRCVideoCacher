@@ -13,6 +13,7 @@ internal static class Program
     public static string YtdlpHash = string.Empty;
     public const string Version = "2025.8.6";
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
+    public static string DataPath;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
 
     public static async Task Main(string[] args)
@@ -28,6 +29,11 @@ internal static class Program
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
+        
+        DataPath = OperatingSystem.IsWindows()
+            ? CurrentProcessPath
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
+        Directory.CreateDirectory(DataPath);
 
         await Updater.CheckForUpdates();
         Updater.Cleanup();
@@ -50,6 +56,7 @@ internal static class Program
         {
             await YtdlManager.TryDownloadYtdlp();
             YtdlManager.StartYtdlDownloadThread();
+            _ = YtdlManager.TryDownloadDeno();
             _ = YtdlManager.TryDownloadFfmpeg();
         }
 
