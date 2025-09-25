@@ -77,7 +77,8 @@ public class VideoId
         }
         
         if (url.StartsWith("https://na2.vrdancing.club") ||
-            url.StartsWith("https://eu2.vrdancing.club"))
+            url.StartsWith("https://eu2.vrdancing.club") ||
+            url.StartsWith("https://na2-lq.vrdancing.club"))
         {
             var videoId = HashUrl(url);
             return new VideoInfo
