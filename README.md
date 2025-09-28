@@ -34,6 +34,12 @@ Edit `Config.json` and set `ytdlDelay` to something like `10` seconds.
 
 Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add this new line `127.0.0.1 localhost.youtube.com` to the bottom of the file, edit `Config.json` and set `ytdlWebServerURL` to `http://localhost.youtube.com:9696`
 
+
+### Running on Linux
+ - Install `dotnet-runtime-9.0`
+ - Run with `dotnet ./VRCVideoCacher`
+ - By default VRCVideoCacher will try to download and run its own binaries, but if you'd like to use your system packages instead, set `ytdlPath` to `""` in `Config.json`, you'll need to install `deno`, `ffmpeg` and yt-dlp using `pip install "yt-dlp[default,curl-cffi]"` the pip version is required due to package manager versions not including browser impersonation, make sure to always keep yt-dlp updated otherwise you will run into issues.
+
 ### Config Options
 
 | Option                    | Description                                                                                                                                                                                                                                         |
