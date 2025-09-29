@@ -15,12 +15,13 @@ public class Updater
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher.Updater" } }
     };
     private static readonly ILogger Log = Program.Logger.ForContext<Updater>();
-    private static string FileName =  OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
+    private static readonly string FileName =  OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
     private const string BackupFileName = "VRCVideoCacher.bkp";
     private const string TempFileName = "VRCVideoCacher.Temp";
     private static readonly string FilePath = Path.Combine(Program.CurrentProcessPath, FileName);
     private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, BackupFileName);
     private static readonly string TempFilePath = Path.Combine(Program.CurrentProcessPath, TempFileName);
+
     public static async Task CheckForUpdates()
     {
         Log.Information("Checking for updates...");
@@ -31,7 +32,7 @@ public class Updater
         if (Program.Version.Contains("-dev") || isDebug)
         {
             Log.Information("Running in dev mode. Skipping update check.");
-            //return;
+            return;
         }
         var response = await HttpClient.GetAsync(UpdateUrl);
         if (!response.IsSuccessStatusCode)
@@ -85,16 +86,15 @@ public class Updater
                 await using var fileStream = new FileStream(TempFileName, FileMode.Create, FileAccess.Write, FileShare.None);
                 await stream.CopyToAsync(fileStream);
                 fileStream.Close();
-                //Log.Information("Updated to version {Version}", release.tag_name);
 
-                if (await HashCheck(release.assets.First().digest))
+                if (await HashCheck(asset.digest))
                 {
-                    Log.Information("Hash check passed, Replacing Binary");
+                    Log.Information("Hash check passed, Replacing binary.");
                     File.Move(TempFilePath, FilePath);
                 }
                 else
                 {
-                    Log.Information("Hash check failed, Reverting update");
+                    Log.Information("Hash check failed, Reverting update.");
                     File.Move(BackupFilePath,FilePath);
                     return;
                 }
@@ -120,23 +120,15 @@ public class Updater
         }
     }
 
-    private static async Task<bool> HashCheck(string githubhash)
+    private static async Task<bool> HashCheck(string githubHash)
     {
-        using (var sha256 = SHA256.Create())
-        {
-            await using (var stream = File.Open(TempFilePath, FileMode.Open))
-            {
-                var hashbytes = await sha256.ComputeHashAsync(stream);
-                var hashstring = BitConverter.ToString(hashbytes).Replace("-", string.Empty);
-                githubhash = githubhash.Split(':')[1];
-                
-                Log.Information($"RemoteHash: {githubhash}");
-                Log.Information($"Hash: {hashstring}");
-                var passed = string.Equals(githubhash, hashstring, StringComparison.OrdinalIgnoreCase);
-                Log.Information($"HashValid: {passed}");
-                return passed;
-            }
-        }
-        return false;
+        using var sha256 = SHA256.Create();
+        await using var stream = File.Open(TempFilePath, FileMode.Open);
+        var hashBytes = await sha256.ComputeHashAsync(stream);
+        var hashString = Convert.ToHexString(hashBytes);
+        githubHash = githubHash.Split(':')[1];
+        var hashMatches = string.Equals(githubHash, hashString, StringComparison.OrdinalIgnoreCase);
+        Log.Information("FileHash: {FileHash} GitHubHash: {GitHubHash} HashMatch: {HashMatches}", hashString, githubHash, hashMatches);
+        return hashMatches;
     }
 }

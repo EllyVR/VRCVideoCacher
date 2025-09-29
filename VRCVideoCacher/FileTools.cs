@@ -8,7 +8,7 @@ namespace VRCVideoCacher;
 public class FileTools
 {
     private static readonly ILogger Log = Program.Logger.ForContext<FileTools>();
-    public static readonly string YtdlPath;
+    private static readonly string YtdlPath;
     private static readonly string BackupPath;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
     

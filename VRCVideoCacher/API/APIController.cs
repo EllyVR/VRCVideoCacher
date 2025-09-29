@@ -97,6 +97,9 @@ public class ApiController : WebApiController
         if (requestUrl.Contains(".imvrcdn.com") || requestUrl.Contains(".illumination.media"))
             avPro = false; // pls no villager
         
+        if (ConfigManager.Config.CacheYouTubeMaxResolution <= 360)
+            avPro = false; // disable browser impersonation when it isn't needed
+        
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
