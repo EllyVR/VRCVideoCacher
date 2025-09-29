@@ -16,7 +16,8 @@ public class YtdlManager
     public static readonly string CookiesPath;
     public static readonly string YtdlPath;
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
-    private const string FfmpegApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
+    private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
+    private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
     private const string DenoApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest";
 
     static YtdlManager()
@@ -186,9 +187,11 @@ public class YtdlManager
             FileTools.MarkFileExecutable(path);
             Versions.CurrentVersion.deno = json.tag_name;
             Versions.Save();
+            Log.Information("Deno downloaded and extracted.");
+            return;
         }
 
-        Log.Information("Deno downloaded and extracted.");
+        Log.Error("Failed to extract Deno files.");
     }
 
     public static async Task TryDownloadFfmpeg()
@@ -214,9 +217,7 @@ public class YtdlManager
         if (!ConfigManager.Config.CacheYouTube)
             return;
 
-        var ffmpegPath = Path.Combine(utilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
-
-        var apiResponse = await HttpClient.GetAsync(FfmpegApiUrl);
+        var apiResponse = await HttpClient.GetAsync(OperatingSystem.IsWindows() ? FfmpegApiUrl : FfmpegNightlyApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
             Log.Warning("Failed to get latest ffmpeg release: {ResponseStatusCode}", apiResponse.StatusCode);
@@ -234,7 +235,7 @@ public class YtdlManager
         if (string.IsNullOrEmpty(currentffmpegVersion))
             currentffmpegVersion = "Not Installed";
 
-        var latestVersion = json.name;
+        var latestVersion = OperatingSystem.IsWindows() ? json.tag_name : json.name;
         Log.Information("FFmpeg Current: {Installed} Latest: {Latest}", currentffmpegVersion, latestVersion);
         if (string.IsNullOrEmpty(latestVersion))
         {
@@ -246,25 +247,26 @@ public class YtdlManager
             Log.Information("FFmpeg is up to date.");
             return;
         }
+        var ffmpegPath = Path.Combine(utilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
         if (!File.Exists(ffmpegPath))
             Log.Information("FFmpeg is not installed. Downloading...");
         else
             Log.Information("FFmpeg is outdated. Updating...");
 
-        string assetName;
+        string assetSuffix;
         if (OperatingSystem.IsWindows())
         {
-            assetName = "ffmpeg-master-latest-win64-gpl.zip";
+            assetSuffix = "full_build.zip";
         }
         else if (OperatingSystem.IsLinux())
         {
             switch (RuntimeInformation.OSArchitecture)
             {
                 case Architecture.X64:
-                    assetName = "ffmpeg-master-latest-linux64-gpl.tar.xz";
+                    assetSuffix = "master-latest-linux64-gpl.tar.xz";
                     break;
                 case Architecture.Arm64:
-                    assetName = "ffmpeg-master-latest-linuxarm64-gpl.tar.xz";
+                    assetSuffix = "master-latest-linuxarm64-gpl.tar.xz";
                     break;
                 default:
                     Log.Error("Unsupported architecture {OSArchitecture}", RuntimeInformation.OSArchitecture);
@@ -276,41 +278,46 @@ public class YtdlManager
             Log.Error("Unsupported operating system {OperatingSystem}", Environment.OSVersion);
             return;
         }
-        // ffmpeg-master-latest-linux64-gpl.tar.xz -> ffmpeg-master-latest-linux64-gpl
-        var folderName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(assetName));
-
-        var assets = json.assets.Where(asset => asset.name == assetName).ToList();
-        if (assets.Count < 1)
+        var url = json.assets
+            .FirstOrDefault(assetVersion => assetVersion.name.EndsWith(assetSuffix, StringComparison.OrdinalIgnoreCase))
+            ?.browser_download_url ?? string.Empty;
+        if (string.IsNullOrEmpty(url))
         {
-            Log.Error("Unable to find ffmpeg asset {AssetName} for this platform.", assetName);
+            Log.Error("Unable to find ffmpeg asset for this platform.");
             return;
         }
-
         Log.Information("Downloading FFmpeg...");
-        var url = assets.First().browser_download_url;
 
         using var response = await HttpClient.GetAsync(url);
         await using var responseStream = await response.Content.ReadAsStreamAsync();
         using var reader = ReaderFactory.Open(responseStream);
+        var success = false;
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key == null || reader.Entry.IsDirectory)
                 continue;
 
-            var nameStripped = reader.Entry.Key.Replace($"{folderName}/bin/", string.Empty);
-            if (nameStripped != reader.Entry.Key)
+            if (reader.Entry.Key.Contains("/bin/"))
             {
-                Log.Debug("Extracting file {Name} ({Size} bytes)", nameStripped, reader.Entry.Size);
-                var path = Path.Combine(utilsPath, nameStripped);
+                var fileName = Path.GetFileName(reader.Entry.Key);
+                Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
+                var path = Path.Combine(utilsPath, fileName);
                 await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 await using var entryStream = reader.OpenEntryStream();
                 await entryStream.CopyToAsync(outputStream);
                 FileTools.MarkFileExecutable(path);
-                Versions.CurrentVersion.ffmpeg = json.tag_name;
-                Versions.Save();
+                success = true;
             }
         }
 
+        if (!success)
+        {
+            Log.Error("Failed to extract ffmpeg files.");
+            return;
+        }
+        
+        Versions.CurrentVersion.ffmpeg = latestVersion;
+        Versions.Save();
         Log.Information("FFmpeg downloaded and extracted.");
     }
     
