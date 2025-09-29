@@ -5,3 +5,4 @@ yt-dlp-stub/obj
 .idea/
 .vscode/
 *.DotSettings*
+Build/
