@@ -11,6 +11,7 @@ public class ConfigManager
     public static readonly ConfigModel Config;
     private static readonly ILogger Log = Program.Logger.ForContext<ConfigManager>();
     private static readonly string ConfigFilePath;
+    public static readonly string UtilsPath;
 
     static ConfigManager()
     {
@@ -29,6 +30,9 @@ public class ConfigManager
         }
         if (Config.ytdlWebServerURL.EndsWith('/'))
             Config.ytdlWebServerURL = Config.ytdlWebServerURL.TrimEnd('/');
+        
+        UtilsPath = Path.Combine(Path.GetDirectoryName(Config.ytdlPath) ?? string.Empty, "Utils");
+        Directory.CreateDirectory(UtilsPath);
         
         Log.Information("Loaded config.");
         TrySaveConfig();

@@ -69,7 +69,7 @@ public class YtdlManager
         }
 
         var currentYtdlVersion = Versions.CurrentVersion.ytdlp;
-        if (string.IsNullOrEmpty(currentYtdlVersion))
+        if (!File.Exists(YtdlPath))
             currentYtdlVersion = "Not Installed";
 
         var latestVersion = json.tag_name;
@@ -84,23 +84,19 @@ public class YtdlManager
             Log.Information("YT-DLP is up to date.");
             return;
         }
-        if (!File.Exists(YtdlPath))
-            Log.Information("YT-DLP is not installed. Downloading...");
-        else
-            Log.Information("YT-DLP is outdated. Updating...");
+        Log.Information("YT-DLP is outdated. Updating...");
 
         await DownloadYtdl(json);
     }
 
     public static async Task TryDownloadDeno()
     {
-        var utilsPath = Path.GetDirectoryName(YtdlPath);
-        if (string.IsNullOrEmpty(utilsPath))
+        if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
         
-        var denoPath = Path.Combine(utilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
+        var denoPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
         
-       var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
+        var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
             Log.Warning("Failed to get latest ffmpeg release: {ResponseStatusCode}", apiResponse.StatusCode);
@@ -115,7 +111,7 @@ public class YtdlManager
         }
         
         var currentDenoVersion = Versions.CurrentVersion.deno;
-        if (string.IsNullOrEmpty(currentDenoVersion))
+        if (!File.Exists(denoPath))
             currentDenoVersion = "Not Installed";
 
         var latestVersion = json.tag_name;
@@ -130,10 +126,7 @@ public class YtdlManager
             Log.Information("Deno is up to date.");
             return;
         }
-        if (!File.Exists(denoPath))
-            Log.Information("Deno is not installed. Downloading...");
-        else
-            Log.Information("Deno is outdated. Updating...");
+        Log.Information("Deno is outdated. Updating...");
 
         string assetName;
         if (OperatingSystem.IsWindows())
@@ -180,7 +173,7 @@ public class YtdlManager
                 continue;
             
             Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
-            var path = Path.Combine(utilsPath, reader.Entry.Key);
+            var path = Path.Combine(ConfigManager.UtilsPath, reader.Entry.Key);
             await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             await using var entryStream = reader.OpenEntryStream();
             await entryStream.CopyToAsync(outputStream);
@@ -196,14 +189,15 @@ public class YtdlManager
 
     public static async Task TryDownloadFfmpeg()
     {
-        var utilsPath = Path.GetDirectoryName(YtdlPath);
-        if (string.IsNullOrEmpty(utilsPath))
+        if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
+
+        var ffmpegPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
 
         // Make sure we can write into the folder
         try
         {
-            var probeFilePath = Path.Combine(utilsPath, "_temp_permission_prober");
+            var probeFilePath = Path.Combine(ConfigManager.UtilsPath, "_temp_permission_prober");
             if (File.Exists(probeFilePath))
                 File.Delete(probeFilePath);
             File.Create(probeFilePath, 0, FileOptions.DeleteOnClose);
@@ -230,9 +224,9 @@ public class YtdlManager
             Log.Error("Failed to parse ffmpeg release response.");
             return;
         }
-        
+
         var currentffmpegVersion = Versions.CurrentVersion.ffmpeg;
-        if (string.IsNullOrEmpty(currentffmpegVersion))
+        if (!File.Exists(ffmpegPath))
             currentffmpegVersion = "Not Installed";
 
         var latestVersion = OperatingSystem.IsWindows() ? json.tag_name : json.name;
@@ -247,11 +241,7 @@ public class YtdlManager
             Log.Information("FFmpeg is up to date.");
             return;
         }
-        var ffmpegPath = Path.Combine(utilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
-        if (!File.Exists(ffmpegPath))
-            Log.Information("FFmpeg is not installed. Downloading...");
-        else
-            Log.Information("FFmpeg is outdated. Updating...");
+        Log.Information("FFmpeg is outdated. Updating...");
 
         string assetSuffix;
         if (OperatingSystem.IsWindows())
@@ -301,7 +291,7 @@ public class YtdlManager
             {
                 var fileName = Path.GetFileName(reader.Entry.Key);
                 Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
-                var path = Path.Combine(utilsPath, fileName);
+                var path = Path.Combine(ConfigManager.UtilsPath, fileName);
                 await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 await using var entryStream = reader.OpenEntryStream();
                 await entryStream.CopyToAsync(outputStream);
@@ -354,10 +344,9 @@ public class YtdlManager
                 continue;
 
             await using var stream = await HttpClient.GetStreamAsync(assetVersion.browser_download_url);
-            var path = Path.GetDirectoryName(YtdlPath);
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
                 throw new Exception("Failed to get YT-DLP path");
-            Directory.CreateDirectory(path);
+
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
