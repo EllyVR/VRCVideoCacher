@@ -27,25 +27,20 @@ public class WinGet
 
     private static bool IsOurPackagesInstalled()
     {
-        var installedPackages = GetInstalledPackages();
-        if (installedPackages.Count == 0)
+        foreach (var package in WingetPackages.Values)
         {
-            Log.Warning("Failed to get installed winget packages.");
-            return true;
-        }
-        foreach (var package in WingetPackages.Keys)
-        {
-            if (!installedPackages.Contains(package))
+            if (!IsPackageInstalled(package))
+            {
                 return false;
+            }
         }
 
         Log.Information("Codec packages are already installed.");
         return true;
     }
 
-    private static List<string> GetInstalledPackages()
+    private static bool IsPackageInstalled(string packageId)
     {
-        var installedPackages = new List<string>();
         try
         {
             var process = new Process
@@ -53,7 +48,7 @@ public class WinGet
                 StartInfo =
                 {
                     FileName = WingetExe,
-                    Arguments = "list -s msstore --accept-source-agreements",
+                    Arguments = $"list \"{packageId}\" -s msstore --accept-source-agreements",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -63,25 +58,14 @@ public class WinGet
                 }
             };
             process.Start();
-            while (!process.StandardOutput.EndOfStream)
-            {
-                var line = process.StandardOutput.ReadLine();
-                if (line == null || string.IsNullOrEmpty(line.Trim()))
-                    continue;
-
-                var split = line.Split("  ");
-                if (split.Length > 1 && !string.IsNullOrEmpty(split[0]))
-                    installedPackages.Add(split[0]);
-            }
-
             process.WaitForExit();
+            return process.ExitCode == 0;
         }
         catch (Exception ex)
         {
             Log.Error(ex.Message);
+            return false;
         }
-
-        return installedPackages;
     }
 
     private static async Task InstallAllPackages()
