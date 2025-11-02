@@ -30,8 +30,11 @@ public class ConfigManager
         }
         if (Config.ytdlWebServerURL.EndsWith('/'))
             Config.ytdlWebServerURL = Config.ytdlWebServerURL.TrimEnd('/');
-        
-        UtilsPath = Path.Combine(Path.GetDirectoryName(Config.ytdlPath) ?? string.Empty, "Utils");
+
+        UtilsPath = Path.GetDirectoryName(Config.ytdlPath) ?? string.Empty;
+        if (!UtilsPath.EndsWith("Utils"))
+            UtilsPath = Path.Combine(UtilsPath, "Utils");
+
         Directory.CreateDirectory(UtilsPath);
         
         Log.Information("Loaded config.");
