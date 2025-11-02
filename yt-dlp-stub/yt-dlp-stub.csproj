@@ -13,6 +13,7 @@
         <Authors>yt-dlp-stub</Authors>
         <Company>yt-dlp-stub</Company>
         <Product>yt-dlp-stub</Product>
+        <CETCompat>false</CETCompat>
     </PropertyGroup>
     
     <PropertyGroup Condition="$([System.OperatingSystem]::IsLinux())">
