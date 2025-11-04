@@ -93,13 +93,21 @@ public class ApiController : WebApiController
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
-        
-        if (requestUrl.Contains(".imvrcdn.com") || requestUrl.Contains(".illumination.media"))
-            avPro = false; // pls no villager
-        
+
         if (ConfigManager.Config.CacheYouTubeMaxResolution <= 360)
             avPro = false; // disable browser impersonation when it isn't needed
-        
+
+        // pls no villager
+        if (requestUrl.StartsWith("https://anime.illumination.media"))
+            avPro = true;
+        else if (requestUrl.Contains(".imvrcdn.com") ||
+                 (requestUrl.Contains(".illumination.media") && !requestUrl.StartsWith("https://yt.illumination.media")))
+        {
+            Log.Information("URL Is Illumination media: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
