@@ -246,7 +246,7 @@ public class YtdlManager
         string assetSuffix;
         if (OperatingSystem.IsWindows())
         {
-            assetSuffix = "full_build.zip";
+            assetSuffix = "full_build-shared.zip";
         }
         else if (OperatingSystem.IsLinux())
         {
