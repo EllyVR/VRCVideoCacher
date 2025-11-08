@@ -11,28 +11,61 @@ public class FileTools
     private static readonly string YtdlPath;
     private static readonly string BackupPath;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
-    
+
     static FileTools()
     {
-        string localLowPath;
-        if (OperatingSystem.IsWindows())
+        
+
+        if (Program.Resonite)
         {
-            localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
-        }
-        else if (OperatingSystem.IsLinux())
-        {
-            var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
-            localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
+            YtdlPath = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe";
+            BackupPath = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe.bkp";
         }
         else
         {
-            throw new NotImplementedException("Unknown platform");
+            string localLowPath;
+            if (OperatingSystem.IsWindows())
+            {
+                localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
+                localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
+            }
+            else
+            {
+                throw new NotImplementedException("Unknown platform");
+            }
+            YtdlPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
+            BackupPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
         }
 
-        YtdlPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
-        BackupPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
+        
     }
 
+    private static string? GetResonitePath()
+    {
+        string appid = "2519830";
+        if (OperatingSystem.IsWindows())
+        {
+            var libfolders = "C:\\Program Files (x86)\\Steam\\steamapps\\libraryfolders.vdf";
+            var stream = File.OpenRead(libfolders);
+            KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
+            List<string> libraryPaths = [];
+            foreach (var folder in data)
+            {
+                var apps = (IEnumerable<KVObject>)folder["apps"];
+                if (apps.Any(app => app.Name == appid))
+                {
+                    return folder["path"].ToString(CultureInfo.InvariantCulture);
+                }
+            }
+
+        }
+
+        return null;
+    }
     // Linux only
     private static string? GetCompatPath(string appid)
     {

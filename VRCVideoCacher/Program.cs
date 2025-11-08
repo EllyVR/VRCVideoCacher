@@ -11,14 +11,15 @@ namespace VRCVideoCacher;
 internal static class Program
 {
     public static string YtdlpHash = string.Empty;
-    public const string Version = "2025.11.5";
+    public const string Version = "2025.11.8";
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static string DataPath;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
-
+    public static bool Resonite = false;
     public static async Task Main(string[] args)
     {
         Console.Title = $"VRCVideoCacher v{Version}";
+        
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(new ExpressionTemplate(
@@ -29,7 +30,12 @@ internal static class Program
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
-        
+        if (args.Contains("--resonite"))
+        {
+            Resonite = true;
+            Logger.Information("Application booted in Resonite mode.");
+        }
+            
         DataPath = OperatingSystem.IsWindows()
             ? CurrentProcessPath
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");

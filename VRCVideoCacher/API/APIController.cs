@@ -33,7 +33,7 @@ public class ApiController : WebApiController
         if (!ConfigManager.Config.ytdlUseCookies) 
             Log.Warning("Config is NOT set to use cookies from browser extension.");
     }
-    
+
     [Route(HttpVerbs.Get, "/getvideo")]
     public async Task GetVideo()
     {
@@ -46,6 +46,7 @@ public class ApiController : WebApiController
             await HttpContext.SendStringAsync("No URL provided.", "text/plain", Encoding.UTF8);
             return;
         }
+
         Log.Information("Request URL: {URL}", requestUrl);
 
         if (requestUrl.StartsWith("https://dmn.moe"))
@@ -53,7 +54,7 @@ public class ApiController : WebApiController
             requestUrl = requestUrl.Replace("/sr/", "/yt/");
             Log.Information("YTS URL detected, modified to: {URL}", requestUrl);
         }
-        
+
         var videoInfo = await VideoId.GetVideoId(requestUrl, avPro);
         if (videoInfo == null)
         {
@@ -86,11 +87,18 @@ public class ApiController : WebApiController
             await HttpContext.SendStringAsync("https://ellyvr.dev/blocked.mp4", "text/plain", Encoding.UTF8);
             return;
         }
-        
+
         if (requestUrl.StartsWith("https://mightygymcdn.nyc3.cdn.digitaloceanspaces.com"))
         {
             Log.Information("URL Is Mighty Gym: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
+        if (Program.Resonite)
+        {
+            Log.Information("App in Resonite mode sending json.");
+            await HttpContext.SendStringAsync(await VideoId.GetURLResonite(requestUrl), "text/plain", Encoding.UTF8);
             return;
         }
 
