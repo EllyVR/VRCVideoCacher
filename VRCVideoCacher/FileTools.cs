@@ -138,7 +138,7 @@ public class FileTools
     
     public static void RestoreVRC() => Restore(YtdlPathVRC, BackupPathVRC);
     
-    public static void RestoreReso() => Restore(BackupPathReso, BackupPathReso);
+    public static void RestoreReso() => Restore(YtdlPathReso, BackupPathReso);
     
     private static void BackupAndReplaceYtdl(string YtdlPath, string BackupPath)
     {
