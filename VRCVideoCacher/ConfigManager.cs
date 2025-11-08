@@ -82,6 +82,8 @@ public class ConfigManager
         Log.Information("Extension can be found here: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
         Config.ytdlUseCookies = GetUserConfirmation("", true);
 
+        Config.PatchResonite = GetUserConfirmation("Would you like to patch Resonite Video Loading", false);
+        
         if (OperatingSystem.IsWindows() && GetUserConfirmation("Would you like to add VRCVideoCacher to VRCX auto start?", true))
         {
             AutoStartShortcut.CreateShortcut();
@@ -112,8 +114,10 @@ public class ConfigModel
     public float CacheMaxSizeInGb = 0;
     public bool CachePyPyDance = true;
     public bool CacheVRDancing = true;
-
+    public bool PatchResonite = false;
+    public bool PatchVRC = true;
     public bool AutoUpdate = true;
     public string[] PreCacheUrls = [];
+    
 }
 // ReSharper restore InconsistentNaming

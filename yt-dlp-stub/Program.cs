@@ -28,11 +28,18 @@ internal static class Program
         
         var url = string.Empty;
         var avPro = true;
+        string source = "vrchat";
         foreach (var arg in args)
         {
             if (arg.Contains("[protocol^=http]"))
             {
                 avPro = false;
+                continue;
+            }
+
+            if (arg.Contains("-J"))
+            {
+                source = "resonite";
                 continue;
             }
             
@@ -57,7 +64,7 @@ internal static class Program
         {
             using var httpClient = new HttpClient();
             var inputUrl = Uri.EscapeDataString(url);
-            var response = await httpClient.GetAsync($"{BaseUrl}/api/getvideo?url={inputUrl}&avpro={avPro}");
+            var response = await httpClient.GetAsync($"{BaseUrl}/api/getvideo?url={inputUrl}&avpro={avPro}&source={source}");
             var output = await response.Content.ReadAsStringAsync();
             WriteLog($"[Response] {output}");
             if (!response.IsSuccessStatusCode)

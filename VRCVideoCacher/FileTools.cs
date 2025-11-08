@@ -8,38 +8,36 @@ namespace VRCVideoCacher;
 public class FileTools
 {
     private static readonly ILogger Log = Program.Logger.ForContext<FileTools>();
-    private static readonly string YtdlPath;
-    private static readonly string BackupPath;
+    private static readonly string YtdlPathVRC;
+    private static readonly string BackupPathVRC;
+    private static readonly string YtdlPathReso;
+    private static readonly string BackupPathReso;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
 
     static FileTools()
     {
         
 
-        if (Program.Resonite)
-        {
-            YtdlPath = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe";
-            BackupPath = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe.bkp";
+
+        YtdlPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe";
+        BackupPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe.bkp";
+
+        string localLowPath;
+        if (OperatingSystem.IsWindows())
+        { 
+            localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
+        }
+        else if (OperatingSystem.IsLinux())
+        { 
+            var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data"); 
+            localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
         }
         else
-        {
-            string localLowPath;
-            if (OperatingSystem.IsWindows())
-            {
-                localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
-                localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
-            }
-            else
-            {
-                throw new NotImplementedException("Unknown platform");
-            }
-            YtdlPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
-            BackupPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
+        { 
+            throw new NotImplementedException("Unknown platform");
         }
+        YtdlPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
+        BackupPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
 
         
     }
@@ -133,8 +131,16 @@ public class FileTools
             File.SetUnixFileMode(path, mode);
         }
     }
+
+    public static void BackupAndReplaceVRC() => BackupAndReplaceYtdl(YtdlPathVRC, YtdlPathReso);
     
-    public static void BackupAndReplaceYtdl()
+    public static void BackupAndReplaceReso() => BackupAndReplaceYtdl(BackupPathReso, BackupPathReso);
+    
+    public static void RestoreVRC() => Restore(YtdlPathVRC, BackupPathVRC);
+    
+    public static void RestoreReso() => Restore(BackupPathReso, BackupPathReso);
+    
+    private static void BackupAndReplaceYtdl(string YtdlPath, string BackupPath)
     {
         if (!Directory.Exists(ConfigManager.UtilsPath))
         {
@@ -167,7 +173,7 @@ public class FileTools
         Log.Information("Patched YT-DLP.");
     }
 
-    public static void Restore()
+    private static void Restore(string YtdlPath, string BackupPath)
     {
         Log.Information("Restoring yt-dlp...");
         if (!File.Exists(BackupPath))

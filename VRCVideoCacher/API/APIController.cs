@@ -40,6 +40,8 @@ public class ApiController : WebApiController
         // escape double quotes for our own safety
         var requestUrl = Request.QueryString["url"]?.Replace("\"", "%22").Trim();
         var avPro = string.Compare(Request.QueryString["avpro"], "true", StringComparison.OrdinalIgnoreCase) == 0;
+        var source = Request.QueryString["source"];
+        
         if (string.IsNullOrEmpty(requestUrl))
         {
             Log.Error("No URL provided.");
@@ -95,9 +97,9 @@ public class ApiController : WebApiController
             return;
         }
 
-        if (Program.Resonite)
+        if (source == "resonite")
         {
-            Log.Information("App in Resonite mode sending json.");
+            Log.Information("Request sent from resonite sending json.");
             await HttpContext.SendStringAsync(await VideoId.GetURLResonite(requestUrl), "text/plain", Encoding.UTF8);
             return;
         }

@@ -15,7 +15,6 @@ internal static class Program
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static string DataPath;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
-    public static bool Resonite = false;
     public static async Task Main(string[] args)
     {
         Console.Title = $"VRCVideoCacher v{Version}";
@@ -30,11 +29,6 @@ internal static class Program
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
-        if (args.Contains("--resonite"))
-        {
-            Resonite = true;
-            Logger.Information("Application booted in Resonite mode.");
-        }
             
         DataPath = OperatingSystem.IsWindows()
             ? CurrentProcessPath
@@ -45,7 +39,10 @@ internal static class Program
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
         {
-            FileTools.Restore();
+            if(ConfigManager.Config.PatchVRC)
+                FileTools.RestoreVRC();
+            if (ConfigManager.Config.PatchResonite)
+                FileTools.RestoreReso();
             Environment.Exit(0);
         }
         if (Environment.CommandLine.Contains("--Hash"))
@@ -68,7 +65,10 @@ internal static class Program
 
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
-        FileTools.BackupAndReplaceYtdl();
+        if(ConfigManager.Config.PatchVRC)
+            FileTools.BackupAndReplaceVRC();
+        if(ConfigManager.Config.PatchResonite)
+            FileTools.BackupAndReplaceReso();
         await BulkPreCache.DownloadFileList();
 
         if (ConfigManager.Config.ytdlUseCookies && !IsCookiesEnabledAndValid())
@@ -140,7 +140,10 @@ internal static class Program
 
     private static void OnAppQuit()
     {
-        FileTools.Restore();
+        if(ConfigManager.Config.PatchVRC)
+            FileTools.RestoreVRC();
+        if(ConfigManager.Config.PatchResonite)
+            FileTools.RestoreReso();
         Logger.Information("Exiting...");
     }
 }
