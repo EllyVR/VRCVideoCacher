@@ -134,7 +134,7 @@ public class FileTools
 
     public static void BackupAndReplaceVRC() => BackupAndReplaceYtdl(YtdlPathVRC, YtdlPathReso);
     
-    public static void BackupAndReplaceReso() => BackupAndReplaceYtdl(BackupPathReso, BackupPathReso);
+    public static void BackupAndReplaceReso() => BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
     
     public static void RestoreVRC() => Restore(YtdlPathVRC, BackupPathVRC);
     
