@@ -95,10 +95,10 @@ public class WinGet
                 }
             };
             process.Start();
-            while (!process.StandardOutput.EndOfStream)
+            string? line;
+            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
             {
-                var line = await process.StandardOutput.ReadLineAsync();
-                if (line != null && !string.IsNullOrEmpty(line.Trim()))
+                if (!string.IsNullOrEmpty(line.Trim()))
                     Log.Debug("{Winget}: " + line, WingetExe);
             }
             var error = await process.StandardError.ReadToEndAsync();

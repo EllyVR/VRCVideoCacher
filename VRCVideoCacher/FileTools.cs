@@ -8,8 +8,8 @@ namespace VRCVideoCacher;
 public class FileTools
 {
     private static readonly ILogger Log = Program.Logger.ForContext<FileTools>();
-    private static readonly string YtdlPathVRC;
-    private static readonly string BackupPathVRC;
+    private static readonly string YtdlPathVrc;
+    private static readonly string BackupPathVrc;
     private static readonly string YtdlPathReso;
     private static readonly string BackupPathReso;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
@@ -33,14 +33,14 @@ public class FileTools
         { 
             throw new NotImplementedException("Unknown platform");
         }
-        YtdlPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
-        BackupPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
+        YtdlPathVrc = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
+        BackupPathVrc = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
     }
 
     private static string? GetResonitePath()
     {
         const string appid = "2519830";
-        if (OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows())
         {
             Log.Error("GetResonitePath is currently only supported on Windows");
             return null;
@@ -91,8 +91,8 @@ public class FileTools
         }
 
         Log.Debug("Using steam path: {Steam}", steam);
-        var libraryfolders = Path.Join(steam, "steamapps/libraryfolders.vdf");
-        var stream = File.OpenRead(libraryfolders);
+        var libraryFolders = Path.Join(steam, "steamapps/libraryfolders.vdf");
+        var stream = File.OpenRead(libraryFolders);
 
         KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
 
@@ -144,65 +144,65 @@ public class FileTools
     public static void BackupAllYtdl()
     {
         if (ConfigManager.Config.PatchVRC)
-            BackupAndReplaceYtdl(YtdlPathVRC, YtdlPathReso);
+            BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc);
         if (ConfigManager.Config.PatchResonite)
             BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
     }
 
     public static void RestoreAllYtdl()
     {
-        RestoreYtdl(YtdlPathVRC, BackupPathVRC);
+        RestoreYtdl(YtdlPathVrc, BackupPathVrc);
         RestoreYtdl(YtdlPathReso, BackupPathReso);
     }
 
-    private static void BackupAndReplaceYtdl(string YtdlPath, string BackupPath)
+    private static void BackupAndReplaceYtdl(string ytdlPath, string backupPath)
     {
-        if (!Directory.Exists(ConfigManager.UtilsPath))
+        if (!Directory.Exists(Path.GetDirectoryName(ytdlPath) ?? string.Empty))
         {
-            Log.Error("YT-DLP directory does not exist, VRChat may not be installed.");
+            Log.Error("YT-DLP directory does not exist, Game may not be installed. {path}", ytdlPath);
             return;
         }
-        if (File.Exists(YtdlPath))
+        if (File.Exists(ytdlPath))
         {
-            var hash = Program.ComputeBinaryContentHash(File.ReadAllBytes(YtdlPath));
+            var hash = Program.ComputeBinaryContentHash(File.ReadAllBytes(ytdlPath));
             if (hash == Program.YtdlpHash)
             {
                 Log.Information("YT-DLP is already patched.");
                 return;
             }
-            if (File.Exists(BackupPath))
+            if (File.Exists(backupPath))
             {
-                File.SetAttributes(BackupPath, FileAttributes.Normal);
-                File.Delete(BackupPath);
+                File.SetAttributes(backupPath, FileAttributes.Normal);
+                File.Delete(backupPath);
             }
-            File.Move(YtdlPath, BackupPath);
+            File.Move(ytdlPath, backupPath);
             Log.Information("Backed up YT-DLP.");
         }
         using var stream = Program.GetYtDlpStub();
-        using var fileStream = File.Create(YtdlPath);
+        using var fileStream = File.Create(ytdlPath);
         stream.CopyTo(fileStream);
         fileStream.Close();
-        var attr = File.GetAttributes(YtdlPath);
+        var attr = File.GetAttributes(ytdlPath);
         attr |= FileAttributes.ReadOnly;
-        File.SetAttributes(YtdlPath, attr);
+        File.SetAttributes(ytdlPath, attr);
         Log.Information("Patched YT-DLP.");
     }
 
-    private static void RestoreYtdl(string YtdlPath, string BackupPath)
+    private static void RestoreYtdl(string ytdlPath, string backupPath)
     {
-        if (!File.Exists(BackupPath))
+        if (!File.Exists(backupPath))
             return;
         
         Log.Information("Restoring yt-dlp...");
-        if (File.Exists(YtdlPath))
+        if (File.Exists(ytdlPath))
         {
-            File.SetAttributes(YtdlPath, FileAttributes.Normal);
-            File.Delete(YtdlPath);
+            File.SetAttributes(ytdlPath, FileAttributes.Normal);
+            File.Delete(ytdlPath);
         }
-        File.Move(BackupPath, YtdlPath);
-        var attr = File.GetAttributes(YtdlPath);
+        File.Move(backupPath, ytdlPath);
+        var attr = File.GetAttributes(ytdlPath);
         attr &= ~FileAttributes.ReadOnly;
-        File.SetAttributes(YtdlPath, attr);
+        File.SetAttributes(ytdlPath, attr);
         Log.Information("Restored YT-DLP.");
     }
 }
