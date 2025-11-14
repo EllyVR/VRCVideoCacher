@@ -210,7 +210,7 @@ public class VideoId
             if (error.Contains("Sign in to confirm you’re not a bot"))
                 Log.Error("Fix this error by following these instructions: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
 
-            return "";
+            return string.Empty;
         }
         
         if (IsYouTubeUrl(url) && ConfigManager.Config.ytdlDelay > 0)
@@ -220,7 +220,6 @@ public class VideoId
         }
 
         return  output;
-        
     }
     
     // High bitrate video (1080)

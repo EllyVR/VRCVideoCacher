@@ -15,10 +15,10 @@ internal static class Program
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static string DataPath;
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
+
     public static async Task Main(string[] args)
     {
         Console.Title = $"VRCVideoCacher v{Version}";
-        
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(new ExpressionTemplate(
@@ -39,10 +39,7 @@ internal static class Program
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
         {
-            if(ConfigManager.Config.PatchVRC)
-                FileTools.RestoreVRC();
-            if (ConfigManager.Config.PatchResonite)
-                FileTools.RestoreReso();
+            FileTools.RestoreAllYtdl();
             Environment.Exit(0);
         }
         if (Environment.CommandLine.Contains("--Hash"))
@@ -65,10 +62,7 @@ internal static class Program
 
         AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
-        if(ConfigManager.Config.PatchVRC)
-            FileTools.BackupAndReplaceVRC();
-        if(ConfigManager.Config.PatchResonite)
-            FileTools.BackupAndReplaceReso();
+        FileTools.BackupAllYtdl();
         await BulkPreCache.DownloadFileList();
 
         if (ConfigManager.Config.ytdlUseCookies && !IsCookiesEnabledAndValid())
@@ -140,10 +134,7 @@ internal static class Program
 
     private static void OnAppQuit()
     {
-        if(ConfigManager.Config.PatchVRC)
-            FileTools.RestoreVRC();
-        if(ConfigManager.Config.PatchResonite)
-            FileTools.RestoreReso();
+        FileTools.RestoreAllYtdl();
         Logger.Information("Exiting...");
     }
 }

@@ -16,9 +16,6 @@ public class FileTools
 
     static FileTools()
     {
-        
-
-
         YtdlPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe";
         BackupPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe.bkp";
 
@@ -38,32 +35,30 @@ public class FileTools
         }
         YtdlPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
         BackupPathVRC = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
-
-        
     }
 
     private static string? GetResonitePath()
     {
-        string appid = "2519830";
+        const string appid = "2519830";
         if (OperatingSystem.IsWindows())
         {
-            var libfolders = "C:\\Program Files (x86)\\Steam\\steamapps\\libraryfolders.vdf";
-            var stream = File.OpenRead(libfolders);
-            KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
-            List<string> libraryPaths = [];
-            foreach (var folder in data)
-            {
-                var apps = (IEnumerable<KVObject>)folder["apps"];
-                if (apps.Any(app => app.Name == appid))
-                {
-                    return folder["path"].ToString(CultureInfo.InvariantCulture);
-                }
-            }
-
+            Log.Error("GetResonitePath is currently only supported on Windows");
+            return null;
         }
-
+        const string libraryFolders = @"C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf";
+        var stream = File.OpenRead(libraryFolders);
+        KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
+        foreach (var folder in data)
+        {
+            var apps = (IEnumerable<KVObject>)folder["apps"];
+            if (apps.Any(app => app.Name == appid))
+            {
+                return folder["path"].ToString(CultureInfo.InvariantCulture);
+            }
+        }
         return null;
     }
+
     // Linux only
     private static string? GetCompatPath(string appid)
     {
@@ -132,14 +127,20 @@ public class FileTools
         }
     }
 
-    public static void BackupAndReplaceVRC() => BackupAndReplaceYtdl(YtdlPathVRC, YtdlPathReso);
-    
-    public static void BackupAndReplaceReso() => BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
-    
-    public static void RestoreVRC() => Restore(YtdlPathVRC, BackupPathVRC);
-    
-    public static void RestoreReso() => Restore(YtdlPathReso, BackupPathReso);
-    
+    public static void BackupAllYtdl()
+    {
+        if (ConfigManager.Config.PatchVRC)
+            BackupAndReplaceYtdl(YtdlPathVRC, YtdlPathReso);
+        if (ConfigManager.Config.PatchResonite)
+            BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
+    }
+
+    public static void RestoreAllYtdl()
+    {
+        RestoreYtdl(YtdlPathVRC, BackupPathVRC);
+        RestoreYtdl(YtdlPathReso, BackupPathReso);
+    }
+
     private static void BackupAndReplaceYtdl(string YtdlPath, string BackupPath)
     {
         if (!Directory.Exists(ConfigManager.UtilsPath))
@@ -173,12 +174,12 @@ public class FileTools
         Log.Information("Patched YT-DLP.");
     }
 
-    private static void Restore(string YtdlPath, string BackupPath)
+    private static void RestoreYtdl(string YtdlPath, string BackupPath)
     {
-        Log.Information("Restoring yt-dlp...");
         if (!File.Exists(BackupPath))
             return;
         
+        Log.Information("Restoring yt-dlp...");
         if (File.Exists(YtdlPath))
         {
             File.SetAttributes(YtdlPath, FileAttributes.Normal);
