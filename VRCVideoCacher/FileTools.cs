@@ -46,16 +46,30 @@ public class FileTools
             return null;
         }
         const string libraryFolders = @"C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf";
-        var stream = File.OpenRead(libraryFolders);
-        KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
-        foreach (var folder in data)
+        if (!Path.Exists(libraryFolders))
         {
-            var apps = (IEnumerable<KVObject>)folder["apps"];
-            if (apps.Any(app => app.Name == appid))
+            Log.Error("GetResonitePath: Steam libraryfolders.vdf not found at expected location: {Path}", libraryFolders);
+            return null;
+        }
+
+        try
+        {
+            var stream = File.OpenRead(libraryFolders);
+            KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
+            foreach (var folder in data)
             {
-                return folder["path"].ToString(CultureInfo.InvariantCulture);
+                var apps = (IEnumerable<KVObject>)folder["apps"];
+                if (apps.Any(app => app.Name == appid))
+                {
+                    return folder["path"].ToString(CultureInfo.InvariantCulture);
+                }
             }
         }
+        catch (Exception e)
+        {
+            Log.Error("GetResonitePath: Exception while reading libraryfolders.vdf: {Error}", e.Message);
+        }
+
         return null;
     }
 
