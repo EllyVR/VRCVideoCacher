@@ -34,11 +34,11 @@ Edit `Config.json` and set `ytdlDelay` to something like `10` seconds.
 
 Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add this new line `127.0.0.1 localhost.youtube.com` to the bottom of the file, edit `Config.json` and set `ytdlWebServerURL` to `http://localhost.youtube.com:9696`
 
-
 ### Running on Linux
- - Install `dotnet-runtime-9.0`
- - Run with `dotnet ./VRCVideoCacher`
- - By default VRCVideoCacher will try to download and run its own binaries, but if you'd like to use your system packages instead, set `ytdlPath` to `""` in `Config.json`, you'll need to install `deno`, `ffmpeg` and yt-dlp using `pip install "yt-dlp[default,curl-cffi]"` the pip version is required due to package manager versions not including browser impersonation, make sure to always keep yt-dlp updated otherwise you will run into issues.
+
+- Install `dotnet-runtime-10.0`
+- Run with `./VRCVideoCacher`
+- By default VRCVideoCacher will try to download and run its own binaries, but if you'd like to use your system packages instead, set `ytdlPath` to `""` in `Config.json`, you'll need to install `deno`, `ffmpeg` and yt-dlp using `pip install "yt-dlp[default,curl-cffi]"` the pip version is required due to package manager versions not including browser impersonation, make sure to always keep yt-dlp updated otherwise you will run into issues.
 
 ### Config Options
 
@@ -48,7 +48,7 @@ Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add 
 | ytdlUseCookies            | Uses the [Chrome](https://github.com/clienthax/VRCVideoCacherBrowserExtension) or [Firefox](https://addons.mozilla.org/en-GB/android/addon/vrcvideocachercookiesexporter) extension for cookies, this is used to circumvent YouTubes bot detection. |
 | ytdlDubLanguage           | Set preferred audio language for AVPro and cached videos, e.g. `de` for German, check list of [supported lang codes](https://github.com/yt-dlp/yt-dlp/blob/c26f9b991a0681fd3ea548d535919cec1fbbd430/yt_dlp/extractor/youtube.py#L381-L390)          |
 | ytdlDelay                 | No delay (Default) `0`, YouTube videos can fail to load in-game without this delay.                                                                                                                                                                 |
-| ytdlPath                  | Path to the yt-dlp executable. Leave empty to locate in system PATH.                                                                                              |
+| ytdlPath                  | Path to the yt-dlp executable. Leave empty to locate in system PATH.                                                                                                                                                                                |
 | CachedAssetPath           | Location to store downloaded videos, e.g. store videos on separate drive with `D:\\DownloadedVideos`                                                                                                                                                |
 | BlockedUrls               | List of URLs to never load in VRC.                                                                                                                                                                                                                  |
 | CacheYouTube              | Download YouTube videos to `CachedAssets` to improve load times next time the video plays.                                                                                                                                                          |
