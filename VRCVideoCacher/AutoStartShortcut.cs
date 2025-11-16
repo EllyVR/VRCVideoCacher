@@ -12,6 +12,9 @@ public class AutoStartShortcut
     
     public static void TryUpdateShortcutPath()
     {
+        if (!OperatingSystem.IsWindows())
+            return;
+        
         var shortcut = GetOurShortcut();
         if (shortcut == null)
             return;
