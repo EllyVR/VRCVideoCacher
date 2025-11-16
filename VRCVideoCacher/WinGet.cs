@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using System.Text;
 using Serilog;
 
@@ -15,6 +16,7 @@ public class WinGet
         { "Dolby Digital Plus decoder for PC OEMs", "9nvjqjbdkn97" }
     };
     
+    [SupportedOSPlatform("windows")]
     public static async Task TryInstallPackages()
     {
         Log.Information("Checking for missing codec packages...");

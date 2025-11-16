@@ -58,7 +58,8 @@ internal static class Program
             _ = YtdlManager.TryDownloadFfmpeg();
         }
 
-        AutoStartShortcut.TryUpdateShortcutPath();
+        if (OperatingSystem.IsWindows())
+            AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
         FileTools.BackupAllYtdl();
         await BulkPreCache.DownloadFileList();
