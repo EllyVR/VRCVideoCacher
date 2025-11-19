@@ -57,6 +57,12 @@ public class ApiController : WebApiController
             Log.Information("YTS URL detected, modified to: {URL}", requestUrl);
         }
 
+        if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
+        {
+            Log.Warning("URL Is Blocked: {url}", requestUrl);
+            requestUrl = ConfigManager.Config.BlockRedirect;
+        }
+
         var videoInfo = await VideoId.GetVideoId(requestUrl, avPro);
         if (videoInfo == null)
         {
@@ -78,15 +84,6 @@ public class ApiController : WebApiController
         {
             Log.Information("Failed to get Video ID: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        if (ConfigManager.Config.BlockedUrls.Contains(requestUrl))
-        {
-            Console.Beep();
-            Console.Beep();
-            Log.Information("URL Is Blocked: Bypassing.");
-            await HttpContext.SendStringAsync("https://ellyvr.dev/blocked.mp4", "text/plain", Encoding.UTF8);
             return;
         }
 

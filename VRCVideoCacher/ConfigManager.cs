@@ -108,6 +108,7 @@ public class ConfigModel
     public int ytdlDelay = 0;
     public string CachedAssetPath = "";
     public string[] BlockedUrls = ["https://na2.vrdancing.club/sampleurl.mp4"];
+    public string BlockRedirect = "https://www.youtube.com/watch?v=byv2bKekeWQ";
     public bool CacheYouTube = true;
     public int CacheYouTubeMaxResolution = 2160;
     public int CacheYouTubeMaxLength = 120;
