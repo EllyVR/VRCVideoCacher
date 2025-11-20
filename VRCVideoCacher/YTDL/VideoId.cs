@@ -45,8 +45,7 @@ public class VideoId
     {
         url = url.Trim();
         
-        if (url.StartsWith("http://jd.pypy.moe/api/v1/videos/") ||
-            url.StartsWith("https://jd.pypy.moe/api/v1/videos/"))
+        if (url.StartsWith("http://api.pypy.dance/video"))
         {
             var req = new HttpRequestMessage(HttpMethod.Head, url);
             var res = await HttpClient.SendAsync(req);
@@ -60,7 +59,7 @@ public class VideoId
             {
                 var uri = new Uri(videoUrl);
                 var fileName = Path.GetFileName(uri.LocalPath);
-                var pypyVideoId = fileName.Split('.')[0];
+                var pypyVideoId = !fileName.Contains('.') ? fileName : fileName.Split('.')[0];
                 return new VideoInfo
                 {
                     VideoUrl = videoUrl,
