@@ -65,7 +65,7 @@ public class VideoDownloader
     {
         if (DownloadQueue.Any(x => x.VideoId == videoInfo.VideoId))
         {
-            Log.Information("URL is already in the download queue.");
+            // Log.Information("URL is already in the download queue.");
             return;
         }
         DownloadQueue.Enqueue(videoInfo);

@@ -11,10 +11,12 @@ namespace VRCVideoCacher;
 internal static class Program
 {
     public static string YtdlpHash = string.Empty;
-    public const string Version = "2025.11.5";
-    public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
-    public static string DataPath;
+    public const string Version = "2025.11.8-ResoDev";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
+    public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
+    public static readonly string DataPath = OperatingSystem.IsWindows()
+        ? CurrentProcessPath
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
 
     public static async Task Main(string[] args)
     {
@@ -30,16 +32,12 @@ internal static class Program
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
         
-        DataPath = OperatingSystem.IsWindows()
-            ? CurrentProcessPath
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
         Directory.CreateDirectory(DataPath);
-
         await Updater.CheckForUpdates();
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
         {
-            FileTools.Restore();
+            FileTools.RestoreAllYtdl();
             Environment.Exit(0);
         }
         if (Environment.CommandLine.Contains("--Hash"))
@@ -60,9 +58,10 @@ internal static class Program
             _ = YtdlManager.TryDownloadFfmpeg();
         }
 
-        AutoStartShortcut.TryUpdateShortcutPath();
+        if (OperatingSystem.IsWindows())
+            AutoStartShortcut.TryUpdateShortcutPath();
         WebServer.Init();
-        FileTools.BackupAndReplaceYtdl();
+        FileTools.BackupAllYtdl();
         await BulkPreCache.DownloadFileList();
 
         if (ConfigManager.Config.ytdlUseCookies && !IsCookiesEnabledAndValid())
@@ -134,7 +133,7 @@ internal static class Program
 
     private static void OnAppQuit()
     {
-        FileTools.Restore();
+        FileTools.RestoreAllYtdl();
         Logger.Information("Exiting...");
     }
 }

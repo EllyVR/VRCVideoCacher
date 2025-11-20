@@ -45,8 +45,7 @@ public class VideoId
     {
         url = url.Trim();
         
-        if (url.StartsWith("http://jd.pypy.moe/api/v1/videos/") ||
-            url.StartsWith("https://jd.pypy.moe/api/v1/videos/"))
+        if (url.StartsWith("http://api.pypy.dance/video"))
         {
             var req = new HttpRequestMessage(HttpMethod.Head, url);
             var res = await HttpClient.SendAsync(req);
@@ -60,7 +59,7 @@ public class VideoId
             {
                 var uri = new Uri(videoUrl);
                 var fileName = Path.GetFileName(uri.LocalPath);
-                var pypyVideoId = fileName.Split('.')[0];
+                var pypyVideoId = !fileName.Contains('.') ? fileName : fileName.Split('.')[0];
                 return new VideoInfo
                 {
                     VideoUrl = videoUrl,
@@ -171,6 +170,57 @@ public class VideoId
         return data.id;
     }
 
+    public static async Task<string> GetURLResonite(string url)
+    {
+        var process = new Process
+        {
+            StartInfo =
+            {
+                FileName = YtdlManager.YtdlPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
+            }
+        };
+
+        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var cookieArg = string.Empty;
+        if (Program.IsCookiesEnabledAndValid())
+            cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
+        
+        var languageArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
+            ? string.Empty
+            : $" -f [language={ConfigManager.Config.ytdlDubLanguage}]";
+        process.StartInfo.Arguments = $"--flat-playlist -i -J -s --no-playlist {languageArg} --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-warnings {cookieArg} {additionalArgs} {url}";
+
+        process.Start();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        output = output.Trim();
+        var error = await process.StandardError.ReadToEndAsync();
+        error = error.Trim();
+        await process.WaitForExitAsync();
+        Log.Information("Started yt-dlp with args: {args}", process.StartInfo.Arguments);
+        
+        if (process.ExitCode != 0)
+        {
+            if (error.Contains("Sign in to confirm you’re not a bot"))
+                Log.Error("Fix this error by following these instructions: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
+
+            return string.Empty;
+        }
+        
+        if (IsYouTubeUrl(url) && ConfigManager.Config.ytdlDelay > 0)
+        {
+            Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
+            await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
+        }
+
+        return  output;
+    }
+    
     // High bitrate video (1080)
     // https://www.youtube.com/watch?v=DzQwWlbnZvo
 

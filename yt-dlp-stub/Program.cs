@@ -28,11 +28,18 @@ internal static class Program
         
         var url = string.Empty;
         var avPro = true;
+        string source = "vrchat";
         foreach (var arg in args)
         {
             if (arg.Contains("[protocol^=http]"))
             {
                 avPro = false;
+                continue;
+            }
+
+            if (arg.Contains("-J"))
+            {
+                source = "resonite";
                 continue;
             }
             
@@ -43,7 +50,7 @@ internal static class Program
             break;
         }
         
-        WriteLog($"Starting with args: {string.Join(" ", args)}, avPro: {avPro}");
+        WriteLog($"Starting with args: {string.Join(" ", args)}, avPro: {avPro}, source: {source}");
         
         if (string.IsNullOrEmpty(url))
         {
@@ -57,7 +64,7 @@ internal static class Program
         {
             using var httpClient = new HttpClient();
             var inputUrl = Uri.EscapeDataString(url);
-            var response = await httpClient.GetAsync($"{BaseUrl}/api/getvideo?url={inputUrl}&avpro={avPro}");
+            var response = await httpClient.GetAsync($"{BaseUrl}/api/getvideo?url={inputUrl}&avpro={avPro}&source={source}");
             var output = await response.Content.ReadAsStringAsync();
             WriteLog($"[Response] {output}");
             if (!response.IsSuccessStatusCode)
@@ -68,6 +75,13 @@ internal static class Program
         {
             WriteLog("[Error] Connection refused. Is the server running?");
             await Console.Error.WriteLineAsync("ERROR: [VRCVideoCacher] Connection refused. Is VRCVideoCacher running?");
+            var ytdlPath = Path.Combine(appDataPath, "yt-dlp.exe");
+            if (File.Exists(ytdlPath) && File.GetAttributes(ytdlPath).HasFlag(FileAttributes.ReadOnly))
+            {
+                var attr = File.GetAttributes(ytdlPath);
+                attr &= ~FileAttributes.ReadOnly;
+                File.SetAttributes(ytdlPath, attr);
+            }
             Environment.ExitCode = 1;
         }
         catch (Exception ex)

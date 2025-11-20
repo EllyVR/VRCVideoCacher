@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Serilog;
 using ShellLink;
 using ShellLink.Structures;
@@ -10,6 +11,7 @@ public class AutoStartShortcut
     private static readonly byte[] ShortcutSignatureBytes = { 0x4C, 0x00, 0x00, 0x00 }; // signature for ShellLinkHeader
     private const string ShortcutName = "VRCVideoCacher";
     
+    [SupportedOSPlatform("windows")]
     public static void TryUpdateShortcutPath()
     {
         var shortcut = GetOurShortcut();
@@ -32,7 +34,8 @@ public class AutoStartShortcut
 
         return true;
     }
-    
+
+    [SupportedOSPlatform("windows")]
     public static void CreateShortcut()
     {
         if (StartupEnabled())
