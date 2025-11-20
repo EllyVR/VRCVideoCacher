@@ -50,7 +50,7 @@ internal static class Program
             break;
         }
         
-        WriteLog($"Starting with args: {string.Join(" ", args)}, avPro: {avPro}");
+        WriteLog($"Starting with args: {string.Join(" ", args)}, avPro: {avPro}, source: {source}");
         
         if (string.IsNullOrEmpty(url))
         {
@@ -75,6 +75,13 @@ internal static class Program
         {
             WriteLog("[Error] Connection refused. Is the server running?");
             await Console.Error.WriteLineAsync("ERROR: [VRCVideoCacher] Connection refused. Is VRCVideoCacher running?");
+            var ytdlPath = Path.Combine(appDataPath, "yt-dlp.exe");
+            if (File.Exists(ytdlPath) && File.GetAttributes(ytdlPath).HasFlag(FileAttributes.ReadOnly))
+            {
+                var attr = File.GetAttributes(ytdlPath);
+                attr &= ~FileAttributes.ReadOnly;
+                File.SetAttributes(ytdlPath, attr);
+            }
             Environment.ExitCode = 1;
         }
         catch (Exception ex)
