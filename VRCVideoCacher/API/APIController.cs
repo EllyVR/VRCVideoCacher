@@ -115,6 +115,14 @@ public class ApiController : WebApiController
             return;
         }
 
+        // bypass vfi - cinema 
+        if (requestUrl.StartsWith("https://virtualfilm.institute/"))
+        {
+            Log.Information("URL Is VFI -Cinema: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
