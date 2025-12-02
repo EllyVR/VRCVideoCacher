@@ -99,6 +99,9 @@ public class Updater
                     return;
                 }
                 Log.Information("Updated to version {Version}", release.tag_name);
+                if (!OperatingSystem.IsWindows())
+                    FileTools.MarkFileExecutable(FilePath);
+
                 var process = new Process()
                 {
                     StartInfo = new ProcessStartInfo
