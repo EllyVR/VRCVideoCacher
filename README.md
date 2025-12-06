@@ -40,6 +40,11 @@ Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add 
 - Run with `./VRCVideoCacher`
 - By default VRCVideoCacher will try to download and run its own binaries, but if you'd like to use your system packages instead, set `ytdlPath` to `""` in `Config.json`, you'll need to install `deno`, `ffmpeg` and yt-dlp using `pip install "yt-dlp[default,curl-cffi]"` the pip version is required due to package manager versions not including browser impersonation, make sure to always keep yt-dlp updated otherwise you will run into issues.
 
+### Uninstalling
+
+- If you have VRCX, delete the startup shortcut "VRCVideoCacher" from `%AppData%\VRCX\startup`
+- Delete "yt-dlp.exe" from `%AppData%\..\LocalLow\VRChat\VRChat\Tools` and restart VRChat or rejoin world.
+
 ### Config Options
 
 | Option                    | Description                                                                                                                                                                                                                                                                                    |
