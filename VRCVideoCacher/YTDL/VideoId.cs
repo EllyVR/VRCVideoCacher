@@ -47,16 +47,16 @@ public class VideoId
         
         if (url.StartsWith("http://api.pypy.dance/video"))
         {
-            var req = new HttpRequestMessage(HttpMethod.Head, url);
-            var res = await HttpClient.SendAsync(req);
-            var videoUrl = res.RequestMessage?.RequestUri?.ToString();
-            if (string.IsNullOrEmpty(videoUrl))
-            {
-                Log.Error("Failed to get video ID from PypyDance URL: {URL}", url);
-                return null;
-            }
             try
             {
+                var req = new HttpRequestMessage(HttpMethod.Head, url);
+                var res = await HttpClient.SendAsync(req);
+                var videoUrl = res.RequestMessage?.RequestUri?.ToString();
+                if (string.IsNullOrEmpty(videoUrl))
+                {
+                    Log.Error("Failed to get video ID from PypyDance URL: {URL} Response: {Response} - {Data}", url, res.StatusCode, await res.Content.ReadAsStringAsync());
+                    return null;
+                }
                 var uri = new Uri(videoUrl);
                 var fileName = Path.GetFileName(uri.LocalPath);
                 var pypyVideoId = !fileName.Contains('.') ? fileName : fileName.Split('.')[0];
