@@ -63,7 +63,8 @@ public class VideoDownloader
     
     public static void QueueDownload(VideoInfo videoInfo)
     {
-        if (DownloadQueue.Any(x => x.VideoId == videoInfo.VideoId))
+        if (DownloadQueue.Any(x => x.VideoId == videoInfo.VideoId &&
+                                   x.DownloadFormat == videoInfo.DownloadFormat))
         {
             // Log.Information("URL is already in the download queue.");
             return;
@@ -149,7 +150,7 @@ public class VideoDownloader
             
             return;
         }
-        Thread.Sleep(10);
+        Thread.Sleep(100);
         
         var fileName = $"{videoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
         var filePath = Path.Combine(CacheManager.CachePath, fileName);
