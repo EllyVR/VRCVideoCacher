@@ -47,11 +47,11 @@ public class Updater
             Log.Error("Failed to parse update response.");
             return;
         }
-        /* FIXME: Build next github release with proper semver tags to avoid this normalisation slop
+        /* FIXME: Build next github release with proper semver tags
          *        See here: https://semver.org/spec/v2.0.0.html
          */
-        var normalisedTagName = NormaliseVersionString(latestRelease.tag_name);
-        var latestVersion = SemVersion.Parse(normalisedTagName);
+        var normalizedTagName = NormalizeVersionString(latestRelease.tag_name);
+        var latestVersion = SemVersion.Parse(normalizedTagName);
         var currentVersion = SemVersion.Parse(Program.Version);
         Log.Information("Latest release: {Latest}, Installed Version: {Installed}", latestVersion, currentVersion);
         if (SemVersion.ComparePrecedence(currentVersion, latestVersion) >= 0)
@@ -127,7 +127,7 @@ public class Updater
         }
     }
 
-    private static string NormaliseVersionString(string ver)
+    private static string NormalizeVersionString(string ver)
     {
         var parts = ver.Split('.');
         var normalizedParts = parts.Select(part => int.Parse(part).ToString()).ToArray();
