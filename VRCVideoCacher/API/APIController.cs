@@ -10,7 +10,11 @@ namespace VRCVideoCacher.API;
 public class ApiController : WebApiController
 {
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<ApiController>();
-    
+    private static readonly HttpClient HttpClient = new()
+    {
+        DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
+    };
+
     [Route(HttpVerbs.Post, "/youtube-cookies")]
     public async Task ReceiveYoutubeCookies()
     {
@@ -55,6 +59,16 @@ public class ApiController : WebApiController
         {
             requestUrl = requestUrl.Replace("/sr/", "/yt/");
             Log.Information("YTS URL detected, modified to: {URL}", requestUrl);
+            var resolvedUrl = await GetRedirectUrl(requestUrl);
+            if (!string.IsNullOrEmpty(resolvedUrl))
+            {
+                requestUrl = resolvedUrl;
+                Log.Information("YTS URL resolved to URL: {URL}", resolvedUrl);
+            }
+            else
+            {
+                Log.Error("Failed to resolve YTS URL: {URL}", requestUrl);
+            }
         }
 
         if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
@@ -116,7 +130,7 @@ public class ApiController : WebApiController
         }
 
         // bypass vfi - cinema 
-        if (requestUrl.StartsWith("https://virtualfilm.institute/"))
+        if (requestUrl.StartsWith("https://virtualfilm.institute"))
         {
             Log.Information("URL Is VFI -Cinema: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
@@ -136,7 +150,16 @@ public class ApiController : WebApiController
             }
             response = string.Empty;
         }
-        
+
+        if ((videoInfo.UrlType == UrlType.YouTube ||
+             videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
+             videoInfo.VideoUrl.Contains("googlevideo.com")) &&
+            ConfigManager.Config.ytdlDelay > 0)
+        {
+            Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
+            await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
+        }
+
         Log.Information("Responding with URL: {URL}", response);
         await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
         // check if file is cached again to handle race condition
@@ -159,5 +182,15 @@ public class ApiController : WebApiController
             isCached = File.Exists(filePath);
         }
         return (isCached, filePath, fileName);
+    }
+
+    private static async Task<string?> GetRedirectUrl(string requestUrl)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
+        var res = await HttpClient.SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            return null;
+
+        return res.RequestMessage?.RequestUri?.ToString();
     }
 }

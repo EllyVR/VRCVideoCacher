@@ -285,12 +285,6 @@ public class VideoId
 
             return new Tuple<string, bool>(error, false);
         }
-        
-        if (videoInfo.UrlType == UrlType.YouTube && ConfigManager.Config.ytdlDelay > 0)
-        {
-            Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
-            await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
-        }
 
         return new Tuple<string, bool>(output, true);
     }
