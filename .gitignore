@@ -6,3 +6,4 @@ yt-dlp-stub/obj
 .vscode/
 *.DotSettings*
 Build/
+/.vs
