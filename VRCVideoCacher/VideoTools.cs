@@ -21,15 +21,15 @@
             // Prefetch the video URL
             // - Use GET for M3U8 to extract the direct stream URL
             string? firstM3U8Url = null;
-            using (var prefetchHeadRequest = new HttpRequestMessage(isM3U8 ? HttpMethod.Get : HttpMethod.Head, videoUrl))
+            using (var prefetchRequest = new HttpRequestMessage(isM3U8 ? HttpMethod.Get : HttpMethod.Head, videoUrl))
             {
-                using var prefetchResponse = await HttpClient.SendAsync(prefetchHeadRequest);
+                using var prefetchResponse = await HttpClient.SendAsync(prefetchRequest);
 
                 if (prefetchResponse != null)
                 {
                     Log.Information("Video prefetch request returned status code {status}.", (int)prefetchResponse.StatusCode);
 
-                    if (prefetchHeadRequest.Method == HttpMethod.Get && prefetchResponse.Content.Headers.ContentType?.MediaType == "application/vnd.apple.mpegurl")
+                    if (prefetchRequest.Method == HttpMethod.Get && prefetchResponse.Content.Headers.ContentType?.MediaType == "application/vnd.apple.mpegurl")
                     {
                         var body = await prefetchResponse.Content.ReadAsStringAsync();
                         firstM3U8Url = body?.Split('\n')?.FirstOrDefault(line => Uri.IsWellFormedUriString(line, UriKind.RelativeOrAbsolute));
