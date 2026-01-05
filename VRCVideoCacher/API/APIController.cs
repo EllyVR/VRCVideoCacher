@@ -27,14 +27,14 @@ public class ApiController : WebApiController
             await HttpContext.SendStringAsync("Invalid cookies.", "text/plain", Encoding.UTF8);
             return;
         }
-        
+
         await File.WriteAllTextAsync(YtdlManager.CookiesPath, cookies);
 
         HttpContext.Response.StatusCode = 200;
         await HttpContext.SendStringAsync("Cookies received.", "text/plain", Encoding.UTF8);
 
         Log.Information("Received Youtube cookies from browser extension.");
-        if (!ConfigManager.Config.ytdlUseCookies) 
+        if (!ConfigManager.Config.ytdlUseCookies)
             Log.Warning("Config is NOT set to use cookies from browser extension.");
     }
 
@@ -45,7 +45,7 @@ public class ApiController : WebApiController
         var requestUrl = Request.QueryString["url"]?.Replace("\"", "%22").Trim();
         var avPro = string.Compare(Request.QueryString["avpro"], "true", StringComparison.OrdinalIgnoreCase) == 0;
         var source = Request.QueryString["source"];
-        
+
         if (string.IsNullOrEmpty(requestUrl))
         {
             Log.Error("No URL provided.");
@@ -153,11 +153,15 @@ public class ApiController : WebApiController
 
         if ((videoInfo.UrlType == UrlType.YouTube ||
              videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
-             videoInfo.VideoUrl.Contains("googlevideo.com")) &&
-            ConfigManager.Config.ytdlDelay > 0)
+             videoInfo.VideoUrl.Contains("googlevideo.com")))
         {
-            Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
-            await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
+            await VideoTools.Prefetch(response);
+
+            if (ConfigManager.Config.ytdlDelay > 0)
+            {
+                Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
+                await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
+            }
         }
 
         Log.Information("Responding with URL: {URL}", response);
