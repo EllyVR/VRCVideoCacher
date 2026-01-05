@@ -221,6 +221,7 @@ public class VideoDownloader
         await using var fileStream = new FileStream(TempDownloadMp4Path, FileMode.Create, FileAccess.Write, FileShare.None);
         await stream.CopyToAsync(fileStream);
         fileStream.Close();
+        response.Dispose();
         await Task.Delay(10);
         
         var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";

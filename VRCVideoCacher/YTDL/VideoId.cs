@@ -49,8 +49,8 @@ public class VideoId
         {
             try
             {
-                var req = new HttpRequestMessage(HttpMethod.Head, url);
-                var res = await HttpClient.SendAsync(req);
+                using var req = new HttpRequestMessage(HttpMethod.Head, url);
+                using var res = await HttpClient.SendAsync(req);
                 var videoUrl = res.RequestMessage?.RequestUri?.ToString();
                 if (string.IsNullOrEmpty(videoUrl))
                 {

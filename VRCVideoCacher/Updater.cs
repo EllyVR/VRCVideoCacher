@@ -34,7 +34,7 @@ public class Updater
             Log.Information("Running in dev mode. Skipping update check.");
             return;
         }
-        var response = await HttpClient.GetAsync(UpdateUrl);
+        using var response = await HttpClient.GetAsync(UpdateUrl);
         if (!response.IsSuccessStatusCode)
         {
             Log.Warning("Failed to check for updates.");
@@ -68,7 +68,11 @@ public class Updater
     public static void Cleanup()
     {
         if (File.Exists(BackupFilePath))
+        {
             File.Delete(BackupFilePath);
+            // silly temporary config reset to test video prefetch
+            ConfigManager.Config.ytdlDelay = 0;
+        }
     }
         
     private static async Task UpdateAsync(GitHubRelease release)
