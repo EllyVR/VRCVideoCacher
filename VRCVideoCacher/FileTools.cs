@@ -16,8 +16,14 @@ public class FileTools
 
     static FileTools()
     {
-        YtdlPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe";
-        BackupPathReso = $"{GetResonitePath()}\\steamapps\\common\\Resonite\\RuntimeData\\yt-dlp.exe.bkp";
+        string resoPath; 
+        if (!string.IsNullOrEmpty(ConfigManager.Config.ResonitePath))
+            resoPath = ConfigManager.Config.ResonitePath;
+        else
+            resoPath = $@"{GetResonitePath()}\steamapps\common\Resonite";
+
+        YtdlPathReso = $@"{resoPath}\RuntimeData\yt-dlp.exe";
+        BackupPathReso = $"{YtdlPathReso}.bkp";
 
         string localLowPath;
         if (OperatingSystem.IsWindows())

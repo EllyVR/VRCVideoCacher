@@ -125,6 +125,7 @@ public class ConfigModel
     public bool CachePyPyDance = false;
     public bool CacheVRDancing = false;
     public bool PatchResonite = false;
+    public string ResonitePath = "";
     public bool PatchVRC = true;
     public bool AutoUpdate = true;
     public string[] PreCacheUrls = [];
