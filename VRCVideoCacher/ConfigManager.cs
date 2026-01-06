@@ -41,7 +41,7 @@ public class ConfigManager
         TrySaveConfig();
     }
 
-    private static void TrySaveConfig()
+    public static void TrySaveConfig()
     {
         var newConfig = JsonConvert.SerializeObject(Config, Formatting.Indented);
         var oldConfig = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : string.Empty;
@@ -102,6 +102,7 @@ public class ConfigManager
         Log.Information("Chrome: https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge");
         Log.Information("Firefox: https://addons.mozilla.org/en-US/firefox/addon/vrcvideocachercookiesexporter/");
         Log.Information("More info: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
+        TrySaveConfig();
     }
 }
 

@@ -72,6 +72,7 @@ public class Updater
             File.Delete(BackupFilePath);
             // silly temporary config reset to test video prefetch
             ConfigManager.Config.ytdlDelay = 0;
+            ConfigManager.TrySaveConfig();
         }
     }
         
