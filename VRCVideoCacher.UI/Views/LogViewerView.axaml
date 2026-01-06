@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.UI.ViewModels"
+             xmlns:models="using:VRCVideoCacher.UI.Models"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="VRCVideoCacher.UI.Views.LogViewerView"
+             x:DataType="vm:LogViewerViewModel">
+
+    <Grid RowDefinitions="Auto, Auto, *" Margin="10">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+            <TextBlock Text="Log Viewer" FontSize="24" FontWeight="Bold"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <Button Command="{Binding ExportLogsCommand}" ToolTip.Tip="Export Logs">
+                    <mi:MaterialIcon Kind="Export" Width="20" Height="20"/>
+                </Button>
+                <Button Command="{Binding ClearLogsCommand}" ToolTip.Tip="Clear Logs" Background="#CF6679">
+                    <mi:MaterialIcon Kind="Delete" Width="20" Height="20"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Filters -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBox Grid.Column="0" Text="{Binding FilterText}" Watermark="Filter logs..." Margin="0,0,15,0">
+                    <TextBox.InnerLeftContent>
+                        <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
+                    <CheckBox IsChecked="{Binding ShowDebug}" Content="Debug" Foreground="#64B5F6"/>
+                    <CheckBox IsChecked="{Binding ShowInfo}" Content="Info" Foreground="#81C784"/>
+                    <CheckBox IsChecked="{Binding ShowWarning}" Content="Warning" Foreground="#FFB74D"/>
+                    <CheckBox IsChecked="{Binding ShowError}" Content="Error" Foreground="#CF6679"/>
+                    <CheckBox IsChecked="{Binding AutoScroll}" Content="Auto-scroll"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Log List -->
+        <Border Grid.Row="2" Background="#1a1a1a" CornerRadius="8" Padding="10">
+            <ListBox x:Name="LogListBox"
+                     ItemsSource="{Binding FilteredLogEntries}"
+                     Background="Transparent"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:LogEntry}">
+                        <Grid ColumnDefinitions="80, 40, 100, *" Margin="5,2">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}"
+                                       FontFamily="Consolas"
+                                       Foreground="#888888"
+                                       FontSize="12"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Level}"
+                                       FontFamily="Consolas"
+                                       FontWeight="Bold"
+                                       FontSize="12">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding LevelColor}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Source}"
+                                       FontFamily="Consolas"
+                                       Foreground="#CE93D8"
+                                       FontSize="12"/>
+                            <TextBlock Grid.Column="3"
+                                       Text="{Binding Message}"
+                                       FontFamily="Consolas"
+                                       TextWrapping="Wrap"
+                                       FontSize="12"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>

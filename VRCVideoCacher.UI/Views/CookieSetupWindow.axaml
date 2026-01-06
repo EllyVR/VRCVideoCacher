@@ -1,0 +1,123 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VRCVideoCacher.UI.ViewModels"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="VRCVideoCacher.UI.Views.CookieSetupWindow"
+        x:DataType="vm:CookieSetupViewModel"
+        Title="YouTube Cookie Extension Setup"
+        Width="550" Height="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ExtendClientAreaToDecorationsHint="False">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="YouTube Cookie Extension Setup" FontSize="20" FontWeight="Bold"/>
+            <TextBlock Text="Fix YouTube bot detection errors" Foreground="#888888" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Content - Step 1: Browser Selection -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
+                IsVisible="{Binding IsStep1}">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Step 1: Select your browser" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#cccccc">
+                    Choose the browser you use to watch YouTube. The extension will export your YouTube cookies to VRCVideoCacher.
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Button Command="{Binding SelectChromeCommand}" Width="150" Height="100" Background="#3d3d3d"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="GoogleChrome" Width="40" Height="40" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Chrome" FontSize="14" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding SelectFirefoxCommand}" Width="150" Height="100" Background="#3d3d3d"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="Firefox" Width="40" Height="40" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Firefox" FontSize="14" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Content - Step 2: Install Extension -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
+                IsVisible="{Binding IsStep2}">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Step 2: Install the extension" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#cccccc">
+                    Click the button below to open the extension store. Install the "VRCVideoCacher Cookies Exporter" extension.
+                </TextBlock>
+
+                <Button Command="{Binding OpenExtensionStoreCommand}" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="OpenInNew" Width="16" Height="16"/>
+                        <TextBlock Text="{Binding ExtensionStoreButtonText}"/>
+                    </StackPanel>
+                </Button>
+
+                <TextBlock TextWrapping="Wrap" Foreground="#cccccc" Margin="0,10,0,0">
+                    After installing, click "Next" to continue.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Content - Step 3: Visit YouTube -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
+                IsVisible="{Binding IsStep3}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Step 3: Visit YouTube" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock TextWrapping="Wrap" Foreground="#cccccc">
+                        Open YouTube in your browser and make sure you're signed in. The extension will automatically send your cookies to VRCVideoCacher.
+                    </TextBlock>
+
+                    <Button Command="{Binding OpenYouTubeCommand}" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <mi:MaterialIcon Kind="Youtube" Width="16" Height="16"/>
+                            <TextBlock Text="Open YouTube"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Border Background="#1a1a1a" CornerRadius="4" Padding="12" Margin="0,5,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="{Binding CookieStatusIcon}" Width="24" Height="24"
+                                            Foreground="{Binding CookieStatusColor}"/>
+                            <TextBlock Text="{Binding CookieStatusText}" VerticalAlignment="Center"
+                                      Foreground="{Binding CookieStatusColor}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock TextWrapping="Wrap" Foreground="#888888" FontSize="11" Margin="0,5,0,0">
+                        Note: You can uninstall the extension after cookies are received. If you browse YouTube again while logged in, cookies may be invalidated. Consider deleting YouTube cookies from your browser after setup, or keep the extension installed.
+                    </TextBlock>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Content - Step 4: Complete -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
+                IsVisible="{Binding IsStep4}">
+            <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <mi:MaterialIcon Kind="CheckCircle" Width="64" Height="64" Foreground="#81C784" HorizontalAlignment="Center"/>
+                <TextBlock Text="Setup Complete!" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#cccccc" HorizontalAlignment="Center" TextAlignment="Center">
+                    YouTube cookies have been received. You should no longer see bot detection errors.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding !IsStep4}"/>
+            <Button Content="Back" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}"/>
+            <Button Content="{Binding NextButtonText}" Command="{Binding NextCommand}"
+                    IsEnabled="{Binding CanGoNext}" Background="#7B68EE"/>
+        </StackPanel>
+    </Grid>
+</Window>

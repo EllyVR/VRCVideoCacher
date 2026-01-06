@@ -8,7 +8,7 @@ using VRCVideoCacher.YTDL;
 
 namespace VRCVideoCacher;
 
-internal static class Program
+public static class Program
 {
     public static string YtdlpHash = string.Empty;
     public const string Version = "2026.1.4";
@@ -18,15 +18,25 @@ internal static class Program
         ? CurrentProcessPath
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
 
+    /// <summary>
+    /// Fired when YouTube cookies are received from the browser extension.
+    /// </summary>
+    public static event Action? OnCookiesUpdated;
+
     public static async Task Main(string[] args)
     {
-        Console.Title = $"VRCVideoCacher v{Version}";
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console(new ExpressionTemplate(
-                "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n{@x}",
-                theme: TemplateTheme.Literate))
-            .CreateLogger();
+        try { Console.Title = $"VRCVideoCacher v{Version}"; } catch { /* GUI mode, no console */ }
+
+        // Only configure logger if not already configured (e.g., by UI)
+        if (Log.Logger.GetType().Name == "SilentLogger")
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console(new ExpressionTemplate(
+                    "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n{@x}",
+                    theme: TemplateTheme.Literate))
+                .CreateLogger();
+        }
         const string elly = "Elly";
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
@@ -135,5 +145,13 @@ internal static class Program
     {
         FileTools.RestoreAllYtdl();
         Logger.Information("Exiting...");
+    }
+
+    /// <summary>
+    /// Notifies listeners that cookies have been updated.
+    /// </summary>
+    public static void NotifyCookiesUpdated()
+    {
+        OnCookiesUpdated?.Invoke();
     }
 }

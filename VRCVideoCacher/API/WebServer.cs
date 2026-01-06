@@ -23,7 +23,7 @@ public class WebServer
     
     private static EmbedIO.WebServer CreateWebServer(string url)
     {
-        Logger.UnregisterLogger<ConsoleLogger>();
+        try { Logger.UnregisterLogger<ConsoleLogger>(); } catch { /* Not registered */ }
         Logger.RegisterLogger<WebServerLogger>();
 
         var urls = new List<string>

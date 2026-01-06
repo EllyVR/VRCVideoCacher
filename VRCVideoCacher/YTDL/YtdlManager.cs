@@ -93,7 +93,8 @@ public class YtdlManager
     {
         if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
-        
+
+        Directory.CreateDirectory(ConfigManager.UtilsPath);
         var denoPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
         
         var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
@@ -192,6 +193,7 @@ public class YtdlManager
         if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
 
+        Directory.CreateDirectory(ConfigManager.UtilsPath);
         var ffmpegPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
 
         // Make sure we can write into the folder
@@ -346,6 +348,11 @@ public class YtdlManager
             await using var stream = await HttpClient.GetStreamAsync(assetVersion.browser_download_url);
             if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
                 throw new Exception("Failed to get YT-DLP path");
+
+            // Ensure directory exists
+            var ytdlDir = Path.GetDirectoryName(YtdlPath);
+            if (!string.IsNullOrEmpty(ytdlDir))
+                Directory.CreateDirectory(ytdlDir);
 
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);

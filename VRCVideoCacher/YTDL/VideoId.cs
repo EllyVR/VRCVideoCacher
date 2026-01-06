@@ -1,12 +1,32 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using Serilog;
 using VRCVideoCacher.Models;
 
 namespace VRCVideoCacher.YTDL;
+
+// JSON model for yt-dlp video info
+internal class YtdlpVideoInfo
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("duration")]
+    public double? Duration { get; set; }
+
+    [JsonPropertyName("is_live")]
+    public bool? IsLive { get; set; }
+}
+
+[JsonSerializable(typeof(YtdlpVideoInfo))]
+internal partial class VideoIdJsonContext : JsonSerializerContext
+{
+}
 
 public class VideoId
 {
@@ -159,15 +179,15 @@ public class VideoId
             throw new Exception($"Failed to get video ID: {error.Trim()}");
         if (string.IsNullOrEmpty(rawData))
             throw new Exception("Failed to get video ID");
-        var data = JsonConvert.DeserializeObject<dynamic>(rawData);
-        if (data is null || data.id is null || data.duration is null)
+        var data = JsonSerializer.Deserialize(rawData, VideoIdJsonContext.Default.YtdlpVideoInfo);
+        if (data?.Id is null || data.Duration is null)
             throw new Exception("Failed to get video ID");
-        if (data.is_live is true)
+        if (data.IsLive == true)
             throw new Exception("Failed to get video ID: Video is a stream");
-        if (data.duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
-            throw new Exception($"Failed to get video ID: Video is longer than configured max length ({data.duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
-        
-        return data.id;
+        if (data.Duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
+            throw new Exception($"Failed to get video ID: Video is longer than configured max length ({data.Duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
+
+        return data.Id;
     }
 
     public static async Task<string> GetURLResonite(string url)

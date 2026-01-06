@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.UI.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="VRCVideoCacher.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" Margin="10">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*, Auto, Auto">
+                <TextBlock Text="Settings" FontSize="24" FontWeight="Bold"/>
+                <Button Grid.Column="1" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+                        <TextBlock Text="Reset"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Command="{Binding SaveSettingsCommand}" Classes="accent">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
+                        <TextBlock Text="Save"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Status Message -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       Foreground="#81C784"/>
+
+            <!-- Server Settings -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Server Settings" FontWeight="SemiBold" FontSize="16"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Web Server URL"/>
+                        <TextBox Text="{Binding WebServerUrl}" Watermark="http://localhost:9696"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Download Settings -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Download Settings" FontWeight="SemiBold" FontSize="16"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="yt-dlp Path"/>
+                        <TextBox Text="{Binding YtdlPath}" Watermark="Utils\yt-dlp.exe"/>
+                    </StackPanel>
+
+                    <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="Use YouTube Cookies (browser extension)"/>
+                    <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="Auto-update yt-dlp, FFmpeg, and Deno"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Additional yt-dlp Arguments"/>
+                        <TextBox Text="{Binding YtdlAdditionalArgs}" Watermark="Optional arguments"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Preferred Dub Language (e.g., 'de' for German)"/>
+                        <TextBox Text="{Binding YtdlDubLanguage}" Watermark="Leave empty for original"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Download Delay (seconds)"/>
+                        <NumericUpDown Value="{Binding YtdlDelay}" Minimum="0" Maximum="60" Increment="1"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Cache Settings -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Cache Settings" FontWeight="SemiBold" FontSize="16"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Cache Path (leave empty for default)"/>
+                        <TextBox Text="{Binding CachedAssetPath}" Watermark="Default: CachedAssets folder"/>
+                    </StackPanel>
+
+                    <CheckBox IsChecked="{Binding CacheYouTube}" Content="Cache YouTube Videos"/>
+
+                    <StackPanel Spacing="5" IsVisible="{Binding CacheYouTube}">
+                        <TextBlock Text="Max YouTube Resolution"/>
+                        <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding CacheYouTubeMaxResolution}"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5" IsVisible="{Binding CacheYouTube}">
+                        <TextBlock Text="Max Video Length (minutes)"/>
+                        <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Maximum="600" Increment="10"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Max Cache Size (GB, 0 = unlimited)"/>
+                        <NumericUpDown Value="{Binding CacheMaxSizeInGb}" Minimum="0" Maximum="1000" Increment="1" FormatString="0.#"/>
+                    </StackPanel>
+
+                    <CheckBox IsChecked="{Binding CachePyPyDance}" Content="Cache PyPyDance Videos"/>
+                    <CheckBox IsChecked="{Binding CacheVRDancing}" Content="Cache VRDancing Videos"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Game Patching -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Game Patching" FontWeight="SemiBold" FontSize="16"/>
+
+                    <CheckBox IsChecked="{Binding PatchVRC}" Content="Patch VRChat"/>
+                    <CheckBox IsChecked="{Binding PatchResonite}" Content="Patch Resonite"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Updates -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Updates" FontWeight="SemiBold" FontSize="16"/>
+
+                    <CheckBox IsChecked="{Binding AutoUpdate}" Content="Auto-update VRCVideoCacher"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Blocked URLs -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Blocked URLs" FontWeight="SemiBold" FontSize="16"/>
+                        <Button Grid.Column="1" Command="{Binding AddBlockedUrlCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
+                                <TextBlock Text="Add"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding BlockedUrls}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*, Auto" Margin="0,5">
+                                    <TextBox Grid.Column="0" Text="{Binding Mode=TwoWay}"/>
+                                    <Button Grid.Column="1" Margin="5,0,0,0"
+                                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).RemoveBlockedUrlCommand}"
+                                            CommandParameter="{Binding}">
+                                        <mi:MaterialIcon Kind="Delete" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+
+    <UserControl.Styles>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="#1DB954"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

@@ -13,6 +13,9 @@ public class ConfigManager
     private static readonly string ConfigFilePath;
     public static readonly string UtilsPath;
 
+    // Events for UI
+    public static event Action? OnConfigChanged;
+
     static ConfigManager()
     {
         Log.Information("Loading config...");
@@ -41,16 +44,17 @@ public class ConfigManager
         TrySaveConfig();
     }
 
-    private static void TrySaveConfig()
+    public static void TrySaveConfig()
     {
         var newConfig = JsonConvert.SerializeObject(Config, Formatting.Indented);
         var oldConfig = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : string.Empty;
         if (newConfig == oldConfig)
             return;
-        
+
         Log.Information("Config changed, saving...");
         File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         Log.Information("Config saved.");
+        OnConfigChanged?.Invoke();
     }
     
     private static bool GetUserConfirmation(string prompt, bool defaultValue)
@@ -119,6 +123,6 @@ public class ConfigModel
     public bool PatchVRC = true;
     public bool AutoUpdate = true;
     public string[] PreCacheUrls = [];
-    
+    public bool CookieSetupCompleted = false;
 }
 // ReSharper restore InconsistentNaming
