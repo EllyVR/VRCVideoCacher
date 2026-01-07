@@ -88,7 +88,7 @@ public class Updater
             try
             {
                 await using var stream = await HttpClient.GetStreamAsync(asset.browser_download_url);
-                await using var fileStream = new FileStream(TempFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var fileStream = new FileStream(TempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 await stream.CopyToAsync(fileStream);
                 fileStream.Close();
 
