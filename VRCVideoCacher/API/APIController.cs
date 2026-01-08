@@ -34,6 +34,7 @@ public class ApiController : WebApiController
         await HttpContext.SendStringAsync("Cookies received.", "text/plain", Encoding.UTF8);
 
         Log.Information("Received Youtube cookies from browser extension.");
+        Program.NotifyCookiesUpdated();
         if (!ConfigManager.Config.ytdlUseCookies)
             Log.Warning("Config is NOT set to use cookies from browser extension.");
     }

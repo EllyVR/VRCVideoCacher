@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.UI.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:asyncImageLoader="using:AsyncImageLoader"
+             x:Class="VRCVideoCacher.UI.Views.CacheBrowserView"
+             x:DataType="vm:CacheBrowserViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="10">
+            <TextBlock Text="Cache Browser" FontSize="24" FontWeight="Bold"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <Button Command="{Binding RefreshCacheCommand}" ToolTip.Tip="Refresh">
+                    <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
+                </Button>
+                <Button Command="{Binding OpenInExplorerCommand}" ToolTip.Tip="Open Folder">
+                    <mi:MaterialIcon Kind="FolderOpen" Width="20" Height="20"/>
+                </Button>
+                <Button Command="{Binding DeleteAllCommand}" ToolTip.Tip="Clear All Cache" Background="#CF6679">
+                    <mi:MaterialIcon Kind="DeleteSweep" Width="20" Height="20"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Search -->
+        <Grid Grid.Row="1" Margin="10,0,10,10">
+            <TextBox Text="{Binding SearchFilter}" Watermark="Search videos...">
+                <TextBox.InnerLeftContent>
+                    <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
+                </TextBox.InnerLeftContent>
+            </TextBox>
+        </Grid>
+
+        <!-- Video List -->
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding FilteredVideos}"
+                 SelectedItem="{Binding SelectedItem}"
+                 Margin="10,0"
+                 Background="#1a1a1a">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:CacheItemViewModel">
+                    <Border Margin="2" Background="#252525" CornerRadius="4" Padding="8">
+                        <Grid ColumnDefinitions="Auto, *, Auto, Auto, Auto">
+                            <!-- Thumbnail -->
+                            <Border Grid.Column="0" Width="120" Height="68" CornerRadius="4" ClipToBounds="True" Background="#333333">
+                                <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailSource}" Stretch="UniformToFill"/>
+                            </Border>
+
+                            <!-- Video Info -->
+                            <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DisplayTitle}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="400"/>
+                                <TextBlock Text="{Binding VideoId}" FontSize="12" Foreground="#888888" Margin="0,4,0,0"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Extension}" FontSize="11" Foreground="#666666"/>
+                                    <TextBlock Text="{Binding SizeFormatted}" FontSize="11" Foreground="#64B5F6"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Date -->
+                            <TextBlock Grid.Column="2" Text="{Binding LastModified, StringFormat={}{0:yyyy-MM-dd HH:mm}}"
+                                       VerticalAlignment="Center" Margin="10" Foreground="#888888"/>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Margin="10,0">
+                                <Button Command="{Binding OpenOnYouTubeCommand}" ToolTip.Tip="Open on YouTube" Padding="8">
+                                    <mi:MaterialIcon Kind="Youtube" Width="18" Height="18" Foreground="#FF0000"/>
+                                </Button>
+                                <Button Command="{Binding CopyUrlCommand}" ToolTip.Tip="Copy Local URL" Padding="8">
+                                    <mi:MaterialIcon Kind="ContentCopy" Width="18" Height="18"/>
+                                </Button>
+                                <Button Command="{Binding DeleteCommand}" ToolTip.Tip="Delete" Padding="8" Background="#CF6679">
+                                    <mi:MaterialIcon Kind="Delete" Width="18" Height="18"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Background="#252525" Padding="10,5" Margin="10,10,10,0">
+            <TextBlock Text="{Binding StatusText}"/>
+        </Border>
+    </Grid>
+</UserControl>

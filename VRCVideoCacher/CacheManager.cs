@@ -4,11 +4,21 @@ using VRCVideoCacher.Models;
 
 namespace VRCVideoCacher;
 
+public enum CacheChangeType
+{
+    Added,
+    Removed,
+    Cleared
+}
+
 public class CacheManager
 {
     private static readonly ILogger Log = Program.Logger.ForContext<CacheManager>();
     private static readonly ConcurrentDictionary<string, VideoCache> CachedAssets = new();
     public static readonly string CachePath;
+
+    // Events for UI
+    public static event Action<string, CacheChangeType>? OnCacheChanged;
 
     static CacheManager()
     {
@@ -82,7 +92,7 @@ public class CacheManager
         var filePath = Path.Combine(CachePath, fileName);
         if (!File.Exists(filePath))
             return;
-        
+
         var fileInfo = new FileInfo(filePath);
         var videoCache = new VideoCache
         {
@@ -90,11 +100,12 @@ public class CacheManager
             Size = fileInfo.Length,
             LastModified = fileInfo.LastWriteTimeUtc
         };
-        
+
         var existingCache = CachedAssets.GetOrAdd(videoCache.FileName, videoCache);
         existingCache.Size = fileInfo.Length;
         existingCache.LastModified = fileInfo.LastWriteTimeUtc;
-        
+
+        OnCacheChanged?.Invoke(fileName, CacheChangeType.Added);
         TryFlushCache();
     }
     
@@ -105,7 +116,50 @@ public class CacheManager
         {
             totalSize += cache.Value.Size;
         }
-        
+
         return totalSize;
+    }
+
+    // Public accessors for UI
+    public static IReadOnlyDictionary<string, VideoCache> GetCachedAssets()
+        => CachedAssets.ToDictionary(k => k.Key, v => v.Value);
+
+    public static long GetTotalCacheSize() => GetCacheSize();
+
+    public static int GetCachedVideoCount() => CachedAssets.Count;
+
+    public static void DeleteCacheItem(string fileName)
+    {
+        var filePath = Path.Combine(CachePath, fileName);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+            CachedAssets.TryRemove(fileName, out _);
+            OnCacheChanged?.Invoke(fileName, CacheChangeType.Removed);
+            Log.Information("Deleted cached video: {FileName}", fileName);
+        }
+    }
+
+    public static void ClearCache()
+    {
+        var files = CachedAssets.Keys.ToList();
+        foreach (var fileName in files)
+        {
+            var filePath = Path.Combine(CachePath, fileName);
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to delete {FileName}: {Error}", fileName, ex.Message);
+                }
+            }
+        }
+        CachedAssets.Clear();
+        OnCacheChanged?.Invoke(string.Empty, CacheChangeType.Cleared);
+        Log.Information("Cache cleared");
     }
 }
