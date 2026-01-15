@@ -16,11 +16,9 @@ public class Updater
     };
     private static readonly ILogger Log = Program.Logger.ForContext<Updater>();
     private static readonly string FileName =  OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
-    private const string BackupFileName = "VRCVideoCacher.bkp";
-    private const string TempFileName = "VRCVideoCacher.Temp";
     private static readonly string FilePath = Path.Combine(Program.CurrentProcessPath, FileName);
-    private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, BackupFileName);
-    private static readonly string TempFilePath = Path.Combine(Program.CurrentProcessPath, TempFileName);
+    private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
+    private static readonly string TempFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
 
     public static async Task CheckForUpdates()
     {
@@ -34,7 +32,7 @@ public class Updater
             Log.Information("Running in dev mode. Skipping update check.");
             return;
         }
-        var response = await HttpClient.GetAsync(UpdateUrl);
+        using var response = await HttpClient.GetAsync(UpdateUrl);
         if (!response.IsSuccessStatusCode)
         {
             Log.Warning("Failed to check for updates.");
@@ -68,7 +66,12 @@ public class Updater
     public static void Cleanup()
     {
         if (File.Exists(BackupFilePath))
+        {
             File.Delete(BackupFilePath);
+            // silly temporary config reset to test video prefetch
+            ConfigManager.Config.ytdlDelay = 0;
+            ConfigManager.TrySaveConfig();
+        }
     }
         
     private static async Task UpdateAsync(GitHubRelease release)
@@ -83,7 +86,7 @@ public class Updater
             try
             {
                 await using var stream = await HttpClient.GetStreamAsync(asset.browser_download_url);
-                await using var fileStream = new FileStream(TempFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var fileStream = new FileStream(TempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 await stream.CopyToAsync(fileStream);
                 fileStream.Close();
 

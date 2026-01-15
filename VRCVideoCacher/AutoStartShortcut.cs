@@ -19,11 +19,13 @@ public class AutoStartShortcut
             return;
 
         var info = Shortcut.ReadFromFile(shortcut);
-        if (info.LinkTargetIDList.Path == Environment.ProcessPath)
+        if (info.LinkTargetIDList.Path == Environment.ProcessPath &&
+            info.StringData.WorkingDir == Path.GetDirectoryName(Environment.ProcessPath))
             return;
         
         Log.Information("Updating VRCX autostart shortcut path...");
         info.LinkTargetIDList.Path = Environment.ProcessPath;
+        info.StringData.WorkingDir = Path.GetDirectoryName(Environment.ProcessPath);
         info.WriteToFile(shortcut);
     }
 
@@ -58,7 +60,7 @@ public class AutoStartShortcut
             },
             StringData = new StringData
             {
-                WorkingDir = Path.GetDirectoryName(Environment.ProcessPath),
+                WorkingDir = Path.GetDirectoryName(Environment.ProcessPath)
             }
         };
         shortcut.WriteToFile(shortcutPath);

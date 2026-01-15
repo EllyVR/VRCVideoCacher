@@ -152,12 +152,11 @@ public class ApiController : WebApiController
             response = string.Empty;
         }
 
-        if ((videoInfo.UrlType == UrlType.YouTube ||
-             videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
-             videoInfo.VideoUrl.Contains("googlevideo.com")))
+        if (videoInfo.UrlType == UrlType.YouTube ||
+            videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
+            videoInfo.VideoUrl.Contains("googlevideo.com"))
         {
             await VideoTools.Prefetch(response);
-
             if (ConfigManager.Config.ytdlDelay > 0)
             {
                 Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
@@ -191,8 +190,8 @@ public class ApiController : WebApiController
 
     private static async Task<string?> GetRedirectUrl(string requestUrl)
     {
-        var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
-        var res = await HttpClient.SendAsync(req);
+        using var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
+        using var res = await HttpClient.SendAsync(req);
         if (!res.IsSuccessStatusCode)
             return null;
 
