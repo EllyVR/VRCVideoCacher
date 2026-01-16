@@ -5,13 +5,13 @@ public class VideoTools
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<VideoTools>();
     private static readonly HttpClient HttpClient = new();
 
-    public static async Task Prefetch(string videoUrl)
+    public static async Task<bool> Prefetch(string videoUrl)
     {
         // If the URL is invalid, skip prefetching
         if (string.IsNullOrWhiteSpace(videoUrl) || !Uri.IsWellFormedUriString(videoUrl, UriKind.RelativeOrAbsolute))
         {
             Log.Warning("Invalid video URL provided for prefetch: {URL}", videoUrl);
-            return;
+            return false;
         }
 
         // Determine if the URL is an M3U8 playlist
@@ -32,7 +32,7 @@ public class VideoTools
         }
 
         if (firstM3U8Url == null)
-            return;
+            return true;
         
         // If we have an M3U8 URL, perform HEAD requests to validate accessibility
         var statusCode = 0;
@@ -63,6 +63,11 @@ public class VideoTools
             Log.Error(
                 "Prefetching M3U8 stream failed after {limit} attempts, status code {status}. Video may not play.",
                 requestLimit, statusCode);
+            return false;
+        }
+        else
+        {
+            return true;
         }
     }
 }

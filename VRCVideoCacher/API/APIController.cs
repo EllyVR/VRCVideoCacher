@@ -155,7 +155,16 @@ public class ApiController : WebApiController
             videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
             videoInfo.VideoUrl.Contains("googlevideo.com"))
         {
-            await VideoTools.Prefetch(response);
+            var isPrefetchSuccessful = await VideoTools.Prefetch(response);
+
+            if(!isPrefetchSuccessful && avPro)
+            {
+                Log.Warning("Prefetch failed with AVPro, retrying without AVPro.");
+                avPro = false;
+                (response, success) = await VideoId.GetUrl(videoInfo, avPro);
+                await VideoTools.Prefetch(response);
+            }
+
             if (ConfigManager.Config.ytdlDelay > 0)
             {
                 Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
