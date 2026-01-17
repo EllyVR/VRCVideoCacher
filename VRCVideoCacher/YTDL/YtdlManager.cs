@@ -54,7 +54,7 @@ public class YtdlManager
     public static async Task TryDownloadYtdlp()
     {
         Log.Information("Checking for YT-DLP updates...");
-        var response = await HttpClient.GetAsync(YtdlpApiUrl);
+        using var response = await HttpClient.GetAsync(YtdlpApiUrl);
         if (!response.IsSuccessStatusCode)
         {
             Log.Warning("Failed to check for YT-DLP updates.");
@@ -97,7 +97,7 @@ public class YtdlManager
         Directory.CreateDirectory(ConfigManager.UtilsPath);
         var denoPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
         
-        var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
+        using var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
             Log.Warning("Failed to get latest ffmpeg release: {ResponseStatusCode}", apiResponse.StatusCode);
@@ -213,7 +213,7 @@ public class YtdlManager
         if (!ConfigManager.Config.CacheYouTube)
             return;
 
-        var apiResponse = await HttpClient.GetAsync(OperatingSystem.IsWindows() ? FfmpegApiUrl : FfmpegNightlyApiUrl);
+        using var apiResponse = await HttpClient.GetAsync(OperatingSystem.IsWindows() ? FfmpegApiUrl : FfmpegNightlyApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
             Log.Warning("Failed to get latest ffmpeg release: {ResponseStatusCode}", apiResponse.StatusCode);

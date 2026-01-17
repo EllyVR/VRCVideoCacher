@@ -70,33 +70,43 @@ public class ConfigManager
     private static void FirstRun()
     {
         Log.Information("It appears this is your first time running VRCVideoCacher. Let's create a basic config file.");
-
-        Config.CacheYouTube = GetUserConfirmation("Would you like to cache/download Youtube videos?", true);
-        if (Config.CacheYouTube)
+        
+        var autoSetup = GetUserConfirmation("Would you like to use VRCVideoCacher for only fixing YouTube videos?", true);
+        if (autoSetup)
         {
-            var maxResolution = GetUserConfirmation("Would you like to cache/download Youtube videos in 4k?", true);
-            Config.CacheYouTubeMaxResolution = maxResolution ? 2160 : 1080;
+            Log.Information("Basic config created. You can modify it later in the Config.json file.");
+        }
+        else
+        {
+            Config.CacheYouTube = GetUserConfirmation("Would you like to cache/download Youtube videos?", true);
+            if (Config.CacheYouTube)
+            {
+                var maxResolution = GetUserConfirmation("Would you like to cache/download Youtube videos in 4k?", true);
+                Config.CacheYouTubeMaxResolution = maxResolution ? 2160 : 1080;
+            }
+
+            var vrDancingPyPyChoice = GetUserConfirmation("Would you like to cache/download VRDancing & PyPyDance videos?", true);
+            Config.CacheVRDancing = vrDancingPyPyChoice;
+            Config.CachePyPyDance = vrDancingPyPyChoice;
+
+            Config.PatchResonite = GetUserConfirmation("Would you like to enable Resonite support?", false);
         }
 
-        var vrDancingPyPyChoice = GetUserConfirmation("Would you like to cache/download VRDancing & PyPyDance videos?", true);
-        Config.CacheVRDancing = vrDancingPyPyChoice;
-        Config.CachePyPyDance = vrDancingPyPyChoice;
-
-        Log.Information("Would you like to use the companion extension to fetch youtube cookies? (This will fix bot errors, requires installation of the extension)");
-        Log.Information("Extension can be found here: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
-        Config.ytdlUseCookies = GetUserConfirmation("", true);
-
-        Config.PatchResonite = GetUserConfirmation("Would you like to patch Resonite Video Loading", false);
-        
         if (OperatingSystem.IsWindows() && GetUserConfirmation("Would you like to add VRCVideoCacher to VRCX auto start?", true))
         {
             AutoStartShortcut.CreateShortcut();
         }
 
-        if (YtdlManager.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config?", true))
+        if (YtdlManager.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config? (this is necessary for VRCVideoCacher to function)", true))
         {
             YtdlManager.DeleteGlobalYtdlConfig();
         }
+
+        Log.Information("You'll need to install our companion extension to fetch youtube cookies (This will fix YouTube bot errors)");
+        Log.Information("Chrome: https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge");
+        Log.Information("Firefox: https://addons.mozilla.org/en-US/firefox/addon/vrcvideocachercookiesexporter/");
+        Log.Information("More info: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
+        TrySaveConfig();
     }
 }
 
@@ -113,13 +123,14 @@ public class ConfigModel
     public string CachedAssetPath = "";
     public string[] BlockedUrls = ["https://na2.vrdancing.club/sampleurl.mp4"];
     public string BlockRedirect = "https://www.youtube.com/watch?v=byv2bKekeWQ";
-    public bool CacheYouTube = true;
-    public int CacheYouTubeMaxResolution = 2160;
+    public bool CacheYouTube = false;
+    public int CacheYouTubeMaxResolution = 1080;
     public int CacheYouTubeMaxLength = 120;
     public float CacheMaxSizeInGb = 0;
-    public bool CachePyPyDance = true;
-    public bool CacheVRDancing = true;
+    public bool CachePyPyDance = false;
+    public bool CacheVRDancing = false;
     public bool PatchResonite = false;
+    public string ResonitePath = "";
     public bool PatchVRC = true;
     public bool AutoUpdate = true;
     public string[] PreCacheUrls = [];
