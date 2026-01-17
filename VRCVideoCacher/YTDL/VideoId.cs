@@ -263,7 +263,7 @@ public class VideoId
         
         if (avPro)
         {
-            process.StartInfo.Arguments = $"--encoding utf-8 -f \"(mp4/best)[height<=?1080][height>=?64][width>=?64]{languageArg}\" --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
+            process.StartInfo.Arguments = $"--encoding utf-8 -f \"(mp4/best)[height<=?1080][height>=?64][width>=?64]{languageArg}\" --extractor-args=\"youtube:player-client=default,-web_safari\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
         }
         else
         {
