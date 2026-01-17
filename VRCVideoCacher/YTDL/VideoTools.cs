@@ -5,13 +5,13 @@ public class VideoTools
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<VideoTools>();
     private static readonly HttpClient HttpClient = new();
 
-    public static async Task Prefetch(string videoUrl)
+    public static async Task<bool> Prefetch(string videoUrl, int maxRetryCount = 7)
     {
         // If the URL is invalid, skip prefetching
         if (string.IsNullOrWhiteSpace(videoUrl) || !Uri.IsWellFormedUriString(videoUrl, UriKind.RelativeOrAbsolute))
         {
             Log.Warning("Invalid video URL provided for prefetch: {URL}", videoUrl);
-            return;
+            return false;
         }
 
         // Determine if the URL is an M3U8 playlist
@@ -32,13 +32,12 @@ public class VideoTools
         }
 
         if (firstM3U8Url == null)
-            return;
+            return true;
         
         // If we have an M3U8 URL, perform HEAD requests to validate accessibility
         var statusCode = 0;
-        const int requestLimit = 7;
         const int wait = 1500;
-        for (var i = 0; i < requestLimit; i++)
+        for (var i = 0; i < maxRetryCount; i++)
         {
             using var m3u8Request = new HttpRequestMessage(HttpMethod.Head, firstM3U8Url);
             using var m3u8Response = await HttpClient.SendAsync(m3u8Request);
@@ -48,7 +47,7 @@ public class VideoTools
             {
                 Log.Warning(
                     "Prefetching M3U8 stream returned status code {status}, retrying... ({attempt}/{limit})",
-                    statusCode, i + 1, requestLimit);
+                    statusCode, i + 1, maxRetryCount);
                 await Task.Delay(wait);
             }
             else
@@ -62,7 +61,12 @@ public class VideoTools
         {
             Log.Error(
                 "Prefetching M3U8 stream failed after {limit} attempts, status code {status}. Video may not play.",
-                requestLimit, statusCode);
+                maxRetryCount, statusCode);
+            return false;
+        }
+        else
+        {
+            return true;
         }
     }
 }
