@@ -9,6 +9,9 @@ namespace VRCVideoCacher.API;
 
 public class ApiController : WebApiController
 {
+    // @TODO: Make this configurable via proposed API.
+    const int YoutubePrefetchMaxRetries = 7;
+
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<ApiController>();
     private static readonly HttpClient HttpClient = new()
     {
@@ -155,14 +158,14 @@ public class ApiController : WebApiController
             videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
             videoInfo.VideoUrl.Contains("googlevideo.com"))
         {
-            var isPrefetchSuccessful = await VideoTools.Prefetch(response);
+            var isPrefetchSuccessful = await VideoTools.Prefetch(response, YoutubePrefetchMaxRetries);
 
             if(!isPrefetchSuccessful && avPro)
             {
                 Log.Warning("Prefetch failed with AVPro, retrying without AVPro.");
                 avPro = false;
                 (response, success) = await VideoId.GetUrl(videoInfo, avPro);
-                await VideoTools.Prefetch(response);
+                await VideoTools.Prefetch(response, YoutubePrefetchMaxRetries);
             }
 
             if (ConfigManager.Config.ytdlDelay > 0)
