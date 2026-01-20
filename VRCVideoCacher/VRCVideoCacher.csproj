@@ -99,6 +99,10 @@
         <EmbeddedResource Include="yt-dlp-stub.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
+        <None Remove="yt-dlp-stub_linux" />
+        <EmbeddedResource Include="yt-dlp-stub_linux">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
