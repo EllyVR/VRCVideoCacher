@@ -44,10 +44,40 @@ public class VideoId
             .Replace("+", "")
             .Replace("=", "");
     }
+    
+    private static readonly List<string> YouTubeResolvers = new()
+    {
+        "dmn.moe",
+        "u2b.cx",
+        "t-ne.x0.to",
+        "nextnex.com",
+        "r.0cm.org"
+    };
 
     public static async Task<VideoInfo?> GetVideoId(string url, bool avPro)
     {
         url = url.Trim();
+        
+        if (url.StartsWith("https://dmn.moe"))
+        {
+            url = url.Replace("/sr/", "/yt/");
+            Log.Information("YTS URL detected, modified to: {URL}", url);
+        }
+        
+        var uriObject = new Uri(url);
+        if (YouTubeResolvers.Contains(uriObject.Host))
+        {
+            var resolvedUrl = await GetRedirectUrl(url);
+            if (url != resolvedUrl)
+            {
+                url = resolvedUrl;
+                Log.Information("YouTube resolver URL resolved to URL: {URL}", resolvedUrl);
+            }
+            else
+            {
+                Log.Error("Failed to resolve YouTube resolver URL: {URL}", url);
+            }
+        }
 
         if (url.StartsWith("http://api.pypy.dance/video") ||
             url.StartsWith("https://api.pypy.dance/video"))
@@ -311,5 +341,15 @@ public class VideoId
         }
 
         return new Tuple<string, bool>(output, true);
+    }
+
+    private static async Task<string> GetRedirectUrl(string requestUrl)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
+        using var res = await HttpClient.SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            return requestUrl;
+
+        return res.RequestMessage?.RequestUri?.ToString() ?? requestUrl;
     }
 }
