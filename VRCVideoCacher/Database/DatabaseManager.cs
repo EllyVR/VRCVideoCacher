@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
 
@@ -60,6 +61,7 @@ public static class DatabaseManager
     public static List<History> GetPlayHistory(int limit = 50)
     {
         return Database.PlayHistory
+            .AsNoTracking()
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
             .ToList();

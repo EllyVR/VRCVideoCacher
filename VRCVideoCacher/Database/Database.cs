@@ -17,6 +17,7 @@ public class Database : DbContext
         {
             Directory.CreateDirectory(CacheDir);
             optionsBuilder.UseSqlite($"Data Source={DbPath}");
+            optionsBuilder.EnableSensitiveDataLogging();
         }
     }
 }
