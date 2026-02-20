@@ -17,7 +17,7 @@ namespace VRCVideoCacher;
 internal sealed class Program
 {
     public static string YtdlpHash = string.Empty;
-    public const string Version = "2026.1.9";
+    public const string Version = "2026.2.19";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = OperatingSystem.IsWindows()
@@ -130,7 +130,7 @@ internal sealed class Program
         YtdlpHash = GetOurYtdlpHash();
 
         DatabaseManager.Init();
-
+        ElevatorManager.Init();
         if (ConfigManager.Config.YtdlpAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
         {
             await YtdlManager.TryDownloadYtdlp();
@@ -248,7 +248,7 @@ internal sealed class Program
         return GetEmbeddedResource("VRCVideoCacher.yt-dlp-stub.exe");
     }
 
-    private static Stream GetEmbeddedResource(string resourceName)
+    public static Stream GetEmbeddedResource(string resourceName)
     {
         var assembly = Assembly.GetExecutingAssembly();
         var stream = assembly.GetManifestResourceStream(resourceName);
