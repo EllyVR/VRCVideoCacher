@@ -8,6 +8,7 @@ using Serilog.Templates;
 using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
 using VRCVideoCacher.Database;
+using VRCVideoCacher.Elevator;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
@@ -28,6 +29,7 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        HostsManager.TryRun();
         AdminCheck.SetupArguements(args);
 
         var processes = Process.GetProcessesByName("VRCVideoCacher");
@@ -130,7 +132,6 @@ internal sealed class Program
         YtdlpHash = GetOurYtdlpHash();
 
         DatabaseManager.Init();
-        ElevatorManager.Init();
         if (ConfigManager.Config.YtdlpAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
         {
             await YtdlManager.TryDownloadYtdlp();

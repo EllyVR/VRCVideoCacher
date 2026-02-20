@@ -2,6 +2,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VRCVideoCacher.Elevator;
+using VRCVideoCacher.Utils;
 using VRCVideoCacher.Views;
 using VRCVideoCacher.YTDL;
 
@@ -35,6 +37,9 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentDownloadText = "None";
 
+    [ObservableProperty]
+    private bool _hostState;
+
     public DashboardViewModel()
     {
         ServerUrl = ConfigManager.Config.YtdlpWebServerURL;
@@ -42,6 +47,7 @@ public partial class DashboardViewModel : ViewModelBase
 
         // Initial data load
         RefreshData();
+        _hostState = HostsManager.IsHostAdded();
 
         // Subscribe to events
         CacheManager.OnCacheChanged += OnCacheChanged;
@@ -108,6 +114,17 @@ public partial class DashboardViewModel : ViewModelBase
             : "None";
 
         _ = ValidateCookiesAsync();
+    }
+
+    [RelayCommand]
+    private void ToggleHost()
+    {
+        if (HostState)
+            ElevatorManager.RemoveHostFile();
+        else
+            ElevatorManager.AddHostFile();
+
+        Dispatcher.UIThread.Post(() => { HostState = !HostState; });
     }
 
     private void RefreshCacheStats()
