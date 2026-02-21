@@ -8,21 +8,14 @@ namespace VRCVideoCacher.Utils;
 public class ElevatorManager
 {
     private static readonly ILogger Log = Program.Logger.ForContext<ElevatorManager>();
-    private static bool _hasHostsLine;
+    public static bool HasHostsLine = HostsManager.IsHostAdded();
 
-    public ElevatorManager()
+    public static void ToggleHostLine()
     {
-        _hasHostsLine = HostsManager.IsHostAdded();
-    }
-
-    public static bool ToggleHostLine()
-    {
-        if (_hasHostsLine)
+        if (HasHostsLine)
             RemoveHostFile();
         else
             AddHostFile();
-        
-        return _hasHostsLine;
     }
 
     private static void AddHostFile()
@@ -42,7 +35,7 @@ public class ElevatorManager
         if (proc.ExitCode == 0)
         {
             Log.Information("Host entry added successfully.");
-            _hasHostsLine = true;
+            HasHostsLine = true;
             ConfigManager.Config.YtdlpWebServerUrl = "http://localhost.youtube.com:9696";
             ConfigManager.TrySaveConfig();
             WebServer.Init();
@@ -68,7 +61,7 @@ public class ElevatorManager
         if (proc.ExitCode == 0)
         {
             Log.Information("Host entry removed successfully.");
-            _hasHostsLine = false;
+            HasHostsLine = false;
             ConfigManager.Config.YtdlpWebServerUrl = "http://localhost:9696";
             ConfigManager.TrySaveConfig();
             WebServer.Init();

@@ -81,6 +81,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel()
     {
+        ConfigManager.OnConfigChanged += LoadFromConfig;
         LoadFromConfig();
     }
 

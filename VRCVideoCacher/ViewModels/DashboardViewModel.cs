@@ -44,10 +44,10 @@ public partial class DashboardViewModel : ViewModelBase
     {
         ServerUrl = ConfigManager.Config.YtdlpWebServerUrl;
         MaxCacheSize = ConfigManager.Config.CacheMaxSizeInGb;
+        HostState = ElevatorManager.HasHostsLine;
 
         // Initial data load
         RefreshData();
-        _hostState = HostsManager.IsHostAdded();
 
         // Subscribe to events
         CacheManager.OnCacheChanged += OnCacheChanged;
@@ -119,8 +119,8 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleHost()
     {
-        var newState = ElevatorManager.ToggleHostLine();
-        Dispatcher.UIThread.Post(() => { HostState = newState; });
+        ElevatorManager.ToggleHostLine();
+        Dispatcher.UIThread.Post(() => { HostState = ElevatorManager.HasHostsLine; });
     }
 
     private void RefreshCacheStats()
