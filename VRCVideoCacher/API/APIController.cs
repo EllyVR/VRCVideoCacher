@@ -85,7 +85,7 @@ public class ApiController : WebApiController
         if (isCached)
         {
             File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
-            var url = $"{ConfigManager.Config.YtdlpWebServerURL}/{fileName}";
+            var url = $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}";
             Log.Information("Responding with Cached URL: {URL}", url);
             await HttpContext.SendStringAsync(url, "text/plain", Encoding.UTF8);
             return;
@@ -167,7 +167,7 @@ public class ApiController : WebApiController
         if (!isCached && (
                 (videoInfo.UrlType == UrlType.YouTube && ConfigManager.Config.CacheYouTube) ||
                 (videoInfo.UrlType == UrlType.PyPyDance && ConfigManager.Config.CachePyPyDance) ||
-                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVRDancing)))
+                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVrDancing)))
         {
             VideoDownloader.QueueDownload(videoInfo);
         }
@@ -177,13 +177,13 @@ public class ApiController : WebApiController
     {
         var ext = avPro ? "webm" : "mp4";
         var fileName = $"{videoId}.{ext}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         var isCached = File.Exists(filePath);
         if (avPro && !isCached)
         {
             // retry with .mp4
             fileName = $"{videoId}.mp4";
-            filePath = Path.Combine(CacheManager.CachePath, fileName);
+            filePath = Path.Join(CacheManager.CachePath, fileName);
             isCached = File.Exists(filePath);
         }
         return (isCached, filePath, fileName);

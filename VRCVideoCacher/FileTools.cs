@@ -129,7 +129,7 @@ public class FileTools
         var systemPaths = systemPath.Split(Path.PathSeparator);
 
         var paths = systemPaths
-            .Select(path => Path.Combine(path, filename))
+            .Select(path => Path.Join(path, filename))
             .Where(Path.Exists)
             .ToImmutableList();
         return paths.Count > 0 ? paths.First() : null;

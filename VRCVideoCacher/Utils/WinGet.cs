@@ -8,7 +8,7 @@ namespace VRCVideoCacher;
 public class WinGet
 {
     private static readonly ILogger Log = Program.Logger.ForContext<WinGet>();
-    private static string WingetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\WindowsApps\winget.exe");
+    private static string WingetPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\WindowsApps\winget.exe");
     private static readonly Dictionary<string, string> WingetPackages = new()
     {
         { "VP9 Video Extensions", "9n4d0msmp0pt" },

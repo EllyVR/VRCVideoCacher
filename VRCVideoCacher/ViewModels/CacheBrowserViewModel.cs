@@ -68,7 +68,7 @@ public partial class CacheItemViewModel : ViewModelBase
     [RelayCommand]
     private async Task CopyUrl()
     {
-        var url = $"{ConfigManager.Config.YtdlpWebServerURL}/{FileName}";
+        var url = $"{ConfigManager.Config.YtdlpWebServerUrl}/{FileName}";
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
             var clipboard = desktop.MainWindow?.Clipboard;
@@ -215,7 +215,7 @@ public partial class CacheBrowserViewModel : ViewModelBase
         {
             if (SelectedItem != null)
             {
-                var filePath = Path.Combine(cachePath, SelectedItem.FileName);
+                var filePath = Path.Join(cachePath, SelectedItem.FileName);
                 System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{filePath}\"");
             }
             else

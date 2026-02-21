@@ -13,17 +13,20 @@ public class WebServer
 
     public static void Init()
     {
-        var indexPath = Path.Combine(CacheManager.CachePath, "index.html");
+        _server?.Dispose();
+
+        var indexPath = Path.Join(CacheManager.CachePath, "index.html");
         if (!File.Exists(indexPath))
             File.WriteAllText(indexPath, "VRCVideoCacher");
 
-        _server = CreateWebServer(ConfigManager.Config.YtdlpWebServerURL);
+        _server = CreateWebServer(ConfigManager.Config.YtdlpWebServerUrl);
         _server.RunAsync();
     }
 
     private static EmbedIO.WebServer CreateWebServer(string url)
     {
         try { Logger.UnregisterLogger<ConsoleLogger>(); } catch { /* Not registered */ }
+        try { Logger.UnregisterLogger<WebServerLogger>(); } catch { /* Not registered */ }
         Logger.RegisterLogger<WebServerLogger>();
 
         var urls = new List<string>

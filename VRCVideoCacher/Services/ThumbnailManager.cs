@@ -2,8 +2,8 @@ namespace VRCVideoCacher.Services;
 
 public class ThumbnailManager
 {
-    public static readonly string CacheDir = Path.Combine(Program.DataPath, "MetadataCache");
-    public static readonly string ThumbnailCacheDir = Path.Combine(CacheDir, "thumbnails");
+    public static readonly string CacheDir = Path.Join(Program.DataPath, "MetadataCache");
+    public static readonly string ThumbnailCacheDir = Path.Join(CacheDir, "thumbnails");
 
     private static readonly HttpClient HttpClient = new()
     {
@@ -19,7 +19,7 @@ public class ThumbnailManager
 
     public static string GetThumbnailPath(string videoId)
     {
-        return Path.Combine(ThumbnailCacheDir, $"{videoId}.jpg");
+        return Path.Join(ThumbnailCacheDir, $"{videoId}.jpg");
     }
 
     public static string? GetThumbnail(string videoId)

@@ -10,12 +10,14 @@
             <!-- Header -->
             <Grid ColumnDefinitions="*, Auto">
                 <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold"/>
-                <Button Grid.Column="1" Command="{Binding RefreshDataCommand}" ToolTip.Tip="Refresh">
-                    <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
-                </Button>
-                <Button Grid.Column="1" Command="{Binding ToggleHostCommand}" ToolTip.Tip="Toggle Host" Margin="40,0,0,0">
-                    <mi:MaterialIcon Kind="ToggleSwitch" Width="20" Height="20" Foreground="{Binding HostState, Converter={x:Static vm:BoolToStatusColorConverter.Instance}}"/>
-                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding RefreshDataCommand}" ToolTip.Tip="Refresh">
+                        <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
+                    </Button>
+                    <Button Command="{Binding ToggleHostCommand}" ToolTip.Tip="Toggle Host">
+                        <mi:MaterialIcon Kind="ToggleSwitch" Width="20" Height="20" Foreground="{Binding HostState, Converter={x:Static vm:BoolToStatusColorConverter.Instance}}"/>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <!-- Stats Cards -->

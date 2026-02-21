@@ -28,8 +28,8 @@ public class VideoDownloader
 
     static VideoDownloader()
     {
-        TempDownloadMp4Path = Path.Combine(CacheManager.CachePath, "_tempVideo.mp4");
-        TempDownloadWebmPath = Path.Combine(CacheManager.CachePath, "_tempVideo.webm");
+        TempDownloadMp4Path = Path.Join(CacheManager.CachePath, "_tempVideo.mp4");
+        TempDownloadWebmPath = Path.Join(CacheManager.CachePath, "_tempVideo.webm");
         Task.Run(DownloadThread);
     }
 
@@ -193,7 +193,7 @@ public class VideoDownloader
         Thread.Sleep(100);
 
         var fileName = $"{videoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         if (File.Exists(filePath))
         {
             Log.Error("File already exists, canceling...");
@@ -226,7 +226,7 @@ public class VideoDownloader
         }
 
         CacheManager.AddToCache(fileName);
-        Log.Information("YouTube Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerURL}/{fileName}");
+        Log.Information("YouTube Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
         return true;
     }
 
@@ -266,7 +266,7 @@ public class VideoDownloader
         await Task.Delay(10);
 
         var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         if (File.Exists(TempDownloadMp4Path))
         {
             File.Move(TempDownloadMp4Path, filePath);
@@ -282,7 +282,7 @@ public class VideoDownloader
         }
 
         CacheManager.AddToCache(fileName);
-        Log.Information("Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerURL}/{fileName}");
+        Log.Information("Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
         return true;
     }
 }

@@ -130,7 +130,7 @@ public partial class LogViewerViewModel : ViewModelBase
     private async Task ExportLogs()
     {
         // Export logs to file
-        var logPath = Path.Combine(VRCVideoCacher.Program.DataPath, $"export_{DateTime.Now:yyyyMMdd_HHmmss}.log");
+        var logPath = Path.Join(VRCVideoCacher.Program.DataPath, $"export_{DateTime.Now:yyyyMMdd_HHmmss}.log");
         var lines = LogEntries.Select(e => $"[{e.Timestamp:HH:mm:ss} {e.Level} {e.Source}] {e.Message}");
         await File.WriteAllLinesAsync(logPath, lines);
 

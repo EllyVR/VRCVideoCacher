@@ -23,8 +23,8 @@ internal static class Program
     public static async Task Main(string[] args)
     {
         var appDataPath =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low", @"VRChat\VRChat\Tools");
-        _logFilePath = Path.Combine(appDataPath, "ytdl.log");
+            Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low", @"VRChat\VRChat\Tools");
+        _logFilePath = Path.Join(appDataPath, "ytdl.log");
         
         var url = string.Empty;
         var avPro = true;
@@ -76,7 +76,7 @@ internal static class Program
         {
             WriteLog("[Error] Connection refused. Is the server running?");
             await Console.Error.WriteLineAsync("ERROR: [VRCVideoCacher] Connection refused. Is VRCVideoCacher running?");
-            var ytdlPath = Path.Combine(appDataPath, "yt-dlp.exe");
+            var ytdlPath = Path.Join(appDataPath, "yt-dlp.exe");
             if (File.Exists(ytdlPath) && File.GetAttributes(ytdlPath).HasFlag(FileAttributes.ReadOnly))
             {
                 var attr = File.GetAttributes(ytdlPath);

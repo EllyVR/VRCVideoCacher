@@ -6,12 +6,12 @@ namespace VRCVideoCacher.Models;
 public class Versions
 {
     private static readonly ILogger Log = Program.Logger.ForContext<Versions>();
-    private static readonly string VersionPath = Path.Combine(Program.DataPath, "version.json");
+    private static readonly string VersionPath = Path.Join(Program.DataPath, "version.json");
     public static readonly VersionJson CurrentVersion = new();
 
     static Versions()
     {
-        var oldVersionFile = Path.Combine(Program.DataPath, "yt-dlp.version.txt");
+        var oldVersionFile = Path.Join(Program.DataPath, "yt-dlp.version.txt");
         if (File.Exists(oldVersionFile))
         {
             CurrentVersion = new VersionJson

@@ -25,11 +25,11 @@ public class CacheManager
     static CacheManager()
     {
         if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
-            CachePath = Path.Combine(GetCacheFolder(), "CachedAssets");
+            CachePath = Path.Join(GetCacheFolder(), "CachedAssets");
         else if (Path.IsPathRooted(ConfigManager.Config.CachedAssetPath))
             CachePath = ConfigManager.Config.CachedAssetPath;
         else
-            CachePath = Path.Combine(Program.CurrentProcessPath, ConfigManager.Config.CachedAssetPath);
+            CachePath = Path.Join(Program.CurrentProcessPath, ConfigManager.Config.CachedAssetPath);
 
         Log.Debug("Using cache path {CachePath}", CachePath);
         BuildCache();
@@ -42,9 +42,9 @@ public class CacheManager
 
         var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
         if (string.IsNullOrEmpty(cachePath))
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
+            return Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
 
-        return Path.Combine(cachePath, "VRCVideoCacher");
+        return Path.Join(cachePath, "VRCVideoCacher");
     }
 
     public static void Init()
@@ -79,7 +79,7 @@ public class CacheManager
         while (cacheSize >= maxCacheSize && oldestFiles.Count > 0)
         {
             var oldestFile = oldestFiles.First();
-            var filePath = Path.Combine(CachePath, oldestFile.Value.FileName);
+            var filePath = Path.Join(CachePath, oldestFile.Value.FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -101,7 +101,7 @@ public class CacheManager
 
     public static void AddToCache(string fileName)
     {
-        var filePath = Path.Combine(CachePath, fileName);
+        var filePath = Path.Join(CachePath, fileName);
         if (!File.Exists(filePath))
             return;
 
@@ -142,7 +142,7 @@ public class CacheManager
 
     public static void DeleteCacheItem(string fileName)
     {
-        var filePath = Path.Combine(CachePath, fileName);
+        var filePath = Path.Join(CachePath, fileName);
         if (!File.Exists(filePath))
             return;
 
@@ -158,7 +158,7 @@ public class CacheManager
         var files = CachedAssets.Keys.ToList();
         foreach (var fileName in files)
         {
-            var filePath = Path.Combine(CachePath, fileName);
+            var filePath = Path.Join(CachePath, fileName);
             if (!File.Exists(filePath))
                 continue;
 

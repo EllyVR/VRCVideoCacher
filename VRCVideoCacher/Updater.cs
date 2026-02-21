@@ -16,9 +16,9 @@ public class Updater
     };
     private static readonly ILogger Log = Program.Logger.ForContext<Updater>();
     private static readonly string FileName = OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
-    private static readonly string FilePath = Path.Combine(Program.CurrentProcessPath, FileName);
-    private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
-    private static readonly string TempFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
+    private static readonly string FilePath = Path.Join(Program.CurrentProcessPath, FileName);
+    private static readonly string BackupFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
+    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
 
     public static async Task CheckForUpdates()
     {

@@ -44,8 +44,8 @@ public class AutoStartShortcut
             return;
 
         Log.Information("Adding VRCVideoCacher to VRCX autostart...");
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
-        var shortcutPath = Path.Combine(path, $"{ShortcutName}.lnk");
+        var path = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
+        var shortcutPath = Path.Join(path, $"{ShortcutName}.lnk");
         if (!Directory.Exists(path))
         {
             Log.Information("VRCX isn't installed");
@@ -68,7 +68,7 @@ public class AutoStartShortcut
 
     private static string? GetOurShortcut()
     {
-        var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
+        var shortcutPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
         if (!Directory.Exists(shortcutPath))
             return null;
 

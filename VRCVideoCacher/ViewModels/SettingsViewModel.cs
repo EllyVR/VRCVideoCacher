@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VRCVideoCacher.API;
 
 namespace VRCVideoCacher.ViewModels;
 
@@ -87,7 +88,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var config = ConfigManager.Config;
 
-        WebServerUrl = config.YtdlpWebServerURL;
+        WebServerUrl = config.YtdlpWebServerUrl;
         YtdlPath = config.YtdlpPath;
         YtdlUseCookies = config.YtdlpUseCookies;
         YtdlAutoUpdate = config.YtdlpAutoUpdate;
@@ -99,7 +100,7 @@ public partial class SettingsViewModel : ViewModelBase
         CacheYouTubeMaxLength = config.CacheYouTubeMaxLength;
         CacheMaxSizeInGb = config.CacheMaxSizeInGb;
         CachePyPyDance = config.CachePyPyDance;
-        CacheVRDancing = config.CacheVRDancing;
+        CacheVRDancing = config.CacheVrDancing;
         CacheOnly = config.CacheOnly;
         PatchResonite = config.PatchResonite;
         PatchVRC = config.PatchVrChat;
@@ -137,8 +138,13 @@ public partial class SettingsViewModel : ViewModelBase
     private void SaveSettings()
     {
         var config = ConfigManager.Config;
+        
+        if (config.YtdlpWebServerUrl != WebServerUrl)
+        {
+            config.YtdlpWebServerUrl = WebServerUrl;
+            WebServer.Init();
+        }
 
-        config.YtdlpWebServerURL = WebServerUrl;
         config.YtdlpPath = YtdlPath;
         config.YtdlpUseCookies = YtdlUseCookies;
         config.YtdlpAutoUpdate = YtdlAutoUpdate;
@@ -150,7 +156,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.CacheYouTubeMaxLength = CacheYouTubeMaxLength;
         config.CacheMaxSizeInGb = CacheMaxSizeInGb;
         config.CachePyPyDance = CachePyPyDance;
-        config.CacheVRDancing = CacheVRDancing;
+        config.CacheVrDancing = CacheVRDancing;
         config.PatchResonite = PatchResonite;
         config.PatchVrChat = PatchVRC;
         config.AutoUpdateVrcVideoCacher = AutoUpdate;

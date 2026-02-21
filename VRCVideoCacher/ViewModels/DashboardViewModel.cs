@@ -42,7 +42,7 @@ public partial class DashboardViewModel : ViewModelBase
 
     public DashboardViewModel()
     {
-        ServerUrl = ConfigManager.Config.YtdlpWebServerURL;
+        ServerUrl = ConfigManager.Config.YtdlpWebServerUrl;
         MaxCacheSize = ConfigManager.Config.CacheMaxSizeInGb;
 
         // Initial data load
@@ -96,7 +96,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            ServerUrl = ConfigManager.Config.YtdlpWebServerURL;
+            ServerUrl = ConfigManager.Config.YtdlpWebServerUrl;
             MaxCacheSize = ConfigManager.Config.CacheMaxSizeInGb;
         });
         _ = ValidateCookiesAsync();
@@ -119,12 +119,8 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleHost()
     {
-        if (HostState)
-            ElevatorManager.RemoveHostFile();
-        else
-            ElevatorManager.AddHostFile();
-
-        Dispatcher.UIThread.Post(() => { HostState = !HostState; });
+        var newState = ElevatorManager.ToggleHostLine();
+        Dispatcher.UIThread.Post(() => { HostState = newState; });
     }
 
     private void RefreshCacheStats()

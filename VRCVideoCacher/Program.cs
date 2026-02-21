@@ -21,9 +21,7 @@ internal sealed class Program
     public const string Version = "2026.2.19";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
-    public static readonly string DataPath = OperatingSystem.IsWindows()
-        ? CurrentProcessPath
-        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
+    public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
     public static event Action? OnCookiesUpdated;
 
     [STAThread]
@@ -130,8 +128,7 @@ internal sealed class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
-
-        DatabaseManager.Init();
+        
         if (ConfigManager.Config.YtdlpAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
         {
             await YtdlManager.TryDownloadYtdlp();
@@ -142,6 +139,7 @@ internal sealed class Program
 
         if (OperatingSystem.IsWindows())
             AutoStartShortcut.TryUpdateShortcutPath();
+        DatabaseManager.Init();
         WebServer.Init();
         FileTools.BackupAllYtdl();
         await BulkPreCache.DownloadFileList();
