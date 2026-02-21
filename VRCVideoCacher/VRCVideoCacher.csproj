@@ -57,10 +57,6 @@
         <EmbeddedResource Include="yt-dlp-stub.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-        <None Remove="VRCVideoCacher.Elevator.exe" />
-        <EmbeddedResource Include="VRCVideoCacher.Elevator.exe">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </EmbeddedResource>
     </ItemGroup>
 
 </Project>
