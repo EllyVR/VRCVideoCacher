@@ -10,7 +10,7 @@ public class AutoStartShortcut
     private static readonly ILogger Log = Program.Logger.ForContext<AutoStartShortcut>();
     private static readonly byte[] ShortcutSignatureBytes = { 0x4C, 0x00, 0x00, 0x00 }; // signature for ShellLinkHeader
     private const string ShortcutName = "VRCVideoCacher";
-
+    private const string SteamRunCommand = "steam://rungameid/4296960";
     [SupportedOSPlatform("windows")]
     public static void TryUpdateShortcutPath()
     {
@@ -18,6 +18,17 @@ public class AutoStartShortcut
         if (shortcut == null)
             return;
 
+#if STEAMRELEASE
+        var info = Shortcut.ReadFromFile(shortcut);
+        if (info.LinkTargetIDList.Path == SteamRunCommand &&
+            info.StringData.WorkingDir == Path.GetDirectoryName(Environment.ProcessPath))
+            return;
+
+        Log.Information("Updating VRCX autostart shortcut path...");
+        info.LinkTargetIDList.Path = SteamRunCommand;
+        info.StringData.WorkingDir = Path.GetDirectoryName(Environment.ProcessPath);
+        info.WriteToFile(shortcut);
+#else
         var info = Shortcut.ReadFromFile(shortcut);
         if (info.LinkTargetIDList.Path == Environment.ProcessPath &&
             info.StringData.WorkingDir == Path.GetDirectoryName(Environment.ProcessPath))
@@ -27,6 +38,7 @@ public class AutoStartShortcut
         info.LinkTargetIDList.Path = Environment.ProcessPath;
         info.StringData.WorkingDir = Path.GetDirectoryName(Environment.ProcessPath);
         info.WriteToFile(shortcut);
+#endif
     }
 
     private static bool StartupEnabled()
