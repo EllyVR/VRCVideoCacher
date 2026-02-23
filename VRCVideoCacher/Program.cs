@@ -128,7 +128,7 @@ internal sealed class Program
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
-        
+        await VvcConfigService.GetConfig();
         if (ConfigManager.Config.YtdlpAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
         {
             await YtdlManager.TryDownloadYtdlp();

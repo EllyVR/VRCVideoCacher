@@ -4,6 +4,7 @@ using EmbedIO.Routing;
 using EmbedIO.WebApi;
 using VRCVideoCacher.Database;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.YTDL;
 
 namespace VRCVideoCacher.API;
@@ -11,7 +12,7 @@ namespace VRCVideoCacher.API;
 public class ApiController : WebApiController
 {
     // @TODO: Make this configurable via proposed API.
-    const int YoutubePrefetchMaxRetries = 7;
+    private int YoutubePrefetchMaxRetries = VvcConfigService.CurrentConfig.retryCount;
 
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<ApiController>();
     private static readonly HttpClient HttpClient = new()
