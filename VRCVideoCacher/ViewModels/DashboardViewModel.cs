@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Elevator;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.Views;
 using VRCVideoCacher.YTDL;
@@ -39,6 +40,12 @@ public partial class DashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _hostState;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMotd))]
+    private string? _motd;
+    
+    public bool HasMotd => !string.IsNullOrWhiteSpace(Motd);
 
     public DashboardViewModel()
     {
@@ -49,6 +56,8 @@ public partial class DashboardViewModel : ViewModelBase
         // Initial data load
         RefreshData();
 
+        Motd = VvcConfigService.CurrentConfig.motd;
+        
         // Subscribe to events
         CacheManager.OnCacheChanged += OnCacheChanged;
         VideoDownloader.OnDownloadStarted += OnDownloadStarted;

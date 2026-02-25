@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace VRCVideoCacher.Services;
 
 public class VvcConfigService
 {
-    public static VvcConfig CurrentConfig;
+    public static VvcConfig CurrentConfig = new VvcConfig();
     private static HttpClient httpClient;
 
     static VvcConfigService()
