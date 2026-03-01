@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.ViewModels;
 
@@ -10,6 +11,13 @@ public partial class CookieSetupViewModel : ViewModelBase
 {
     private const string ChromeExtensionUrl = "https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge";
     private const string FirefoxExtensionUrl = "https://addons.mozilla.org/en-US/firefox/addon/vrcvideocachercookiesexporter";
+
+    // Step layout:
+    //  1 - Browser selection
+    //  2 - Install extension
+    //  3 - Visit YouTube / wait for cookies
+    //  4 - Hosts file (Windows only; skipped on other platforms)
+    //  5 - Complete
 
     public event Action? RequestClose;
 
@@ -22,22 +30,27 @@ public partial class CookieSetupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _cookiesReceived;
 
+    [ObservableProperty]
+    private bool _hostState;
+
     public bool IsStep1 => CurrentStep == 1;
     public bool IsStep2 => CurrentStep == 2;
     public bool IsStep3 => CurrentStep == 3;
     public bool IsStep4 => CurrentStep == 4;
+    public bool IsStep5 => CurrentStep == 5;
 
-    public bool CanGoBack => CurrentStep > 1 && CurrentStep < 4;
+    public bool CanGoBack => CurrentStep > 1 && CurrentStep < 5;
     public bool CanGoNext => CurrentStep switch
     {
         1 => false, // Must select browser
         2 => true,
         3 => CookiesReceived,
-        4 => true,
+        4 => true,  // Hosts step is optional
+        5 => true,
         _ => false
     };
 
-    public string NextButtonText => CurrentStep == 4 ? "Done" : "Next";
+    public string NextButtonText => CurrentStep == 5 ? "Done" : "Next";
 
     public string ExtensionStoreButtonText => IsChrome
         ? "Open Chrome Web Store"
@@ -55,13 +68,23 @@ public partial class CookieSetupViewModel : ViewModelBase
         ? new SolidColorBrush(Color.Parse("#81C784"))
         : new SolidColorBrush(Color.Parse("#FFB74D"));
 
+    public string HostStatusText => HostState
+        ? "localhost.youtube.com is active"
+        : "Not configured";
+
+    public string HostStatusIcon => HostState ? "CheckCircle" : "AlertCircleOutline";
+
+    public IBrush HostStatusColor => HostState
+        ? new SolidColorBrush(Color.Parse("#81C784"))
+        : new SolidColorBrush(Color.Parse("#FFB74D"));
+
+    public string HostButtonText => HostState ? "Remove Entry" : "Add Hosts Entry";
+
     public CookieSetupViewModel()
     {
-        // Subscribe to cookies updated event
         VRCVideoCacher.Program.OnCookiesUpdated += OnCookiesUpdated;
-
-        // Check if cookies are already valid
         CookiesReceived = VRCVideoCacher.Program.IsCookiesEnabledAndValid();
+        _hostState = ElevatorManager.HasHostsLine;
     }
 
     private void OnCookiesUpdated()
@@ -74,10 +97,9 @@ public partial class CookieSetupViewModel : ViewModelBase
             OnPropertyChanged(nameof(CookieStatusIcon));
             OnPropertyChanged(nameof(CookieStatusColor));
 
-            // Auto-advance to step 4 when cookies are received
             if (CookiesReceived && CurrentStep == 3)
             {
-                CurrentStep = 4;
+                CurrentStep = NextStepFrom(3);
                 UpdateStepProperties();
             }
         });
@@ -94,10 +116,18 @@ public partial class CookieSetupViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsStep2));
         OnPropertyChanged(nameof(IsStep3));
         OnPropertyChanged(nameof(IsStep4));
+        OnPropertyChanged(nameof(IsStep5));
         OnPropertyChanged(nameof(CanGoBack));
         OnPropertyChanged(nameof(CanGoNext));
         OnPropertyChanged(nameof(NextButtonText));
     }
+
+    // On non-Windows platforms the hosts step doesn't apply, so skip over it.
+    private static int NextStepFrom(int step) =>
+        step == 3 && !OperatingSystem.IsWindows() ? 5 : step + 1;
+
+    private static int PrevStepFrom(int step) =>
+        step == 5 && !OperatingSystem.IsWindows() ? 3 : step - 1;
 
     [RelayCommand]
     private void SelectChrome()
@@ -118,8 +148,7 @@ public partial class CookieSetupViewModel : ViewModelBase
     [RelayCommand]
     private void OpenExtensionStore()
     {
-        var url = IsChrome ? ChromeExtensionUrl : FirefoxExtensionUrl;
-        OpenUrl(url);
+        OpenUrl(IsChrome ? ChromeExtensionUrl : FirefoxExtensionUrl);
     }
 
     [RelayCommand]
@@ -129,33 +158,39 @@ public partial class CookieSetupViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void ToggleHost()
+    {
+        ElevatorManager.ToggleHostLine();
+        Dispatcher.UIThread.Post(() =>
+        {
+            HostState = ElevatorManager.HasHostsLine;
+            OnPropertyChanged(nameof(HostButtonText));
+            OnPropertyChanged(nameof(HostStatusText));
+            OnPropertyChanged(nameof(HostStatusIcon));
+            OnPropertyChanged(nameof(HostStatusColor));
+        });
+    }
+
+    [RelayCommand]
     private void Next()
     {
-        if (CurrentStep == 4)
+        if (CurrentStep == 5)
         {
-            // Mark setup as completed and save config
             ConfigManager.Config.CookieSetupCompleted = true;
             ConfigManager.TrySaveConfig();
-
-            // Done - close the window
             VRCVideoCacher.Program.OnCookiesUpdated -= OnCookiesUpdated;
             RequestClose?.Invoke();
             return;
         }
 
-        if (CurrentStep < 4)
-        {
-            CurrentStep++;
-        }
+        CurrentStep = NextStepFrom(CurrentStep);
     }
 
     [RelayCommand]
     private void Back()
     {
         if (CurrentStep > 1)
-        {
-            CurrentStep--;
-        }
+            CurrentStep = PrevStepFrom(CurrentStep);
     }
 
     [RelayCommand]
@@ -169,11 +204,7 @@ public partial class CookieSetupViewModel : ViewModelBase
     {
         try
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
+            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
         }
         catch { /* Ignore errors */ }
     }

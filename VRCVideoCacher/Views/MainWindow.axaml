@@ -66,6 +66,16 @@
                         </StackPanel>
                     </Button>
 
+                    <Button Command="{Binding NavigateToHistoryCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Classes="nav-button">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="History" Width="20" Height="20"/>
+                            <TextBlock Text="History" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button Command="{Binding NavigateToLogViewerCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
@@ -95,6 +105,9 @@
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type vm:LogViewerViewModel}">
                         <views:LogViewerView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+                        <views:HistoryView/>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>

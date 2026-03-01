@@ -21,6 +21,8 @@
         <TrimMode>partial</TrimMode>
         <!-- Suppress trim warnings from third-party libraries -->
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+        <!-- IL2037: EF Core 10 DynamicDependency on ExecuteUpdate overload not resolvable by ILLink -->
+        <NoWarn>$(NoWarn);IL2037</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SteamRelease|AnyCPU'">
@@ -33,6 +35,8 @@
         <TrimMode>partial</TrimMode>
         <!-- Suppress trim warnings from third-party libraries -->
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+        <!-- IL2037: EF Core 10 DynamicDependency on ExecuteUpdate overload not resolvable by ILLink -->
+        <NoWarn>$(NoWarn);IL2037</NoWarn>
     </PropertyGroup>
     
     <ItemGroup>

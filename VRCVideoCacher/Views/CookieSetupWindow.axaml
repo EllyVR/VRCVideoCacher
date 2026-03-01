@@ -5,7 +5,7 @@
         x:Class="VRCVideoCacher.Views.CookieSetupWindow"
         x:DataType="vm:CookieSetupViewModel"
         Title="YouTube Cookie Extension Setup"
-        Width="550" Height="450"
+        Width="550" Height="480"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         ExtendClientAreaToDecorationsHint="False">
@@ -100,9 +100,40 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Content - Step 4: Complete -->
+        <!-- Content - Step 4: Hosts File -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
                 IsVisible="{Binding IsStep4}">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Step 4: localhost.youtube.com (Optional)" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#cccccc">
+                    Adding a hosts entry for localhost.youtube.com allows VRCVideoCacher to serve cached videos using the YouTube domain, which improves compatibility with VRChat's video player.
+                </TextBlock>
+
+                <Border Background="#1a1a1a" CornerRadius="4" Padding="12">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <mi:MaterialIcon Kind="{Binding HostStatusIcon}" Width="24" Height="24"
+                                        Foreground="{Binding HostStatusColor}"/>
+                        <TextBlock Text="{Binding HostStatusText}" VerticalAlignment="Center"
+                                   Foreground="{Binding HostStatusColor}"/>
+                    </StackPanel>
+                </Border>
+
+                <Button Command="{Binding ToggleHostCommand}" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="ShieldEdit" Width="16" Height="16"/>
+                        <TextBlock Text="{Binding HostButtonText}"/>
+                    </StackPanel>
+                </Button>
+
+                <TextBlock TextWrapping="Wrap" Foreground="#888888" FontSize="11">
+                    This requires administrator permission. You can skip this step and configure it later from the Dashboard.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Content - Step 5: Complete -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
+                IsVisible="{Binding IsStep5}">
             <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <mi:MaterialIcon Kind="CheckCircle" Width="64" Height="64" Foreground="#81C784" HorizontalAlignment="Center"/>
                 <TextBlock Text="Setup Complete!" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -114,7 +145,7 @@
 
         <!-- Footer Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
-            <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding !IsStep4}"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding !IsStep5}"/>
             <Button Content="Back" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}"/>
             <Button Content="{Binding NextButtonText}" Command="{Binding NextCommand}"
                     IsEnabled="{Binding CanGoNext}" Background="#7B68EE"/>

@@ -23,6 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public CacheBrowserViewModel CacheBrowser { get; }
     public DownloadQueueViewModel DownloadQueue { get; }
     public LogViewerViewModel LogViewer { get; }
+    public HistoryViewModel History { get; }
 
     public MainWindowViewModel()
     {
@@ -31,6 +32,7 @@ public partial class MainWindowViewModel : ViewModelBase
         CacheBrowser = new CacheBrowserViewModel();
         DownloadQueue = new DownloadQueueViewModel();
         LogViewer = new LogViewerViewModel();
+        History = new HistoryViewModel();
 
         _currentView = Dashboard;
 
@@ -80,4 +82,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void NavigateToLogViewer() => CurrentView = LogViewer;
+
+    [RelayCommand]
+    private void NavigateToHistory() => CurrentView = History;
 }

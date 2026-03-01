@@ -8,16 +8,19 @@ public static class DatabaseManager
 {
     public static readonly Database Database = new();
 
+    public static event Action? OnPlayHistoryAdded;
+    public static event Action? OnVideoInfoCacheUpdated;
+
     static DatabaseManager()
     {
         Database.Database.EnsureCreated();
     }
-    
+
     public static void Init()
     {
         Database.SaveChanges();
     }
-    
+
     public static void AddPlayHistory(VideoInfo videoInfo)
     {
         var history = new History
@@ -29,6 +32,7 @@ public static class DatabaseManager
         };
         Database.PlayHistory.Add(history);
         Database.SaveChanges();
+        OnPlayHistoryAdded?.Invoke();
     }
 
     public static void AddVideoInfoCache(VideoInfoCache videoInfoCache)
@@ -56,8 +60,9 @@ public static class DatabaseManager
             Database.VideoInfoCache.Add(videoInfoCache);
         }
         Database.SaveChanges();
+        OnVideoInfoCacheUpdated?.Invoke();
     }
-    
+
     public static List<History> GetPlayHistory(int limit = 50)
     {
         return Database.PlayHistory
@@ -65,5 +70,14 @@ public static class DatabaseManager
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
             .ToList();
+    }
+
+    public static Dictionary<string, VideoInfoCache> GetVideoInfoCacheByIds(IEnumerable<string> ids)
+    {
+        var idList = ids.Where(id => !string.IsNullOrEmpty(id)).ToList();
+        return Database.VideoInfoCache
+            .AsNoTracking()
+            .Where(v => idList.Contains(v.Id))
+            .ToDictionary(v => v.Id);
     }
 }

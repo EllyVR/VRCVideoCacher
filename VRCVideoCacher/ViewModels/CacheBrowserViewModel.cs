@@ -113,7 +113,6 @@ public partial class CacheBrowserViewModel : ViewModelBase
 
     public CacheBrowserViewModel()
     {
-        RefreshCache();
         CacheManager.OnCacheChanged += OnCacheChanged;
     }
 
