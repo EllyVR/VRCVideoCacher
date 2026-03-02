@@ -61,6 +61,7 @@
         <PackageReference Include="ValveKeyValue" Version="0.20.0.417" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.11" />
+        <PackageReference Include="CodingSeb.Localization.Avalonia" Version="1.*" />
     </ItemGroup>
 
     <ItemGroup>
@@ -73,6 +74,11 @@
         <EmbeddedResource Include="yt-dlp-stub.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Languages\*.loc.json" />
+        <EmbeddedResource Include="Languages\*.loc.json" />
     </ItemGroup>
 
 </Project>

@@ -250,6 +250,9 @@ public class ConfigModel
     // Video Cacher
     public bool AutoUpdateVrcVideoCacher = true;
     public bool CookieSetupCompleted = false;
+
+    // Localization
+    public string Language = "en";
 }
 
 

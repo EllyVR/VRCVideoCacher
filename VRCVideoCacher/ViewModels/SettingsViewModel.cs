@@ -1,9 +1,13 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.API;
 
 namespace VRCVideoCacher.ViewModels;
+
+public record LanguageOption(string Code, string DisplayName);
 
 public partial class SettingsViewModel : ViewModelBase
 {
@@ -79,6 +83,29 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasChanges;
 
+    // Language selection
+    public IReadOnlyList<LanguageOption> AvailableLanguageOptions =>
+        Loc.Instance.AvailableLanguages
+            .Select(code => new LanguageOption(code, GetLanguageDisplayName(code)))
+            .ToList();
+
+    [ObservableProperty]
+    private LanguageOption? _selectedLanguageOption;
+
+    partial void OnSelectedLanguageOptionChanged(LanguageOption? value)
+    {
+        if (value is null) return;
+        Loc.Instance.CurrentLanguage = value.Code;
+        ConfigManager.Config.Language = value.Code;
+        ConfigManager.TrySaveConfig();
+    }
+
+    private static string GetLanguageDisplayName(string code)
+    {
+        try { return CultureInfo.GetCultureInfo(code).NativeName; }
+        catch { return code; }
+    }
+
     public SettingsViewModel()
     {
         ConfigManager.OnConfigChanged += LoadFromConfig;
@@ -113,6 +140,9 @@ public partial class SettingsViewModel : ViewModelBase
             BlockedUrls.Add(url);
         }
         BlockRedirect = config.BlockRedirect;
+
+        SelectedLanguageOption = AvailableLanguageOptions.FirstOrDefault(o => o.Code == config.Language)
+                                 ?? AvailableLanguageOptions.FirstOrDefault();
 
         HasChanges = false;
         StatusMessage = string.Empty;
@@ -166,14 +196,14 @@ public partial class SettingsViewModel : ViewModelBase
 
         ConfigManager.TrySaveConfig();
         HasChanges = false;
-        StatusMessage = "Settings saved!";
+        StatusMessage = Loc.Tr("SettingsSaved");
     }
 
     [RelayCommand]
     private void ResetToDefaults()
     {
         LoadFromConfig();
-        StatusMessage = "Settings reset to last saved values.";
+        StatusMessage = Loc.Tr("SettingsReset");
     }
 
     [RelayCommand]

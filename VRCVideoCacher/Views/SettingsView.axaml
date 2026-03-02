@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
              x:Class="VRCVideoCacher.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
@@ -9,17 +10,17 @@
         <StackPanel Spacing="20" Margin="10">
             <!-- Header -->
             <Grid ColumnDefinitions="*, Auto, Auto">
-                <TextBlock Text="Settings" FontSize="24" FontWeight="Bold"/>
+                <TextBlock Text="{loc:Tr Settings}" FontSize="24" FontWeight="Bold"/>
                 <Button Grid.Column="1" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <mi:MaterialIcon Kind="Undo" Width="16" Height="16"/>
-                        <TextBlock Text="Reset"/>
+                        <TextBlock Text="{loc:Tr Reset}"/>
                     </StackPanel>
                 </Button>
                 <Button Grid.Column="2" Command="{Binding SaveSettingsCommand}" Classes="accent">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <mi:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
-                        <TextBlock Text="Save"/>
+                        <TextBlock Text="{loc:Tr Save}"/>
                     </StackPanel>
                 </Button>
             </Grid>
@@ -29,13 +30,32 @@
                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Foreground="#81C784"/>
 
+            <!-- General Settings -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="{loc:Tr Language}" FontWeight="SemiBold" FontSize="16"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{loc:Tr Language}"/>
+                        <ComboBox ItemsSource="{Binding AvailableLanguageOptions}"
+                                  SelectedItem="{Binding SelectedLanguageOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Server Settings -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="Server Settings" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr ServerSettings}" FontWeight="SemiBold" FontSize="16"/>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Web Server URL"/>
+                        <TextBlock Text="{loc:Tr WebServerUrl}"/>
                         <TextBox Text="{Binding WebServerUrl}" Watermark="http://localhost:9696"/>
                     </StackPanel>
                 </StackPanel>
@@ -44,23 +64,23 @@
             <!-- Download Settings -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="Download Settings" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr DownloadSettings}" FontWeight="SemiBold" FontSize="16"/>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="yt-dlp Path (leave empty to use global PATH)"/>
+                        <TextBlock Text="{loc:Tr YtdlpPathLabel}"/>
                         <TextBox Text="{Binding YtdlPath}" Watermark="Utils\yt-dlp.exe"/>
                     </StackPanel>
 
-                    <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="Use YouTube Cookies (requires browser extension)"/>
-                    <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="Auto-update Utils (yt-dlp, FFmpeg, and Deno)"/>
+                    <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="{loc:Tr UseYouTubeCookies}"/>
+                    <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="{loc:Tr AutoUpdateUtils}"/>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Additional yt-dlp Arguments"/>
+                        <TextBlock Text="{loc:Tr AdditionalYtdlpArgs}"/>
                         <TextBox Text="{Binding YtdlAdditionalArgs}" Watermark="Optional arguments"/>
                     </StackPanel>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Preferred Dub Language (e.g., 'de' for German)"/>
+                        <TextBlock Text="{loc:Tr PreferredDubLanguage}"/>
                         <TextBox Text="{Binding YtdlDubLanguage}" Watermark="Leave empty for original"/>
                     </StackPanel>
                 </StackPanel>
@@ -69,54 +89,54 @@
             <!-- Cache Settings -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="Cache Settings" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr CacheSettings}" FontWeight="SemiBold" FontSize="16"/>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Cache Path (leave empty for default)"/>
+                        <TextBlock Text="{loc:Tr CachePathLabel}"/>
                         <TextBox Text="{Binding CachedAssetPath}" Watermark="CachedAssets"/>
                     </StackPanel>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Max Cache Size in GB (0 = unlimited)"/>
+                        <TextBlock Text="{loc:Tr MaxCacheSizeLabel}"/>
                         <NumericUpDown Value="{Binding CacheMaxSizeInGb}" Minimum="0" Maximum="10000" Increment="1" FormatString="0.#"/>
                     </StackPanel>
 
-                    <CheckBox IsChecked="{Binding CacheYouTube}" Content="Cache YouTube Videos"/>
+                    <CheckBox IsChecked="{Binding CacheYouTube}" Content="{loc:Tr CacheYouTubeVideos}"/>
 
                     <StackPanel Spacing="5" Margin="30,0,0,0" IsVisible="{Binding CacheYouTube}">
                         <StackPanel Spacing="5">
-                            <TextBlock Text="Max YouTube Resolution"/>
+                            <TextBlock Text="{loc:Tr MaxYouTubeResolution}"/>
                             <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding CacheYouTubeMaxResolution}"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="Max Video Length (minutes)"/>
+                            <TextBlock Text="{loc:Tr MaxVideoLength}"/>
                             <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Maximum="600" Increment="10"/>
                         </StackPanel>
                     </StackPanel>
 
-                    <CheckBox IsChecked="{Binding CachePyPyDance}" Content="Cache PyPyDance Videos"/>
-                    <CheckBox IsChecked="{Binding CacheVRDancing}" Content="Cache VRDancing Videos"/>
-                    <CheckBox IsChecked="{Binding CacheOnly}" Content="Only Serve Cached Videos"/>
+                    <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{loc:Tr CachePyPyDanceVideos}"/>
+                    <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{loc:Tr CacheVRDancingVideos}"/>
+                    <CheckBox IsChecked="{Binding CacheOnly}" Content="{loc:Tr OnlyServeCachedVideos}"/>
                 </StackPanel>
             </Border>
 
             <!-- Game Patching -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="Game Patching" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr GamePatching}" FontWeight="SemiBold" FontSize="16"/>
 
-                    <CheckBox IsChecked="{Binding PatchVRC}" Content="Patch VRChat"/>
-                    <CheckBox IsChecked="{Binding PatchResonite}" Content="Patch Resonite"/>
+                    <CheckBox IsChecked="{Binding PatchVRC}" Content="{loc:Tr PatchVRChat}"/>
+                    <CheckBox IsChecked="{Binding PatchResonite}" Content="{loc:Tr PatchResonite}"/>
                 </StackPanel>
             </Border>
 
             <!-- Updates -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="Updates" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr Updates}" FontWeight="SemiBold" FontSize="16"/>
 
-                    <CheckBox IsChecked="{Binding AutoUpdate}" Content="Auto-update VRCVideoCacher"/>
+                    <CheckBox IsChecked="{Binding AutoUpdate}" Content="{loc:Tr AutoUpdateVRCVideoCacher}"/>
                 </StackPanel>
             </Border>
 
@@ -124,11 +144,11 @@
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
                     <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Text="Blocked URLs" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{loc:Tr BlockedUrls}" FontWeight="SemiBold" FontSize="16"/>
                         <Button Grid.Column="1" Command="{Binding AddBlockedUrlCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                                <TextBlock Text="Add"/>
+                                <TextBlock Text="{loc:Tr Add}"/>
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -148,7 +168,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <StackPanel Spacing="5" Margin="0,20,0,0">
-                        <TextBlock Text="Blocked URL Redirect" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{loc:Tr BlockedUrlRedirect}" FontWeight="SemiBold" FontSize="16"/>
                         <TextBox Text="{Binding BlockRedirect}" Watermark="Redirect URL"/>
                     </StackPanel>
                 </StackPanel>

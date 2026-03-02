@@ -3,6 +3,7 @@
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
              xmlns:asyncImageLoader="using:AsyncImageLoader"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
              x:Class="VRCVideoCacher.Views.CacheBrowserView"
              x:DataType="vm:CacheBrowserViewModel"
              x:CompileBindings="True">
@@ -10,15 +11,15 @@
     <Grid RowDefinitions="Auto, Auto, *, Auto">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="10">
-            <TextBlock Text="Cache Browser" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Tr CacheBrowser}" FontSize="24" FontWeight="Bold"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Command="{Binding RefreshCacheCommand}" ToolTip.Tip="Refresh">
+                <Button Command="{Binding RefreshCacheCommand}" ToolTip.Tip="{loc:Tr Refresh}">
                     <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding OpenInExplorerCommand}" ToolTip.Tip="Open Folder">
+                <Button Command="{Binding OpenInExplorerCommand}" ToolTip.Tip="{loc:Tr OpenFolder}">
                     <mi:MaterialIcon Kind="FolderOpen" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding DeleteAllCommand}" ToolTip.Tip="Delete All Cache" Background="#CF6679">
+                <Button Command="{Binding DeleteAllCommand}" ToolTip.Tip="{loc:Tr DeleteAllCache}" Background="#CF6679">
                     <mi:MaterialIcon Kind="DeleteSweep" Width="20" Height="20"/>
                 </Button>
             </StackPanel>
@@ -26,7 +27,7 @@
 
         <!-- Search -->
         <Grid Grid.Row="1" Margin="10,0,10,10">
-            <TextBox Text="{Binding SearchFilter}" Watermark="Search videos...">
+            <TextBox Text="{Binding SearchFilter}" Watermark="{loc:Tr SearchVideosWatermark}">
                 <TextBox.InnerLeftContent>
                     <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
                 </TextBox.InnerLeftContent>

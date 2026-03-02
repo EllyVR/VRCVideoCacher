@@ -1,3 +1,4 @@
+using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Utils;
@@ -10,7 +11,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private ViewModelBase _currentView;
 
     [ObservableProperty]
-    private string _statusText = "Server running";
+    private string _statusText = Loc.Tr("ServerRunning");
 
     [ObservableProperty]
     private string _cacheStatusText = "Cache: 0 B";
@@ -41,6 +42,9 @@ public partial class MainWindowViewModel : ViewModelBase
         // Subscribe to cache changes for status bar
         CacheManager.OnCacheChanged += (_, _) => UpdateCacheStatus();
         UpdateCacheStatus();
+
+        // Refresh localized strings when language changes
+        Loc.Instance.CurrentLanguageChanged += (_, _) => StatusText = Loc.Tr("ServerRunning");
     }
 
     private void UpdateCacheStatus()

@@ -3,6 +3,7 @@
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
              xmlns:asyncImageLoader="using:AsyncImageLoader"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
              x:Class="VRCVideoCacher.Views.HistoryView"
              x:DataType="vm:HistoryViewModel"
              x:CompileBindings="True">
@@ -10,8 +11,8 @@
     <Grid RowDefinitions="Auto, *, Auto">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="10">
-            <TextBlock Text="History" FontSize="24" FontWeight="Bold"/>
-            <Button Grid.Column="1" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
+            <TextBlock Text="{loc:Tr History}" FontSize="24" FontWeight="Bold"/>
+            <Button Grid.Column="1" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Tr Refresh}">
                 <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
             </Button>
         </Grid>

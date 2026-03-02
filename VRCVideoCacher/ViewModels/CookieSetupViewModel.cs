@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Media;
 using Avalonia.Threading;
+using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Utils;
@@ -50,15 +51,15 @@ public partial class CookieSetupViewModel : ViewModelBase
         _ => false
     };
 
-    public string NextButtonText => CurrentStep == 5 ? "Done" : "Next";
+    public string NextButtonText => CurrentStep == 5 ? Loc.Tr("Done") : Loc.Tr("Next");
 
     public string ExtensionStoreButtonText => IsChrome
-        ? "Open Chrome Web Store"
-        : "Open Firefox Add-ons";
+        ? Loc.Tr("OpenChromeWebStore")
+        : Loc.Tr("OpenFirefoxAddons");
 
     public string CookieStatusText => CookiesReceived
-        ? "Cookies received!"
-        : "Waiting for cookies...";
+        ? Loc.Tr("CookiesReceived")
+        : Loc.Tr("WaitingForCookies");
 
     public string CookieStatusIcon => CookiesReceived
         ? "CheckCircle"
@@ -69,8 +70,8 @@ public partial class CookieSetupViewModel : ViewModelBase
         : new SolidColorBrush(Color.Parse("#FFB74D"));
 
     public string HostStatusText => HostState
-        ? "localhost.youtube.com is active"
-        : "Not configured";
+        ? Loc.Tr("HostsActive")
+        : Loc.Tr("NotConfigured");
 
     public string HostStatusIcon => HostState ? "CheckCircle" : "AlertCircleOutline";
 
@@ -78,13 +79,24 @@ public partial class CookieSetupViewModel : ViewModelBase
         ? new SolidColorBrush(Color.Parse("#81C784"))
         : new SolidColorBrush(Color.Parse("#FFB74D"));
 
-    public string HostButtonText => HostState ? "Remove Entry" : "Add Hosts Entry";
+    public string HostButtonText => HostState ? Loc.Tr("RemoveEntry") : Loc.Tr("AddHostsEntry");
 
     public CookieSetupViewModel()
     {
         VRCVideoCacher.Program.OnCookiesUpdated += OnCookiesUpdated;
         CookiesReceived = VRCVideoCacher.Program.IsCookiesEnabledAndValid();
         _hostState = ElevatorManager.HasHostsLine;
+
+        Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedComputedProperties);
+    }
+
+    private void RefreshLocalizedComputedProperties()
+    {
+        OnPropertyChanged(nameof(NextButtonText));
+        OnPropertyChanged(nameof(ExtensionStoreButtonText));
+        OnPropertyChanged(nameof(CookieStatusText));
+        OnPropertyChanged(nameof(HostStatusText));
+        OnPropertyChanged(nameof(HostButtonText));
     }
 
     private void OnCookiesUpdated()

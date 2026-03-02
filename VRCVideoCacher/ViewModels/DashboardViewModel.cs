@@ -1,5 +1,6 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Elevator;
@@ -33,10 +34,10 @@ public partial class DashboardViewModel : ViewModelBase
     private int _downloadQueueCount;
 
     [ObservableProperty]
-    private string _cookieStatus = "Not Set";
+    private string _cookieStatus = Loc.Tr("NotSet");
 
     [ObservableProperty]
-    private string _currentDownloadText = "None";
+    private string _currentDownloadText = Loc.Tr("None");
 
     [ObservableProperty]
     private bool _hostState;
@@ -58,6 +59,9 @@ public partial class DashboardViewModel : ViewModelBase
 
         Motd = VvcConfigService.CurrentConfig.motd;
         
+        // Subscribe to language changes to refresh localized strings
+        Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedStrings);
+
         // Subscribe to events
         CacheManager.OnCacheChanged += OnCacheChanged;
         VideoDownloader.OnDownloadStarted += OnDownloadStarted;
@@ -65,6 +69,16 @@ public partial class DashboardViewModel : ViewModelBase
         VideoDownloader.OnQueueChanged += OnQueueChanged;
         ConfigManager.OnConfigChanged += OnConfigChanged;
         Program.OnCookiesUpdated += OnCookiesUpdated;
+    }
+
+    private void RefreshLocalizedStrings()
+    {
+        // Force BoolToStatusConverter to re-evaluate with new language
+        OnPropertyChanged(nameof(ServerRunning));
+
+        // Refresh directly-assigned localized strings
+        if (VideoDownloader.GetCurrentDownload() == null)
+            CurrentDownloadText = Loc.Tr("None");
     }
 
     private void OnCookiesUpdated()
@@ -89,7 +103,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            CurrentDownloadText = "None";
+            CurrentDownloadText = Loc.Tr("None");
         });
     }
 
@@ -120,7 +134,7 @@ public partial class DashboardViewModel : ViewModelBase
         var currentDownload = VideoDownloader.GetCurrentDownload();
         CurrentDownloadText = currentDownload != null
             ? $"{currentDownload.UrlType}: {currentDownload.VideoId}"
-            : "None";
+            : Loc.Tr("None");
 
         _ = ValidateCookiesAsync();
     }
@@ -161,20 +175,20 @@ public partial class DashboardViewModel : ViewModelBase
     {
         if (!Program.IsCookiesEnabledAndValid())
         {
-            Dispatcher.UIThread.Post(() => CookieStatus = "Not Set");
+            Dispatcher.UIThread.Post(() => CookieStatus = Loc.Tr("NotSet"));
             return;
         }
 
-        Dispatcher.UIThread.Post(() => CookieStatus = "Checking...");
+        Dispatcher.UIThread.Post(() => CookieStatus = Loc.Tr("Checking"));
 
         var result = await Program.ValidateCookiesAsync();
         Dispatcher.UIThread.Post(() =>
         {
             CookieStatus = result switch
             {
-                true => "Valid",
-                false => "Expired",
-                null => "Unknown"
+                true => Loc.Tr("Valid"),
+                false => Loc.Tr("Expired"),
+                null => Loc.Tr("Unknown")
             };
         });
     }

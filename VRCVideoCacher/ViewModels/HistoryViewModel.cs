@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia.Media;
 using Avalonia.Threading;
+using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Database;
@@ -120,7 +121,7 @@ public partial class HistoryViewModel : ViewModelBase
             HistoryItems.Clear();
             foreach (var item in items)
                 HistoryItems.Add(item);
-            StatusText = $"{HistoryItems.Count} entries";
+            StatusText = string.Format(Loc.Tr("EntriesCountFormat"), HistoryItems.Count);
         });
     }
 }

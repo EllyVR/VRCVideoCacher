@@ -3,18 +3,19 @@
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:models="using:VRCVideoCacher.Models"
              xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
              x:Class="VRCVideoCacher.Views.LogViewerView"
              x:DataType="vm:LogViewerViewModel">
 
     <Grid RowDefinitions="Auto, Auto, *" Margin="10">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
-            <TextBlock Text="Log Viewer" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{loc:Tr LogViewer}" FontSize="24" FontWeight="Bold"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Command="{Binding ExportLogsCommand}" ToolTip.Tip="Export Logs">
+                <Button Command="{Binding ExportLogsCommand}" ToolTip.Tip="{loc:Tr ExportLogs}">
                     <mi:MaterialIcon Kind="Export" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding ClearLogsCommand}" ToolTip.Tip="Clear Logs" Background="#CF6679">
+                <Button Command="{Binding ClearLogsCommand}" ToolTip.Tip="{loc:Tr ClearLogs}" Background="#CF6679">
                     <mi:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                 </Button>
             </StackPanel>
@@ -23,18 +24,18 @@
         <!-- Filters -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <Grid ColumnDefinitions="*, Auto">
-                <TextBox Grid.Column="0" Text="{Binding FilterText}" Watermark="Filter logs..." Margin="0,0,15,0">
+                <TextBox Grid.Column="0" Text="{Binding FilterText}" Watermark="{loc:Tr FilterLogsWatermark}" Margin="0,0,15,0">
                     <TextBox.InnerLeftContent>
                         <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
                     </TextBox.InnerLeftContent>
                 </TextBox>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
-                    <CheckBox IsChecked="{Binding ShowDebug}" Content="Debug" Foreground="#64B5F6"/>
-                    <CheckBox IsChecked="{Binding ShowInfo}" Content="Info" Foreground="#81C784"/>
-                    <CheckBox IsChecked="{Binding ShowWarning}" Content="Warning" Foreground="#FFB74D"/>
-                    <CheckBox IsChecked="{Binding ShowError}" Content="Error" Foreground="#CF6679"/>
-                    <CheckBox IsChecked="{Binding AutoScroll}" Content="Auto-scroll"/>
+                    <CheckBox IsChecked="{Binding ShowDebug}" Content="{loc:Tr Debug}" Foreground="#64B5F6"/>
+                    <CheckBox IsChecked="{Binding ShowInfo}" Content="{loc:Tr Info}" Foreground="#81C784"/>
+                    <CheckBox IsChecked="{Binding ShowWarning}" Content="{loc:Tr Warning}" Foreground="#FFB74D"/>
+                    <CheckBox IsChecked="{Binding ShowError}" Content="{loc:Tr Error}" Foreground="#CF6679"/>
+                    <CheckBox IsChecked="{Binding AutoScroll}" Content="{loc:Tr AutoScroll}"/>
                 </StackPanel>
             </Grid>
         </Border>
