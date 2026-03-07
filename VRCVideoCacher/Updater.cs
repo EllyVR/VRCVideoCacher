@@ -72,6 +72,11 @@ public class Updater
         {
             File.Delete(BackupFilePath);
         }
+        var batPath = Path.Join(Program.CurrentProcessPath, "update.bat");
+        if (File.Exists(batPath))
+        {
+            try { File.Delete(batPath); } catch { /* Ignore if still locked */ }
+        }
     }
 
     private static async Task UpdateAsync(GitHubRelease release)
@@ -80,8 +85,6 @@ public class Updater
         {
             if (asset.name != FileName)
                 continue;
-
-            File.Move(FilePath, BackupFilePath);
 
             try
             {
@@ -93,43 +96,71 @@ public class Updater
                 if (await HashCheck(asset.digest))
                 {
                     Log.Information("Hash check passed, Replacing binary.");
-                    File.Move(TempFilePath, FilePath);
+                    
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        File.Move(FilePath, BackupFilePath);
+                        File.Move(TempFilePath, FilePath);
+                        FileTools.MarkFileExecutable(FilePath);
+                        
+                        var process = new Process()
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = FilePath,
+                                UseShellExecute = true,
+                                WorkingDirectory = Program.CurrentProcessPath
+                            }
+                        };
+                        process.Start();
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        // On Windows, running executable cannot be safely renamed while Avalonia is looking for Trimmed UI components.
+                        // We use a temporary batch script to swap the binary *after* the current process has fully exited.
+                        var batPath = Path.Join(Program.CurrentProcessPath, "update.bat");
+                        var batScript = $"""
+@echo off
+timeout /t 1 /nobreak > NUL
+:loop
+move /y "{FilePath}" "{BackupFilePath}" > NUL 2>&1
+if exist "{FilePath}" goto loop
+move /y "{TempFilePath}" "{FilePath}" > NUL
+start "" "{FilePath}"
+del "%~f0"
+""";
+                        await File.WriteAllTextAsync(batPath, batScript);
+                        
+                        var process = new Process
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = batPath,
+                                UseShellExecute = true,
+                                CreateNoWindow = true,
+                                WindowStyle = ProcessWindowStyle.Hidden,
+                                WorkingDirectory = Program.CurrentProcessPath
+                            }
+                        };
+                        process.Start();
+                        Environment.Exit(0);
+                    }
                 }
                 else
                 {
                     Log.Information("Hash check failed, Reverting update.");
-                    File.Move(BackupFilePath, FilePath);
+                    if (File.Exists(TempFilePath)) File.Delete(TempFilePath);
                     return;
                 }
                 Log.Information("Updated to version {Version}", release.tag_name);
-                if (!OperatingSystem.IsWindows())
-                    FileTools.MarkFileExecutable(FilePath);
-
-                var process = new Process()
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = FilePath,
-                        UseShellExecute = true,
-                        WorkingDirectory = Program.CurrentProcessPath
-                    }
-                };
-                process.Start();
-                Environment.Exit(0);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to update: {Message}", ex.Message);
-                try
+                if (File.Exists(TempFilePath))
                 {
-                    if (File.Exists(BackupFilePath) && !File.Exists(FilePath))
-                    {
-                        File.Move(BackupFilePath, FilePath);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Failed to restore backup: {Message}", e.Message);
+                    try { File.Delete(TempFilePath); } catch { /* Ignored */ }
                 }
             }
         }

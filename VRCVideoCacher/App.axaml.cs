@@ -37,6 +37,7 @@ public partial class App : Application
                 var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
                 desktop.MainWindow = adminWindow;
                 adminWindow.Closed += (_, _) => desktop.Shutdown();
+                adminWindow.Show();
                 return;
             }
 
