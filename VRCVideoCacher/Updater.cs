@@ -81,7 +81,6 @@ public class Updater
             if (asset.name != FileName)
                 continue;
 
-            File.Move(FilePath, BackupFilePath);
 
             try
             {
@@ -90,17 +89,17 @@ public class Updater
                 await stream.CopyToAsync(fileStream);
                 fileStream.Close();
 
-                if (await HashCheck(asset.digest))
-                {
-                    Log.Information("Hash check passed, Replacing binary.");
-                    File.Move(TempFilePath, FilePath);
-                }
-                else
+                if (!await HashCheck(asset.digest))
                 {
                     Log.Information("Hash check failed, Reverting update.");
                     File.Move(BackupFilePath, FilePath);
                     return;
                 }
+
+                Log.Information("Hash check passed, Replacing binary.");
+                File.Move(FilePath, BackupFilePath);
+                File.Move(TempFilePath, FilePath);
+
                 Log.Information("Updated to version {Version}", release.tag_name);
                 if (!OperatingSystem.IsWindows())
                     FileTools.MarkFileExecutable(FilePath);
