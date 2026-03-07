@@ -2,7 +2,7 @@ name: Crowdin Translations
 
 on:
   push:
-    branches: [UI]
+    branches: [main]
     paths:
       - 'VRCVideoCacher/Languages/en.loc.json'
   schedule:
@@ -10,7 +10,7 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch:
   pull_request:
-    branches: [UI]
+    branches: [main]
     paths:
       - 'VRCVideoCacher/Languages/*.loc.json'
 
@@ -27,7 +27,7 @@ jobs:
         with:
           upload_sources: true
           upload_translations: false
-          crowdin_branch_name: UI
+          crowdin_branch_name: main
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
@@ -48,8 +48,8 @@ jobs:
           create_pull_request: true
           pull_request_title: 'chore: update translations from Crowdin'
           pull_request_body: 'Automated translation update from Crowdin.'
-          pull_request_base_branch_name: UI
-          crowdin_branch_name: UI
+          pull_request_base_branch_name: main
+          crowdin_branch_name: main
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
