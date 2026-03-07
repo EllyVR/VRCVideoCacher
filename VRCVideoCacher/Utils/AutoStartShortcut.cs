@@ -10,7 +10,6 @@ public class AutoStartShortcut
     private static readonly ILogger Log = Program.Logger.ForContext<AutoStartShortcut>();
     private static readonly byte[] ShortcutSignatureBytes = { 0x4C, 0x00, 0x00, 0x00 }; // signature for ShellLinkHeader
     private const string ShortcutName = "VRCVideoCacher";
-    
     [SupportedOSPlatform("windows")]
     public static void TryUpdateShortcutPath()
     {
@@ -22,7 +21,7 @@ public class AutoStartShortcut
         if (info.LinkTargetIDList.Path == Environment.ProcessPath &&
             info.StringData.WorkingDir == Path.GetDirectoryName(Environment.ProcessPath))
             return;
-        
+
         Log.Information("Updating VRCX autostart shortcut path...");
         info.LinkTargetIDList.Path = Environment.ProcessPath;
         info.StringData.WorkingDir = Path.GetDirectoryName(Environment.ProcessPath);
@@ -42,16 +41,16 @@ public class AutoStartShortcut
     {
         if (StartupEnabled())
             return;
-        
+
         Log.Information("Adding VRCVideoCacher to VRCX autostart...");
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
-        var shortcutPath = Path.Combine(path, $"{ShortcutName}.lnk");
+        var path = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
+        var shortcutPath = Path.Join(path, $"{ShortcutName}.lnk");
         if (!Directory.Exists(path))
         {
             Log.Information("VRCX isn't installed");
             return;
         }
-        
+
         var shortcut = new Shortcut
         {
             LinkTargetIDList = new LinkTargetIDList
@@ -68,12 +67,12 @@ public class AutoStartShortcut
 
     private static string? GetOurShortcut()
     {
-        var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
+        var shortcutPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
         if (!Directory.Exists(shortcutPath))
             return null;
-        
+
         var shortcuts = FindShortcutFiles(shortcutPath);
-        foreach(var shortCut in shortcuts)
+        foreach (var shortCut in shortcuts)
         {
             if (shortCut.Contains(ShortcutName))
                 return shortCut;
@@ -81,7 +80,7 @@ public class AutoStartShortcut
 
         return null;
     }
-    
+
     private static List<string> FindShortcutFiles(string folderPath)
     {
         var directoryInfo = new DirectoryInfo(folderPath);
@@ -96,7 +95,7 @@ public class AutoStartShortcut
 
         return ret;
     }
-    
+
     private static bool IsShortcutFile(string filePath)
     {
         var headerBytes = new byte[4];

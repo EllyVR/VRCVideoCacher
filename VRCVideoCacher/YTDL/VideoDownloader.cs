@@ -17,11 +17,19 @@ public class VideoDownloader
     private static readonly ConcurrentQueue<VideoInfo> DownloadQueue = new();
     private static readonly string TempDownloadMp4Path;
     private static readonly string TempDownloadWebmPath;
-    
+
+    // Events for UI
+    public static event Action<VideoInfo>? OnDownloadStarted;
+    public static event Action<VideoInfo, bool>? OnDownloadCompleted;
+    public static event Action? OnQueueChanged;
+
+    // Current download tracking
+    private static VideoInfo? _currentDownload;
+
     static VideoDownloader()
     {
-        TempDownloadMp4Path = Path.Combine(CacheManager.CachePath, "_tempVideo.mp4");
-        TempDownloadWebmPath = Path.Combine(CacheManager.CachePath, "_tempVideo.webm");
+        TempDownloadMp4Path = Path.Join(CacheManager.CachePath, "_tempVideo.mp4");
+        TempDownloadWebmPath = Path.Join(CacheManager.CachePath, "_tempVideo.webm");
         Task.Run(DownloadThread);
     }
 
@@ -31,36 +39,48 @@ public class VideoDownloader
         {
             await Task.Delay(100);
             if (DownloadQueue.IsEmpty)
-                continue;
-
-            DownloadQueue.TryPeek(out var queueItem);
-            if (queueItem == null)
-                continue;
-            
-            switch (queueItem.UrlType)
             {
-                case UrlType.YouTube:
-                    if (ConfigManager.Config.CacheYouTube)
-                        await DownloadYouTubeVideo(queueItem);
-                    break;
-                case UrlType.PyPyDance:
-                    if (ConfigManager.Config.CachePyPyDance)
-                        await DownloadVideoWithId(queueItem);
-                    break;
-                case UrlType.VRDancing:
-                    if (ConfigManager.Config.CacheVRDancing)
-                        await DownloadVideoWithId(queueItem);
-                    break;
-                case UrlType.Other:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                _currentDownload = null;
+                continue;
             }
 
-            DownloadQueue.TryDequeue(out _);
+            DownloadQueue.TryDequeue(out var queueItem);
+            if (queueItem == null)
+                continue;
+
+            _currentDownload = queueItem;
+            OnDownloadStarted?.Invoke(queueItem);
+
+            var success = false;
+            try
+            {
+                switch (queueItem.UrlType)
+                {
+                    case UrlType.YouTube:
+                        success = await DownloadYouTubeVideo(queueItem);
+                        break;
+                    case UrlType.PyPyDance:
+                    case UrlType.VRDancing:
+                        success = await DownloadVideoWithId(queueItem);
+                        break;
+                    case UrlType.Other:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Exception during download: {Ex}", ex.Message);
+                success = false;
+            }
+
+            OnDownloadCompleted?.Invoke(queueItem, success);
+            OnQueueChanged?.Invoke();
+            _currentDownload = null;
         }
     }
-    
+
     public static void QueueDownload(VideoInfo videoInfo)
     {
         if (DownloadQueue.Any(x => x.VideoId == videoInfo.VideoId &&
@@ -69,10 +89,30 @@ public class VideoDownloader
             // Log.Information("URL is already in the download queue.");
             return;
         }
+        if (_currentDownload != null &&
+            _currentDownload.VideoId == videoInfo.VideoId &&
+            _currentDownload.DownloadFormat == videoInfo.DownloadFormat)
+        {
+            // Log.Information("URL is already being downloaded.");
+            return;
+        }
+
         DownloadQueue.Enqueue(videoInfo);
+        OnQueueChanged?.Invoke();
+    }
+    
+    public static void ClearQueue()
+    {
+        DownloadQueue.Clear();
+        OnQueueChanged?.Invoke();
     }
 
-    private static async Task DownloadYouTubeVideo(VideoInfo videoInfo)
+    // Public accessors for UI
+    public static IReadOnlyList<VideoInfo> GetQueueSnapshot() => DownloadQueue.ToArray();
+    public static int GetQueueCount() => DownloadQueue.Count;
+    public static VideoInfo? GetCurrentDownload() => _currentDownload;
+
+    private static async Task<bool> DownloadYouTubeVideo(VideoInfo videoInfo)
     {
         var url = videoInfo.VideoUrl;
         string? videoId;
@@ -83,7 +123,7 @@ public class VideoDownloader
         catch (Exception ex)
         {
             Log.Error("Not downloading YouTube video: {URL} {ex}", url, ex.Message);
-            return;
+            return false;
         }
 
         if (File.Exists(TempDownloadMp4Path))
@@ -99,18 +139,18 @@ public class VideoDownloader
 
         Log.Information("Downloading YouTube Video: {URL}", url);
 
-        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
             cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-        
-        var audioArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
+
+        var audioArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? "+ba[acodec=opus][ext=webm]"
-            : $"+(ba[acodec=opus][ext=webm][language={ConfigManager.Config.ytdlDubLanguage}]/ba[acodec=opus][ext=webm])";
-        
-        var audioArgPotato = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
+            : $"+(ba[acodec=opus][ext=webm][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[acodec=opus][ext=webm])";
+
+        var audioArgPotato = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? "+ba[ext=m4a]"
-            : $"+(ba[ext=m4a][language={ConfigManager.Config.ytdlDubLanguage}]/ba[ext=m4a])";
+            : $"+(ba[ext=m4a][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[ext=m4a])";
 
         var process = new Process
         {
@@ -125,7 +165,7 @@ public class VideoDownloader
                 StandardErrorEncoding = Encoding.UTF8,
             }
         };
-        
+
         if (videoInfo.DownloadFormat == DownloadFormat.Webm)
         {
             // process.StartInfo.Arguments = $"--encoding utf-8 -q -o \"{TempDownloadMp4Path}\" -f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec!=av01][vcodec!=vp9.2][protocol^=http]\" --no-playlist --remux-video mp4 --no-progress {cookieArg} {additionalArgs} -- \"{videoId}\"";
@@ -147,13 +187,13 @@ public class VideoDownloader
             Log.Error("Failed to download YouTube Video: {exitCode} {URL} {error}", process.ExitCode, url, error);
             if (error.Contains("Sign in to confirm you’re not a bot"))
                 Log.Error("Fix this error by following these instructions: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
-            
-            return;
+
+            return false;
         }
         Thread.Sleep(100);
-        
+
         var fileName = $"{videoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         if (File.Exists(filePath))
         {
             Log.Error("File already exists, canceling...");
@@ -168,9 +208,9 @@ public class VideoDownloader
             {
                 Log.Error("Failed to delete temp file: {ex}", ex.Message);
             }
-            return;
+            return false;
         }
-        
+
         if (File.Exists(TempDownloadMp4Path))
         {
             File.Move(TempDownloadMp4Path, filePath);
@@ -182,14 +222,15 @@ public class VideoDownloader
         else
         {
             Log.Error("Failed to download YouTube Video: {URL}", url);
-            return;
+            return false;
         }
 
         CacheManager.AddToCache(fileName);
-        Log.Information("YouTube Video Downloaded: {URL}", $"{ConfigManager.Config.ytdlWebServerURL}/{fileName}");
+        Log.Information("YouTube Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
+        return true;
     }
-    
-    private static async Task DownloadVideoWithId(VideoInfo videoInfo)
+
+    private static async Task<bool> DownloadVideoWithId(VideoInfo videoInfo)
     {
         if (File.Exists(TempDownloadMp4Path))
         {
@@ -214,7 +255,7 @@ public class VideoDownloader
         if (!response.IsSuccessStatusCode)
         {
             Log.Error("Failed to download video: {URL}", url);
-            return;
+            return false;
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync();
@@ -223,9 +264,9 @@ public class VideoDownloader
         fileStream.Close();
         response.Dispose();
         await Task.Delay(10);
-        
+
         var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         if (File.Exists(TempDownloadMp4Path))
         {
             File.Move(TempDownloadMp4Path, filePath);
@@ -237,8 +278,11 @@ public class VideoDownloader
         else
         {
             Log.Error("Failed to download Video: {URL}", url);
-            return;
+            return false;
         }
-        Log.Information("Video Downloaded: {URL}", $"{ConfigManager.Config.ytdlWebServerURL}/{fileName}");
+
+        CacheManager.AddToCache(fileName);
+        Log.Information("Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
+        return true;
     }
 }

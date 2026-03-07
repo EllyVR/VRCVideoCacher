@@ -2,13 +2,18 @@ using System.Text;
 using EmbedIO;
 using EmbedIO.Routing;
 using EmbedIO.WebApi;
+using VRCVideoCacher.Database;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.YTDL;
 
 namespace VRCVideoCacher.API;
 
 public class ApiController : WebApiController
 {
+    // @TODO: Make this configurable via proposed API.
+    private int YoutubePrefetchMaxRetries = VvcConfigService.CurrentConfig.retryCount;
+
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<ApiController>();
     private static readonly HttpClient HttpClient = new()
     {
@@ -34,7 +39,8 @@ public class ApiController : WebApiController
         await HttpContext.SendStringAsync("Cookies received.", "text/plain", Encoding.UTF8);
 
         Log.Information("Received Youtube cookies from browser extension.");
-        if (!ConfigManager.Config.ytdlUseCookies)
+        Program.NotifyCookiesUpdated();
+        if (!ConfigManager.Config.YtdlpUseCookies)
             Log.Warning("Config is NOT set to use cookies from browser extension.");
     }
 
@@ -55,22 +61,6 @@ public class ApiController : WebApiController
 
         Log.Information("Request URL: {URL}", requestUrl);
 
-        if (requestUrl.StartsWith("https://dmn.moe"))
-        {
-            requestUrl = requestUrl.Replace("/sr/", "/yt/");
-            Log.Information("YTS URL detected, modified to: {URL}", requestUrl);
-            var resolvedUrl = await GetRedirectUrl(requestUrl);
-            if (!string.IsNullOrEmpty(resolvedUrl))
-            {
-                requestUrl = resolvedUrl;
-                Log.Information("YTS URL resolved to URL: {URL}", resolvedUrl);
-            }
-            else
-            {
-                Log.Error("Failed to resolve YTS URL: {URL}", requestUrl);
-            }
-        }
-
         if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
         {
             Log.Warning("URL Is Blocked: {url}", requestUrl);
@@ -83,12 +73,20 @@ public class ApiController : WebApiController
             Log.Information("Failed to get Video Info for URL: {URL}", requestUrl);
             return;
         }
+        DatabaseManager.AddPlayHistory(videoInfo);
+
+        if (source == "resonite")
+        {
+            Log.Information("Request sent from resonite sending json.");
+            await HttpContext.SendStringAsync(await VideoId.GetURLResonite(videoInfo.VideoUrl), "text/plain", Encoding.UTF8);
+            return;
+        }
 
         var (isCached, filePath, fileName) = GetCachedFile(videoInfo.VideoId, avPro);
         if (isCached)
         {
             File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
-            var url = $"{ConfigManager.Config.ytdlWebServerURL}/{fileName}";
+            var url = $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}";
             Log.Information("Responding with Cached URL: {URL}", url);
             await HttpContext.SendStringAsync(url, "text/plain", Encoding.UTF8);
             return;
@@ -101,22 +99,19 @@ public class ApiController : WebApiController
             return;
         }
 
+        if (ConfigManager.Config.CacheOnly)
+        {
+            Log.Information("Cache Only Mode Enabled: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
         if (requestUrl.StartsWith("https://mightygymcdn.nyc3.cdn.digitaloceanspaces.com"))
         {
             Log.Information("URL Is Mighty Gym: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
-
-        if (source == "resonite")
-        {
-            Log.Information("Request sent from resonite sending json.");
-            await HttpContext.SendStringAsync(await VideoId.GetURLResonite(requestUrl), "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        if (ConfigManager.Config.CacheYouTubeMaxResolution <= 360)
-            avPro = false; // disable browser impersonation when it isn't needed
 
         // pls no villager
         if (requestUrl.StartsWith("https://anime.illumination.media"))
@@ -132,7 +127,7 @@ public class ApiController : WebApiController
         // bypass vfi - cinema 
         if (requestUrl.StartsWith("https://virtualfilm.institute"))
         {
-            Log.Information("URL Is VFI -Cinema: Bypassing.");
+            Log.Information("URL Is VFI - Cinema: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
@@ -155,11 +150,14 @@ public class ApiController : WebApiController
             videoInfo.VideoUrl.StartsWith("https://manifest.googlevideo.com") ||
             videoInfo.VideoUrl.Contains("googlevideo.com"))
         {
-            await VideoTools.Prefetch(response);
-            if (ConfigManager.Config.ytdlDelay > 0)
+            var isPrefetchSuccessful = await VideoTools.Prefetch(response, YoutubePrefetchMaxRetries);
+
+            if (!isPrefetchSuccessful && avPro)
             {
-                Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
-                await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
+                Log.Warning("Prefetch failed with AVPro, retrying without AVPro.");
+                avPro = false;
+                (response, success) = await VideoId.GetUrl(videoInfo, avPro);
+                await VideoTools.Prefetch(response, YoutubePrefetchMaxRetries);
             }
         }
 
@@ -167,33 +165,28 @@ public class ApiController : WebApiController
         await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
         // check if file is cached again to handle race condition
         (isCached, _, _) = GetCachedFile(videoInfo.VideoId, avPro);
-        if (!isCached)
+        if (!isCached && (
+                (videoInfo.UrlType == UrlType.YouTube && ConfigManager.Config.CacheYouTube) ||
+                (videoInfo.UrlType == UrlType.PyPyDance && ConfigManager.Config.CachePyPyDance) ||
+                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVrDancing)))
+        {
             VideoDownloader.QueueDownload(videoInfo);
+        }
     }
 
     private static (bool isCached, string filePath, string fileName) GetCachedFile(string videoId, bool avPro)
     {
         var ext = avPro ? "webm" : "mp4";
         var fileName = $"{videoId}.{ext}";
-        var filePath = Path.Combine(CacheManager.CachePath, fileName);
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
         var isCached = File.Exists(filePath);
         if (avPro && !isCached)
         {
             // retry with .mp4
             fileName = $"{videoId}.mp4";
-            filePath = Path.Combine(CacheManager.CachePath, fileName);
+            filePath = Path.Join(CacheManager.CachePath, fileName);
             isCached = File.Exists(filePath);
         }
         return (isCached, filePath, fileName);
-    }
-
-    private static async Task<string?> GetRedirectUrl(string requestUrl)
-    {
-        using var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
-        using var res = await HttpClient.SendAsync(req);
-        if (!res.IsSuccessStatusCode)
-            return null;
-
-        return res.RequestMessage?.RequestUri?.ToString();
     }
 }

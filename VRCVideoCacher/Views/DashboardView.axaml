@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             x:Class="VRCVideoCacher.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+<Grid RowDefinitions="Auto, *">
+    
+    <Border
+        Grid.Row="0"
+        Background="#1a73e8"
+        IsVisible="{Binding HasMotd}"
+        Padding="12,8">
+        <TextBlock
+            Foreground="White"
+            Text="{Binding Motd}"
+            TextWrapping="Wrap"
+            HorizontalAlignment="Center"
+            FontWeight="Medium" />
+    </Border>
+    <ScrollViewer Grid.Row="1">
+        
+        <StackPanel Spacing="20" Margin="10">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Text="{loc:Tr Dashboard}" FontSize="24" FontWeight="Bold"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding RefreshDataCommand}" ToolTip.Tip="{loc:Tr Refresh}">
+                        <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
+                    </Button>
+                    <Button Command="{Binding ToggleHostCommand}" ToolTip.Tip="{loc:Tr ToggleHostTooltip}">
+                        <mi:MaterialIcon Kind="ToggleSwitch" Width="20" Height="20" Foreground="{Binding HostState, Converter={x:Static vm:BoolToStatusColorConverter.Instance}}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Stats Cards -->
+            <WrapPanel Orientation="Horizontal">
+                <!-- Server Status -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Server" Width="24" Height="24" Foreground="#81C784"/>
+                            <TextBlock Text="{loc:Tr ServerStatus}" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ServerRunning, Converter={x:Static vm:BoolToStatusConverter.Instance}}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding ServerUrl}" Foreground="#888888" FontSize="12" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Cache Stats -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Database" Width="24" Height="24" Foreground="#64B5F6"/>
+                            <TextBlock Text="{loc:Tr Cache}" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CachedVideoCount, StringFormat='{}{0} videos'}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
+                            <TextBlock Text="{Binding TotalCacheSize, Converter={x:Static vm:FileSizeConverter.Instance}}"
+                                       Foreground="#888888" FontSize="12"/>
+                            <TextBlock Text="/" Foreground="#888888" FontSize="12" IsVisible="{Binding MaxCacheSize, Converter={x:Static vm:GreaterThanZeroConverter.Instance}}"/>
+                            <TextBlock Text="{Binding MaxCacheSize, StringFormat='{}{0} GB'}"
+                                       Foreground="#888888" FontSize="12"
+                                       IsVisible="{Binding MaxCacheSize, Converter={x:Static vm:GreaterThanZeroConverter.Instance}}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Download Queue -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Download" Width="24" Height="24" Foreground="#FFB74D"/>
+                            <TextBlock Text="{loc:Tr Downloads}" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding DownloadQueueCount, StringFormat='{}{0} in queue'}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding CurrentDownloadText}" Foreground="#888888" FontSize="12" Margin="0,5,0,0"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Cookies Status -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Cookie" Width="24" Height="24" Foreground="#CE93D8"/>
+                            <TextBlock Text="{loc:Tr YouTubeCookies}" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CookieStatus}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <!-- Quick Actions -->
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="{loc:Tr QuickActions}" FontWeight="SemiBold" FontSize="16"/>
+                    <WrapPanel Orientation="Horizontal">
+                        <Button Command="{Binding OpenCacheFolderCommand}" Margin="0,0,10,10">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="FolderOpen" Width="16" Height="16"/>
+                                <TextBlock Text="{loc:Tr OpenCacheFolder}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding SetupCookieExtensionCommand}" Margin="0,0,10,10">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="Cookie" Width="16" Height="16"/>
+                                <TextBlock Text="{loc:Tr SetupYouTubeCookieExtension}"/>
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Grid>
+</UserControl>

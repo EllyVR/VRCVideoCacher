@@ -8,14 +8,14 @@ namespace VRCVideoCacher;
 public class WinGet
 {
     private static readonly ILogger Log = Program.Logger.ForContext<WinGet>();
-    private const string WingetExe = "winget.exe";
+    private static string WingetPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\WindowsApps\winget.exe");
     private static readonly Dictionary<string, string> WingetPackages = new()
     {
         { "VP9 Video Extensions", "9n4d0msmp0pt" },
         { "AV1 Video Extension", "9mvzqvxjbq9v" },
         { "Dolby Digital Plus decoder for PC OEMs", "9nvjqjbdkn97" }
     };
-    
+
     [SupportedOSPlatform("windows")]
     public static async Task TryInstallPackages()
     {
@@ -49,7 +49,7 @@ public class WinGet
             {
                 StartInfo =
                 {
-                    FileName = WingetExe,
+                    FileName = WingetPath,
                     Arguments = $"list \"{packageId}\" -s msstore --accept-source-agreements",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -86,7 +86,7 @@ public class WinGet
             {
                 StartInfo =
                 {
-                    FileName = WingetExe,
+                    FileName = WingetPath,
                     Arguments = $"install --id {packageId} -s msstore --accept-package-agreements --accept-source-agreements",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -101,13 +101,13 @@ public class WinGet
             while ((line = await process.StandardOutput.ReadLineAsync()) != null)
             {
                 if (!string.IsNullOrEmpty(line.Trim()))
-                    Log.Debug("{Winget}: " + line, WingetExe);
+                    Log.Debug("{Winget}: " + line,"winget");
             }
             var error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
             if (process.ExitCode != 0 && !string.IsNullOrEmpty(error))
                 throw new Exception($"Installation failed with exit code {process.ExitCode}. Error: {error}");
-            
+
             var packageName = WingetPackages.FirstOrDefault(x => x.Value == packageId).Key;
             if (process.ExitCode == 0)
                 Log.Information("Successfully installed package: {packageName}", packageName);

@@ -6,7 +6,7 @@ namespace VRCVideoCacher.API;
 public class WebServerLogger : ILogger
 {
     public LogLevel LogLevel { get; } = LogLevel.Info;
-    
+
     public void Dispose()
     {
     }

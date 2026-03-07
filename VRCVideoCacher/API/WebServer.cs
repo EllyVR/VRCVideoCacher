@@ -10,20 +10,23 @@ public class WebServer
 {
     private static EmbedIO.WebServer? _server;
     public static readonly ILogger Log = Program.Logger.ForContext<WebServer>();
-    
+
     public static void Init()
     {
-        var indexPath = Path.Combine(CacheManager.CachePath, "index.html");
+        _server?.Dispose();
+
+        var indexPath = Path.Join(CacheManager.CachePath, "index.html");
         if (!File.Exists(indexPath))
             File.WriteAllText(indexPath, "VRCVideoCacher");
-        
-        _server = CreateWebServer(ConfigManager.Config.ytdlWebServerURL);
-        _server.RunAsync();  
+
+        _server = CreateWebServer(ConfigManager.Config.YtdlpWebServerUrl);
+        _server.RunAsync();
     }
-    
+
     private static EmbedIO.WebServer CreateWebServer(string url)
     {
-        Logger.UnregisterLogger<ConsoleLogger>();
+        try { Logger.UnregisterLogger<ConsoleLogger>(); } catch { /* Not registered */ }
+        try { Logger.UnregisterLogger<WebServerLogger>(); } catch { /* Not registered */ }
         Logger.RegisterLogger<WebServerLogger>();
 
         var urls = new List<string>
@@ -33,7 +36,7 @@ public class WebServer
         };
         if (!urls.Contains(url))
             urls.Add(url);
-        
+
         var server = new EmbedIO.WebServer(o => o
                 .WithUrlPrefixes(urls)
                 .WithMode(HttpListenerMode.EmbedIO))
@@ -46,7 +49,7 @@ public class WebServer
         // Listen for state changes.
         server.StateChanged += (_, e) => $"WebServer State: {e.NewState}".Info();
         server.OnUnhandledException += OnUnhandledException;
-        server.OnHttpException += OnHttpException;  
+        server.OnHttpException += OnHttpException;
         return server;
     }
 

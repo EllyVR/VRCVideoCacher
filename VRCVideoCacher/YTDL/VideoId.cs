@@ -2,9 +2,13 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
+using System.Web;
 using Serilog;
+using VRCVideoCacher.Database;
+using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace VRCVideoCacher.YTDL;
 
@@ -30,7 +34,7 @@ public class VideoId
             return false;
         }
     }
-    
+
     private static string HashUrl(string url)
     {
         return Convert.ToBase64String(
@@ -41,11 +45,42 @@ public class VideoId
             .Replace("=", "");
     }
     
+    private static readonly List<string> YouTubeResolvers = new()
+    {
+        "dmn.moe",
+        "u2b.cx",
+        "t-ne.x0.to",
+        "nextnex.com",
+        "r.0cm.org"
+    };
+
     public static async Task<VideoInfo?> GetVideoId(string url, bool avPro)
     {
         url = url.Trim();
         
-        if (url.StartsWith("http://api.pypy.dance/video"))
+        if (url.StartsWith("https://dmn.moe"))
+        {
+            url = url.Replace("/sr/", "/yt/");
+            Log.Information("YTS URL detected, modified to: {URL}", url);
+        }
+        
+        var uriObject = new Uri(url);
+        if (YouTubeResolvers.Contains(uriObject.Host))
+        {
+            var resolvedUrl = await GetRedirectUrl(url);
+            if (url != resolvedUrl)
+            {
+                url = resolvedUrl;
+                Log.Information("YouTube resolver URL resolved to URL: {URL}", resolvedUrl);
+            }
+            else
+            {
+                Log.Error("Failed to resolve YouTube resolver URL: {URL}", url);
+            }
+        }
+
+        if (url.StartsWith("http://api.pypy.dance/video") ||
+            url.StartsWith("https://api.pypy.dance/video"))
         {
             try
             {
@@ -60,6 +95,16 @@ public class VideoId
                 var uri = new Uri(videoUrl);
                 var fileName = Path.GetFileName(uri.LocalPath);
                 var pypyVideoId = !fileName.Contains('.') ? fileName : fileName.Split('.')[0];
+
+                var pypyUri = new Uri(url);
+                var query = HttpUtility.ParseQueryString(pypyUri.Query);
+                int.TryParse(query.Get("id"), out var idInt);
+                _ = Task.Run(async () =>
+                {
+                    await PyPyDanceApiService.DownloadMetadata(idInt, pypyVideoId);
+                });
+                
+
                 return new VideoInfo
                 {
                     VideoUrl = videoUrl,
@@ -74,12 +119,17 @@ public class VideoId
                 return null;
             }
         }
-        
+
         if (url.StartsWith("https://na2.vrdancing.club") ||
-            url.StartsWith("https://eu2.vrdancing.club") ||
-            url.StartsWith("https://na2-lq.vrdancing.club"))
+            url.StartsWith("https://eu2.vrdancing.club"))
         {
+            var uri = new Uri(url);
+            var code = Path.GetFileNameWithoutExtension(uri.LocalPath);
             var videoId = HashUrl(url);
+            _ = Task.Run(async () =>
+            {
+                await VRDancingAPIService.DownloadMetadata(code, videoId);
+            });
             return new VideoInfo
             {
                 VideoUrl = url,
@@ -88,14 +138,14 @@ public class VideoId
                 DownloadFormat = DownloadFormat.MP4
             };
         }
-        
+
         if (IsYouTubeUrl(url))
         {
             var videoId = string.Empty;
             var match = YoutubeRegex.Match(url);
             if (match.Success)
             {
-                videoId = match.Groups[1].Value; 
+                videoId = match.Groups[1].Value;
             }
             else if (url.StartsWith("https://www.youtube.com/shorts/") ||
                      url.StartsWith("https://youtube.com/shorts/"))
@@ -116,7 +166,7 @@ public class VideoId
                 VideoUrl = url,
                 VideoId = videoId,
                 UrlType = UrlType.YouTube,
-                DownloadFormat = avPro ? DownloadFormat.Webm : DownloadFormat.MP4,
+                DownloadFormat = avPro ? DownloadFormat.Webm : DownloadFormat.MP4
             };
         }
 
@@ -126,13 +176,13 @@ public class VideoId
             VideoUrl = url,
             VideoId = urlHash,
             UrlType = UrlType.Other,
-            DownloadFormat = DownloadFormat.MP4,
+            DownloadFormat = DownloadFormat.MP4
         };
     }
 
     public static async Task<string> TryGetYouTubeVideoId(string url)
     {
-        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
             cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
@@ -159,15 +209,25 @@ public class VideoId
             throw new Exception($"Failed to get video ID: {error.Trim()}");
         if (string.IsNullOrEmpty(rawData))
             throw new Exception("Failed to get video ID");
-        var data = JsonConvert.DeserializeObject<dynamic>(rawData);
-        if (data is null || data.id is null || data.duration is null)
+        var data = JsonSerializer.Deserialize(rawData, VideoIdJsonContext.Default.YtdlpVideoInfo);
+        if (data?.Id is null || data.Duration is null)
             throw new Exception("Failed to get video ID");
-        if (data.is_live is true)
-            throw new Exception("Failed to get video ID: Video is a stream");
-        if (data.duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
-            throw new Exception($"Failed to get video ID: Video is longer than configured max length ({data.duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
         
-        return data.id;
+        DatabaseManager.AddVideoInfoCache(new VideoInfoCache
+        {
+            Id = data.Id,
+            Title = data.Name,
+            Author = data.Author,
+            Duration = data.Duration,
+            Type = UrlType.YouTube
+        });
+
+        if (data.IsLive == true)
+            throw new Exception("Failed to get video ID: Video is a stream");
+        if (data.Duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
+            throw new Exception($"Failed to get video ID: Video is longer than configured max length ({data.Duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
+
+        return data.Id;
     }
 
     public static async Task<string> GetURLResonite(string url)
@@ -186,14 +246,14 @@ public class VideoId
             }
         };
 
-        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
             cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-        
-        var languageArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
+
+        var languageArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? string.Empty
-            : $" -f [language={ConfigManager.Config.ytdlDubLanguage}]";
+            : $" -f [language={ConfigManager.Config.YtdlpDubLanguage}]";
         process.StartInfo.Arguments = $"--flat-playlist -i -J -s --no-playlist {languageArg} --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-warnings {cookieArg} {additionalArgs} {url}";
 
         process.Start();
@@ -203,7 +263,7 @@ public class VideoId
         error = error.Trim();
         await process.WaitForExitAsync();
         Log.Information("Started yt-dlp with args: {args}", process.StartInfo.Arguments);
-        
+
         if (process.ExitCode != 0)
         {
             if (error.Contains("Sign in to confirm you’re not a bot"))
@@ -211,16 +271,10 @@ public class VideoId
 
             return string.Empty;
         }
-        
-        if (IsYouTubeUrl(url) && ConfigManager.Config.ytdlDelay > 0)
-        {
-            Log.Information("Delaying YouTube URL response for configured {delay} seconds, this can help with video errors, don't ask why", ConfigManager.Config.ytdlDelay);
-            await Task.Delay(ConfigManager.Config.ytdlDelay * 1000);
-        }
 
-        return  output;
+        return output;
     }
-    
+
     // High bitrate video (1080)
     // https://www.youtube.com/watch?v=DzQwWlbnZvo
 
@@ -252,15 +306,15 @@ public class VideoId
 
         // yt-dlp -f best/bestvideo[height<=?720]+bestaudio --no-playlist --no-warnings --get-url https://youtu.be/GoSo8YOKSAE
         var url = videoInfo.VideoUrl;
-        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
         var cookieArg = string.Empty;
         if (Program.IsCookiesEnabledAndValid())
             cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-        
-        var languageArg = string.IsNullOrEmpty(ConfigManager.Config.ytdlDubLanguage)
+
+        var languageArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? string.Empty
-            : $"[language={ConfigManager.Config.ytdlDubLanguage}]/(mp4/best)[height<=?1080][height>=?64][width>=?64]";
-        
+            : $"[language={ConfigManager.Config.YtdlpDubLanguage}]/(mp4/best)[height<=?1080][height>=?64][width>=?64]";
+
         if (avPro)
         {
             process.StartInfo.Arguments = $"--encoding utf-8 -f \"(mp4/best)[height<=?1080][height>=?64][width>=?64]{languageArg}\" --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
@@ -269,7 +323,7 @@ public class VideoId
         {
             process.StartInfo.Arguments = $"--encoding utf-8 -f \"(mp4/best)[vcodec!=av01][vcodec!=vp9.2][height<=?1080][height>=?64][width>=?64][protocol^=http]\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
         }
-        
+
         process.Start();
         var output = await process.StandardOutput.ReadToEndAsync();
         output = output.Trim();
@@ -277,7 +331,7 @@ public class VideoId
         error = error.Trim();
         await process.WaitForExitAsync();
         Log.Information("Started yt-dlp with args: {args}", process.StartInfo.Arguments);
-        
+
         if (process.ExitCode != 0)
         {
             if (error.Contains("Sign in to confirm you’re not a bot"))
@@ -287,5 +341,15 @@ public class VideoId
         }
 
         return new Tuple<string, bool>(output, true);
+    }
+
+    private static async Task<string> GetRedirectUrl(string requestUrl)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Head, requestUrl);
+        using var res = await HttpClient.SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            return requestUrl;
+
+        return res.RequestMessage?.RequestUri?.ToString() ?? requestUrl;
     }
 }

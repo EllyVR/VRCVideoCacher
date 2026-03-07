@@ -1,0 +1,94 @@
+name: Crowdin Translations
+
+on:
+  push:
+    branches: [UI]
+    paths:
+      - 'VRCVideoCacher/Languages/en.loc.json'
+  schedule:
+    # Download completed translations weekly on Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+  pull_request:
+    branches: [UI]
+    paths:
+      - 'VRCVideoCacher/Languages/*.loc.json'
+
+jobs:
+  # Upload English source to Crowdin whenever it changes on UI
+  upload-sources:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload source to Crowdin
+        uses: crowdin/github-action@v2
+        with:
+          upload_sources: true
+          upload_translations: false
+          crowdin_branch_name: UI
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
+
+  # Download completed translations and open a PR (weekly or manual)
+  download-translations:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download translations from Crowdin
+        uses: crowdin/github-action@v2
+        with:
+          upload_sources: false
+          upload_translations: false
+          download_translations: true
+          create_pull_request: true
+          pull_request_title: 'chore: update translations from Crowdin'
+          pull_request_body: 'Automated translation update from Crowdin.'
+          pull_request_base_branch_name: UI
+          crowdin_branch_name: UI
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Validate translation files on PRs that touch the Languages directory
+  validate-translations:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate translation JSON files
+        run: |
+          set -e
+          SOURCE="VRCVideoCacher/Languages/en.loc.json"
+          SOURCE_KEYS=$(jq 'keys | sort' "$SOURCE")
+          FAILED=0
+
+          for file in VRCVideoCacher/Languages/*.loc.json; do
+            [ "$file" = "$SOURCE" ] && continue
+
+            lang=$(basename "$file" .loc.json)
+
+            # Check for valid JSON
+            if ! jq empty "$file" 2>/dev/null; then
+              echo "ERROR: $file is not valid JSON"
+              FAILED=1
+              continue
+            fi
+
+            # Check for missing keys vs the English source
+            MISSING=$(jq --argjson src "$SOURCE_KEYS" \
+              '($src - (keys | sort)) | if length > 0 then . else empty end' "$file")
+            if [ -n "$MISSING" ]; then
+              echo "WARNING: $file is missing keys: $MISSING"
+            fi
+
+            echo "OK: $file"
+          done
+
+          exit $FAILED

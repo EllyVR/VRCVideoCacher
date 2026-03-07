@@ -1,9 +1,15 @@
-VRCVideoCacher/bin
-VRCVideoCacher/obj
-yt-dlp-stub/bin
-yt-dlp-stub/obj
+# Build outputs
+**/bin/
+**/obj/
+Build/
+publish/
+
+# IDE
 .idea/
 .vscode/
+.vs/
 *.DotSettings*
-Build/
-/.vs
+
+# Runtime files
+*.log
+nul

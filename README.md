@@ -32,8 +32,6 @@ In order to fix YouTube videos failing to load, you'll need to install our Chrom
 
 Sync system time, Open Windows Settings -> Time & Language -> Date & Time, under "Additional settings" click "Sync now"
 
-Edit `Config.json` and set `ytdlDelay` to something like `10` seconds.
-
 ### Fix cached videos failing to play in public instances
 
 > Attempted to play an untrusted URL (Domain: localhost) that is not allowlisted for public instances.
@@ -61,7 +59,6 @@ Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add 
 | ytdlAutoUpdate            | Auto update yt-dlp, ffmpeg and deno.                                                                                                                                                                                                                                                           |
 | ytdlAdditionalArgs        | Add your own [yt-dlp args](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options) (only add these if you know what you're doing)                                                                                                                                               |
 | ytdlDubLanguage           | Set preferred audio language for AVPro and cached videos, be warned you may end up with auto translated slop. e.g. `de` for German, check list of [supported lang codes](https://github.com/yt-dlp/yt-dlp/blob/c26f9b991a0681fd3ea548d535919cec1fbbd430/yt_dlp/extractor/youtube.py#L381-L390) |
-| ytdlDelay                 | No delay (Default) `0`, YouTube videos can fail to load sometimes in-game without this delay. e.g. `8` for 8 seconds.                                                                                                                                                                          |
 | CachedAssetPath           | Location to store downloaded videos, e.g. store videos on separate drive with `D:\\DownloadedVideos`                                                                                                                                                                                           |
 | BlockedUrls               | List of URLs to never load in VRC, also works for blocking domains e.g. `[ "https://youtube.com", "https://youtu.be" ]` to block YouTube.                                                                                                                                                      |
 | BlockRedirect             | Video to load in-place of Blocked URL.                                                                                                                                                                                                                                                         |

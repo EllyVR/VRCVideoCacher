@@ -15,17 +15,20 @@ public class Updater
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher.Updater" } }
     };
     private static readonly ILogger Log = Program.Logger.ForContext<Updater>();
-    private static readonly string FileName =  OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
-    private static readonly string FilePath = Path.Combine(Program.CurrentProcessPath, FileName);
-    private static readonly string BackupFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
-    private static readonly string TempFilePath = Path.Combine(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
+    private static readonly string FileName = OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
+    private static readonly string FilePath = Path.Join(Program.CurrentProcessPath, FileName);
+    private static readonly string BackupFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
+    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
 
     public static async Task CheckForUpdates()
     {
+#if STEAMRELEASE
+        return;
+#endif
         Log.Information("Checking for updates...");
         var isDebug = false;
 #if DEBUG
-            isDebug = true;
+        isDebug = true;
 #endif
         if (Program.Version.Contains("-dev") || isDebug)
         {
@@ -54,7 +57,7 @@ public class Updater
             return;
         }
         Log.Information("Update available: {Version}", latestVersion);
-        if (ConfigManager.Config.AutoUpdate)
+        if (ConfigManager.Config.AutoUpdateVrcVideoCacher)
         {
             await UpdateAsync(latestRelease);
             return;
@@ -62,18 +65,15 @@ public class Updater
         Log.Information(
             "Auto Update is disabled. Please update manually from the releases page. https://github.com/EllyVR/VRCVideoCacher/releases");
     }
-        
+
     public static void Cleanup()
     {
         if (File.Exists(BackupFilePath))
         {
             File.Delete(BackupFilePath);
-            // silly temporary config reset to test video prefetch
-            ConfigManager.Config.ytdlDelay = 0;
-            ConfigManager.TrySaveConfig();
         }
     }
-        
+
     private static async Task UpdateAsync(GitHubRelease release)
     {
         foreach (var asset in release.assets)
@@ -82,7 +82,7 @@ public class Updater
                 continue;
 
             File.Move(FilePath, BackupFilePath);
-            
+
             try
             {
                 await using var stream = await HttpClient.GetStreamAsync(asset.browser_download_url);
@@ -98,7 +98,7 @@ public class Updater
                 else
                 {
                     Log.Information("Hash check failed, Reverting update.");
-                    File.Move(BackupFilePath,FilePath);
+                    File.Move(BackupFilePath, FilePath);
                     return;
                 }
                 Log.Information("Updated to version {Version}", release.tag_name);

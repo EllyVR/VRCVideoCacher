@@ -4,7 +4,8 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 namespace VRCVideoCacher.Models;
 
-public class Asset {
+public class Asset
+{
     public string url { get; set; }
     public int id { get; set; }
     public string node_id { get; set; }
@@ -21,7 +22,8 @@ public class Asset {
     public string browser_download_url { get; set; }
 }
 
-public class Author {
+public class Author
+{
     public string login { get; set; }
     public int id { get; set; }
     public string node_id { get; set; }
@@ -42,7 +44,8 @@ public class Author {
     public bool site_admin { get; set; }
 }
 
-public class GitHubRelease {
+public class GitHubRelease
+{
     public string url { get; set; }
     public string assets_url { get; set; }
     public string upload_url { get; set; }
@@ -63,7 +66,8 @@ public class GitHubRelease {
     public string body { get; set; }
 }
 
-public class Uploader {
+public class Uploader
+{
     public string login { get; set; }
     public int id { get; set; }
     public string node_id { get; set; }

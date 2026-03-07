@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:asyncImageLoader="using:AsyncImageLoader"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             x:Class="VRCVideoCacher.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="10">
+            <TextBlock Text="{loc:Tr History}" FontSize="24" FontWeight="Bold"/>
+            <Button Grid.Column="1" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Tr Refresh}">
+                <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
+            </Button>
+        </Grid>
+
+        <!-- History List -->
+        <ListBox Grid.Row="1"
+                 ItemsSource="{Binding HistoryItems}"
+                 Margin="10,0"
+                 Background="#1a1a1a">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:HistoryItemViewModel">
+                    <Border Margin="2" Background="#252525" CornerRadius="4" Padding="8">
+                        <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                            <!-- Thumbnail -->
+                            <Border Grid.Column="0" Width="120" Height="68" CornerRadius="4" ClipToBounds="True" Background="#333333">
+                                <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}" Stretch="UniformToFill"/>
+                            </Border>
+
+                            <!-- Info -->
+                            <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DisplayTitle}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Author}" FontSize="12" Foreground="#888888" Margin="0,2,0,0"
+                                           IsVisible="{Binding HasAuthor}"/>
+                                <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd MMM yyyy HH:mm}}" FontSize="11" Foreground="#666666" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <!-- Type Badge -->
+                            <Border Grid.Column="2" Background="{Binding TypeBadgeColor}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Margin="10,0">
+                                <TextBlock Text="{Binding TypeBadge}" FontSize="11" Foreground="White"/>
+                            </Border>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <Button Command="{Binding OpenUrlCommand}" ToolTip.Tip="Open URL" Padding="8">
+                                    <mi:MaterialIcon Kind="OpenInNew" Width="18" Height="18"/>
+                                </Button>
+                                <Button Command="{Binding CopyUrlCommand}" ToolTip.Tip="Copy URL" Padding="8">
+                                    <mi:MaterialIcon Kind="ContentCopy" Width="18" Height="18"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#252525" Padding="10,5" Margin="10,10,10,0">
+            <TextBlock Text="{Binding StatusText}"/>
+        </Border>
+    </Grid>
+</UserControl>

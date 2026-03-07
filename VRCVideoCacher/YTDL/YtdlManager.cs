@@ -1,5 +1,5 @@
-using Newtonsoft.Json;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 using Serilog;
 using SharpCompress.Readers;
 using VRCVideoCacher.Models;
@@ -22,19 +22,18 @@ public class YtdlManager
 
     static YtdlManager()
     {
-        CookiesPath = Path.Combine(Program.DataPath, "youtube_cookies.txt");
+        CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
 
         // try to locate in PATH
-        if (string.IsNullOrEmpty(ConfigManager.Config.ytdlPath))
-            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? throw new FileNotFoundException("Unable to find yt-dlp");
-        else if (Path.IsPathRooted(ConfigManager.Config.ytdlPath))
-            YtdlPath = ConfigManager.Config.ytdlPath;
+        if (string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
+            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ??
+                       throw new FileNotFoundException("Unable to find yt-dlp");
         else
-            YtdlPath = Path.Combine(Program.DataPath, ConfigManager.Config.ytdlPath);
-        
+            YtdlPath = Path.Join(ConfigManager.UtilsPath, Path.GetFileName(ConfigManager.Config.YtdlpPath));
+
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
     }
-    
+
     public static void StartYtdlDownloadThread()
     {
         Task.Run(YtdlDownloadTask);
@@ -93,9 +92,10 @@ public class YtdlManager
     {
         if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
-        
-        var denoPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
-        
+
+        Directory.CreateDirectory(ConfigManager.UtilsPath);
+        var denoPath = Path.Join(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
+
         using var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
@@ -109,7 +109,7 @@ public class YtdlManager
             Log.Error("Failed to parse deno release response.");
             return;
         }
-        
+
         var currentDenoVersion = Versions.CurrentVersion.deno;
         if (!File.Exists(denoPath))
             currentDenoVersion = "Not Installed";
@@ -167,15 +167,15 @@ public class YtdlManager
         using var response = await HttpClient.GetAsync(url);
         await using var responseStream = await response.Content.ReadAsStreamAsync();
         using var reader = ReaderFactory.Open(responseStream);
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key == null || reader.Entry.IsDirectory)
                 continue;
-            
+
             Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
-            var path = Path.Combine(ConfigManager.UtilsPath, reader.Entry.Key);
+            var path = Path.Join(ConfigManager.UtilsPath, reader.Entry.Key);
             await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await using var entryStream = reader.OpenEntryStream();
+            await using var entryStream = await reader.OpenEntryStreamAsync();
             await entryStream.CopyToAsync(outputStream);
             FileTools.MarkFileExecutable(path);
             Versions.CurrentVersion.deno = json.tag_name;
@@ -192,12 +192,13 @@ public class YtdlManager
         if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
             throw new Exception("Failed to get Utils path");
 
-        var ffmpegPath = Path.Combine(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
+        Directory.CreateDirectory(ConfigManager.UtilsPath);
+        var ffmpegPath = Path.Join(ConfigManager.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
 
         // Make sure we can write into the folder
         try
         {
-            var probeFilePath = Path.Combine(ConfigManager.UtilsPath, "_temp_permission_prober");
+            var probeFilePath = Path.Join(ConfigManager.UtilsPath, "_temp_permission_prober");
             if (File.Exists(probeFilePath))
                 File.Delete(probeFilePath);
             File.Create(probeFilePath, 0, FileOptions.DeleteOnClose);
@@ -282,22 +283,22 @@ public class YtdlManager
         await using var responseStream = await response.Content.ReadAsStreamAsync();
         using var reader = ReaderFactory.Open(responseStream);
         var success = false;
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key == null || reader.Entry.IsDirectory)
                 continue;
 
-            if (reader.Entry.Key.Contains("/bin/"))
-            {
-                var fileName = Path.GetFileName(reader.Entry.Key);
-                Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
-                var path = Path.Combine(ConfigManager.UtilsPath, fileName);
-                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                await using var entryStream = reader.OpenEntryStream();
-                await entryStream.CopyToAsync(outputStream);
-                FileTools.MarkFileExecutable(path);
-                success = true;
-            }
+            if (!reader.Entry.Key.Contains("/bin/"))
+                continue;
+
+            var fileName = Path.GetFileName(reader.Entry.Key);
+            Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
+            var path = Path.Join(ConfigManager.UtilsPath, fileName);
+            await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            await using var entryStream = await reader.OpenEntryStreamAsync();
+            await entryStream.CopyToAsync(outputStream);
+            FileTools.MarkFileExecutable(path);
+            success = true;
         }
 
         if (!success)
@@ -305,12 +306,12 @@ public class YtdlManager
             Log.Error("Failed to extract ffmpeg files.");
             return;
         }
-        
+
         Versions.CurrentVersion.ffmpeg = latestVersion;
         Versions.Save();
         Log.Information("FFmpeg downloaded and extracted.");
     }
-    
+
     private static async Task DownloadYtdl(GitHubRelease json)
     {
         if (File.Exists(YtdlPath) && File.GetAttributes(YtdlPath).HasFlag(FileAttributes.ReadOnly))
@@ -347,6 +348,11 @@ public class YtdlManager
             if (string.IsNullOrEmpty(ConfigManager.UtilsPath))
                 throw new Exception("Failed to get YT-DLP path");
 
+            // Ensure directory exists
+            var ytdlDir = Path.GetDirectoryName(YtdlPath);
+            if (!string.IsNullOrEmpty(ytdlDir))
+                Directory.CreateDirectory(ytdlDir);
+
             await using var fileStream = new FileStream(YtdlPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
@@ -357,27 +363,27 @@ public class YtdlManager
         }
         throw new Exception("Failed to download YT-DLP");
     }
-    
+
     private static readonly List<string> YtdlConfigPaths =
     [
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp.conf"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config.txt"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf.txt"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config.txt"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config.txt"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp.conf"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yt-dlp", "config.txt"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "yt-dlp", "config.txt"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp.conf.txt"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "yt-dlp/config.txt"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config"),
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".yt-dlp/config.txt"),
     ];
-    
+
     public static bool GlobalYtdlConfigExists()
     {
         return YtdlConfigPaths.Any(File.Exists);
     }
-    
+
     public static void DeleteGlobalYtdlConfig()
     {
         foreach (var configPath in YtdlConfigPaths)

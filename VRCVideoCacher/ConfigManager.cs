@@ -8,37 +8,145 @@ namespace VRCVideoCacher;
 
 public class ConfigManager
 {
-    public static readonly ConfigModel Config;
+    public static ConfigModel Config { get; private set; }
     private static readonly ILogger Log = Program.Logger.ForContext<ConfigManager>();
     private static readonly string ConfigFilePath;
     public static readonly string UtilsPath;
 
+    // Events for UI
+    public static event Action? OnConfigChanged;
+
     static ConfigManager()
     {
         Log.Information("Loading config...");
-        ConfigFilePath = Path.Combine(Program.DataPath, "Config.json");
+        ConfigFilePath = Path.Join(Program.DataPath, "Config.json");
         Log.Debug("Using config file path: {ConfigFilePath}", ConfigFilePath);
 
-        if (!File.Exists(ConfigFilePath))
+        ConfigModel? newConfig = null;
+        try
         {
+            if (File.Exists(ConfigFilePath))
+                newConfig = JsonConvert.DeserializeObject<ConfigModel>(File.ReadAllText(ConfigFilePath));
+            if (newConfig == null)
+                newConfig = MigrateLegacyConfig();
+            if (newConfig != null)
+                Config = newConfig;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load config, creating new one...");
+        }
+
+        if (Config == null)
+        {
+            Log.Information("No valid config found, creating new one...");
             Config = new ConfigModel();
             FirstRun();
         }
         else
         {
-            Config = JsonConvert.DeserializeObject<ConfigModel>(File.ReadAllText(ConfigFilePath)) ?? new ConfigModel();
+            Log.Information("Config loaded successfully.");
         }
-        if (Config.ytdlWebServerURL.EndsWith('/'))
-            Config.ytdlWebServerURL = Config.ytdlWebServerURL.TrimEnd('/');
+        
+        if (Config.YtdlpWebServerUrl.EndsWith('/'))
+            Config.YtdlpWebServerUrl = Config.YtdlpWebServerUrl.TrimEnd('/');
 
-        UtilsPath = Path.GetDirectoryName(Config.ytdlPath) ?? string.Empty;
-        if (!UtilsPath.EndsWith("Utils"))
-            UtilsPath = Path.Combine(UtilsPath, "Utils");
+        UtilsPath = Path.GetDirectoryName(Config.YtdlpPath) ?? string.Empty;
+        if (!Path.IsPathRooted(UtilsPath))
+            UtilsPath = Path.Join(Program.DataPath, "Utils");
 
         Directory.CreateDirectory(UtilsPath);
-        
+
         Log.Information("Loaded config.");
         TrySaveConfig();
+    }
+    
+    private static ConfigModel? MigrateLegacyConfig()
+    {
+        if (!OperatingSystem.IsWindows())
+            return null;
+
+        try
+        {
+            // migrate legacy config if it exists
+            var legacyConfigPath = Path.Join(Program.CurrentProcessPath, "config.json");
+            if (!File.Exists(legacyConfigPath))
+                return null;
+
+            var legacyConfig = JsonConvert.DeserializeObject<LegacyConfigModel>(File.ReadAllText(legacyConfigPath));
+            if (legacyConfig == null)
+                return null;
+            
+            // move our files and folders
+            var folderList = new List<string>
+            {
+                "Utils",
+                "MetadataCache"
+            };
+            var fileList = new List<string>
+            {
+                "version.json",
+                "yt-dlp.version.txt",
+                "youtube_cookies.txt"
+            };
+            foreach (var folder in folderList)
+            {
+                var oldPath = Path.Join(Program.CurrentProcessPath, folder);
+                var newPath = Path.Join(Program.DataPath, folder);
+                if (Directory.Exists(oldPath))
+                {
+                    if (Directory.Exists(newPath))
+                        Directory.Delete(newPath, true);
+                    Directory.Move(oldPath, newPath);
+                }
+            }
+            foreach (var file in fileList)
+            {
+                var oldPath = Path.Join(Program.CurrentProcessPath, file);
+                var newPath = Path.Join(Program.DataPath, file);
+                if (File.Exists(oldPath))
+                {
+                    if (File.Exists(newPath))
+                        File.Delete(newPath);
+                    File.Move(oldPath, newPath);
+                }
+            }
+
+            // Use existing cache directory if it has cached assets
+            var oldCachePath = Path.Join(Program.CurrentProcessPath, "CachedAssets");
+            var isCacheDirInUse = Directory.Exists(oldCachePath) && Directory.GetFiles(oldCachePath).Length > 1;
+            var newCachePath = isCacheDirInUse ? oldCachePath : legacyConfig.CachedAssetPath;
+
+            File.Delete(legacyConfigPath);
+            Log.Information("Migrated legacy config from {LegacyConfigPath}", legacyConfigPath);
+            return new ConfigModel
+            {
+                YtdlpWebServerUrl = legacyConfig.ytdlWebServerURL,
+                YtdlpPath = legacyConfig.ytdlPath,
+                YtdlpUseCookies = legacyConfig.ytdlUseCookies,
+                YtdlpAutoUpdate = legacyConfig.ytdlAutoUpdate,
+                YtdlpAdditionalArgs = legacyConfig.ytdlAdditionalArgs,
+                YtdlpDubLanguage = legacyConfig.ytdlDubLanguage,
+                CachedAssetPath = newCachePath,
+                BlockedUrls = legacyConfig.BlockedUrls,
+                BlockRedirect = legacyConfig.BlockRedirect,
+                CacheYouTube = legacyConfig.CacheYouTube,
+                CacheYouTubeMaxResolution = legacyConfig.CacheYouTubeMaxResolution,
+                CacheYouTubeMaxLength = legacyConfig.CacheYouTubeMaxLength,
+                CacheMaxSizeInGb = legacyConfig.CacheMaxSizeInGb,
+                CachePyPyDance = legacyConfig.CachePyPyDance,
+                CacheVrDancing = legacyConfig.CacheVRDancing,
+                PatchResonite = legacyConfig.PatchResonite,
+                ResonitePath = legacyConfig.ResonitePath,
+                PatchVrChat = legacyConfig.PatchVRC,
+                AutoUpdateVrcVideoCacher = legacyConfig.AutoUpdate
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to migrate legacy config, it may be corrupted. Recreating...");
+            return null;
+        }
     }
 
     public static void TrySaveConfig()
@@ -47,12 +155,14 @@ public class ConfigManager
         var oldConfig = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : string.Empty;
         if (newConfig == oldConfig)
             return;
-        
+
         Log.Information("Config changed, saving...");
         File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         Log.Information("Config saved.");
+        OnConfigChanged?.Invoke();
+        CacheManager.TryFlushCache();
     }
-    
+
     private static bool GetUserConfirmation(string prompt, bool defaultValue)
     {
         var defaultOption = defaultValue ? "Y/n" : "y/N";
@@ -66,7 +176,7 @@ public class ConfigManager
     private static void FirstRun()
     {
         Log.Information("It appears this is your first time running VRCVideoCacher. Let's create a basic config file.");
-        
+
         var autoSetup = GetUserConfirmation("Would you like to use VRCVideoCacher for only fixing YouTube videos?", true);
         if (autoSetup)
         {
@@ -82,7 +192,7 @@ public class ConfigManager
             }
 
             var vrDancingPyPyChoice = GetUserConfirmation("Would you like to cache/download VRDancing & PyPyDance videos?", true);
-            Config.CacheVRDancing = vrDancingPyPyChoice;
+            Config.CacheVrDancing = vrDancingPyPyChoice;
             Config.CachePyPyDance = vrDancingPyPyChoice;
 
             Config.PatchResonite = GetUserConfirmation("Would you like to enable Resonite support?", false);
@@ -106,11 +216,52 @@ public class ConfigManager
     }
 }
 
-// ReSharper disable InconsistentNaming
+
 public class ConfigModel
 {
+    // yt-dlp
+    public string YtdlpWebServerUrl = "http://localhost:9696";
+    public string YtdlpPath = OperatingSystem.IsWindows() ? "Utils\\yt-dlp.exe" : Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
+    public bool YtdlpUseCookies = true;
+    public bool YtdlpAutoUpdate = true;
+    public string YtdlpAdditionalArgs = string.Empty;
+    public string YtdlpDubLanguage = string.Empty;
+
+    // Caching
+    public string CachedAssetPath = "";
+    public float CacheMaxSizeInGb = 10f;
+    public bool CacheYouTube = false;
+    public int CacheYouTubeMaxResolution = 1080;
+    public int CacheYouTubeMaxLength = 120;
+    public bool CachePyPyDance = false;
+    public bool CacheVrDancing = false;
+    public bool CacheOnly = false;
+
+    // Cache Rules
+    public string[] BlockedUrls = ["https://na2.vrdancing.club/sampleurl.mp4"];
+    public string BlockRedirect = "https://www.youtube.com/watch?v=byv2bKekeWQ";
+    public string[] PreCacheUrls = [];
+
+    // Patching
+    public bool PatchResonite = false;
+    public string ResonitePath = "";
+    public bool PatchVrChat = true;
+
+    // Video Cacher
+    public bool AutoUpdateVrcVideoCacher = true;
+    public bool CookieSetupCompleted = false;
+
+    // Localization
+    public string Language = "en";
+}
+
+
+
+// ReSharper disable InconsistentNaming
+public class LegacyConfigModel
+{
     public string ytdlWebServerURL = "http://localhost:9696";
-    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils\\yt-dlp.exe" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
+    public string ytdlPath = OperatingSystem.IsWindows() ? "Utils\\yt-dlp.exe" : Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
     public bool ytdlUseCookies = true;
     public bool ytdlAutoUpdate = true;
     public string ytdlAdditionalArgs = string.Empty;

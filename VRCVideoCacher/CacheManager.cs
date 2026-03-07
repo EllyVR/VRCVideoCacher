@@ -1,8 +1,17 @@
 using System.Collections.Concurrent;
 using Serilog;
+using VRCVideoCacher.Database;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher;
+
+public enum CacheChangeType
+{
+    Added,
+    Removed,
+    Cleared
+}
 
 public class CacheManager
 {
@@ -10,15 +19,18 @@ public class CacheManager
     private static readonly ConcurrentDictionary<string, VideoCache> CachedAssets = new();
     public static readonly string CachePath;
 
+    // Events for UI
+    public static event Action<string, CacheChangeType>? OnCacheChanged;
+
     static CacheManager()
     {
         if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
-            CachePath = Path.Combine(GetCacheFolder(), "CachedAssets");
+            CachePath = Path.Join(GetCacheFolder(), "CachedAssets");
         else if (Path.IsPathRooted(ConfigManager.Config.CachedAssetPath))
             CachePath = ConfigManager.Config.CachedAssetPath;
         else
-            CachePath = Path.Combine(Program.CurrentProcessPath, ConfigManager.Config.CachedAssetPath);
-        
+            CachePath = Path.Join(Program.CurrentProcessPath, ConfigManager.Config.CachedAssetPath);
+
         Log.Debug("Using cache path {CachePath}", CachePath);
         BuildCache();
     }
@@ -30,16 +42,16 @@ public class CacheManager
 
         var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
         if (string.IsNullOrEmpty(cachePath))
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
-        
-        return Path.Combine(cachePath, "VRCVideoCacher");
+            return Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
+
+        return Path.Join(cachePath, "VRCVideoCacher");
     }
-    
+
     public static void Init()
     {
         TryFlushCache();
     }
-    
+
     private static void BuildCache()
     {
         CachedAssets.Clear();
@@ -51,26 +63,36 @@ public class CacheManager
             AddToCache(file);
         }
     }
-    
-    private static void TryFlushCache()
+
+    public static void TryFlushCache()
     {
         if (ConfigManager.Config.CacheMaxSizeInGb <= 0f)
             return;
-        
+
         var maxCacheSize = (long)(ConfigManager.Config.CacheMaxSizeInGb * 1024f * 1024f * 1024f);
         var cacheSize = GetCacheSize();
         if (cacheSize < maxCacheSize)
             return;
 
+        var recentPlayHistory = DatabaseManager.GetPlayHistory();
         var oldestFiles = CachedAssets.OrderBy(x => x.Value.LastModified).ToList();
         while (cacheSize >= maxCacheSize && oldestFiles.Count > 0)
         {
             var oldestFile = oldestFiles.First();
-            var filePath = Path.Combine(CachePath, oldestFile.Value.FileName);
+            var filePath = Path.Join(CachePath, oldestFile.Value.FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
                 cacheSize -= oldestFile.Value.Size;
+                
+                // delete thumbnail if not in recent history
+                var videoId = Path.GetFileNameWithoutExtension(oldestFile.Value.FileName);
+                if (recentPlayHistory.All(h => h.Id != videoId))
+                {
+                    var thumbnailPath = ThumbnailManager.GetThumbnailPath(videoId);
+                    if (File.Exists(thumbnailPath))
+                        File.Delete(thumbnailPath);
+                }
             }
             CachedAssets.TryRemove(oldestFile.Key, out _);
             oldestFiles.RemoveAt(0);
@@ -79,10 +101,10 @@ public class CacheManager
 
     public static void AddToCache(string fileName)
     {
-        var filePath = Path.Combine(CachePath, fileName);
+        var filePath = Path.Join(CachePath, fileName);
         if (!File.Exists(filePath))
             return;
-        
+
         var fileInfo = new FileInfo(filePath);
         var videoCache = new VideoCache
         {
@@ -90,14 +112,15 @@ public class CacheManager
             Size = fileInfo.Length,
             LastModified = fileInfo.LastWriteTimeUtc
         };
-        
+
         var existingCache = CachedAssets.GetOrAdd(videoCache.FileName, videoCache);
         existingCache.Size = fileInfo.Length;
         existingCache.LastModified = fileInfo.LastWriteTimeUtc;
-        
+
+        OnCacheChanged?.Invoke(fileName, CacheChangeType.Added);
         TryFlushCache();
     }
-    
+
     private static long GetCacheSize()
     {
         var totalSize = 0L;
@@ -105,7 +128,60 @@ public class CacheManager
         {
             totalSize += cache.Value.Size;
         }
-        
+
         return totalSize;
+    }
+
+    // Public accessors for UI
+    public static IReadOnlyDictionary<string, VideoCache> GetCachedAssets()
+        => CachedAssets.ToDictionary(k => k.Key, v => v.Value);
+
+    public static long GetTotalCacheSize() => GetCacheSize();
+
+    public static int GetCachedVideoCount() => CachedAssets.Count;
+
+    public static void DeleteCacheItem(string fileName)
+    {
+        var filePath = Path.Join(CachePath, fileName);
+        if (!File.Exists(filePath))
+            return;
+
+        File.Delete(filePath);
+        CachedAssets.TryRemove(fileName, out _);
+        OnCacheChanged?.Invoke(fileName, CacheChangeType.Removed);
+        Log.Information("Deleted cached video: {FileName}", fileName);
+    }
+
+    public static void ClearCache()
+    {
+        var recentPlayHistory = DatabaseManager.GetPlayHistory();
+        var files = CachedAssets.Keys.ToList();
+        foreach (var fileName in files)
+        {
+            var filePath = Path.Join(CachePath, fileName);
+            if (!File.Exists(filePath))
+                continue;
+
+            try
+            {
+                File.Delete(filePath);
+                
+                // delete thumbnail if not in recent history
+                var videoId = Path.GetFileNameWithoutExtension(fileName);
+                if (recentPlayHistory.All(h => h.Id != videoId))
+                {
+                    var thumbnailPath = ThumbnailManager.GetThumbnailPath(videoId);
+                    if (File.Exists(thumbnailPath))
+                        File.Delete(thumbnailPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to delete {FileName}: {Error}", fileName, ex.Message);
+            }
+        }
+        CachedAssets.Clear();
+        OnCacheChanged?.Invoke(string.Empty, CacheChangeType.Cleared);
+        Log.Information("Cache cleared");
     }
 }
