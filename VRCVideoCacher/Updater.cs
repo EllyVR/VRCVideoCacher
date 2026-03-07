@@ -81,9 +81,14 @@ public class Updater
             if (asset.name != FileName)
                 continue;
 
-
             try
             {
+                if (File.Exists(TempFilePath))
+                {
+                    Log.Information("Temp file found from a previous update, deleting.");
+                    File.Delete(TempFilePath);
+                }
+
                 await using var stream = await HttpClient.GetStreamAsync(asset.browser_download_url);
                 await using var fileStream = new FileStream(TempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 await stream.CopyToAsync(fileStream);
@@ -97,12 +102,14 @@ public class Updater
                 }
 
                 Log.Information("Hash check passed, Replacing binary.");
+
+                if (!OperatingSystem.IsWindows())
+                    FileTools.MarkFileExecutable(TempFilePath);
+
                 File.Move(FilePath, BackupFilePath);
                 File.Move(TempFilePath, FilePath);
 
                 Log.Information("Updated to version {Version}", release.tag_name);
-                if (!OperatingSystem.IsWindows())
-                    FileTools.MarkFileExecutable(FilePath);
 
                 var process = new Process()
                 {
