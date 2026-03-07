@@ -6,7 +6,9 @@ public class HostsManager
 
     private static readonly string Header = $"{Environment.NewLine}# ----- BEGIN VRCVIDEOCACHER -----{Environment.NewLine}";
     private static readonly string Footer = $"{Environment.NewLine}# ----- END VRCVIDEOCACHER -----{Environment.NewLine}";
-    private static readonly string HostsPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.System)}/drivers/etc/hosts";
+    private static readonly string HostsPath = OperatingSystem.IsWindows()
+        ? $"{Environment.GetFolderPath(Environment.SpecialFolder.System)}/drivers/etc/hosts"
+        : "/etc/hosts";
     
     public static void TryRun()
     {
