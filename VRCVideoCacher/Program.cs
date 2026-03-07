@@ -30,6 +30,9 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
+        HostsManager.TryRun();
+
 #if STEAMRELEASE
         if (SteamAPI.RestartAppIfNecessary(new AppId_t(4296960)))
         {
@@ -46,8 +49,6 @@ internal sealed class Program
 
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
-
-        HostsManager.TryRun();
         AdminCheck.SetupArguements(args);
 
         var processes = Process.GetProcessesByName("VRCVideoCacher");
