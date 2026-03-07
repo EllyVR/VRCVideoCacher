@@ -30,7 +30,15 @@ public class ElevatorManager
                 Verb = "runas"
             }
         };
-        proc.Start();
+        try
+        {
+            proc.Start();
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            Log.Warning("User cancelled UAC prompt for adding host entry.");
+            return;
+        }
         proc.WaitForExit();
         if (proc.ExitCode == 0)
         {
@@ -56,7 +64,15 @@ public class ElevatorManager
                 Verb = "runas"
             }
         };
-        proc.Start();
+        try
+        {
+            proc.Start();
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            Log.Warning("User cancelled UAC prompt for removing host entry.");
+            return;
+        }
         proc.WaitForExit();
         if (proc.ExitCode == 0)
         {
