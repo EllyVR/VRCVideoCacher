@@ -3,6 +3,9 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
+#if STEAMRELEASE
+using Steamworks;
+#endif
 using Serilog;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
@@ -27,6 +30,23 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+#if STEAMRELEASE
+        if (SteamAPI.RestartAppIfNecessary(new AppId_t(4296960)))
+        {
+            Environment.Exit(0);
+            return;
+        }
+
+        if (!SteamAPI.Init())
+        {
+            Console.Error.WriteLine("SteamAPI.Init() failed. Make sure Steam is running.");
+            Environment.Exit(1);
+            return;
+        }
+
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
+#endif
+
         HostsManager.TryRun();
         AdminCheck.SetupArguements(args);
 

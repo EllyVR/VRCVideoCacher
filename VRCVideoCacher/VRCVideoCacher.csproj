@@ -39,6 +39,10 @@
         <NoWarn>$(NoWarn);IL2037</NoWarn>
     </PropertyGroup>
     
+    <ItemGroup Condition="'$(Configuration)' == 'SteamRelease'">
+        <PackageReference Include="Steamworks.NET.AnyCPU" Version="2026.163.0-a" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.11" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
