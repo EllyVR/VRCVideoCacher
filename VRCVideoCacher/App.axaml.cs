@@ -37,7 +37,6 @@ public partial class App : Application
                 var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
                 desktop.MainWindow = adminWindow;
                 adminWindow.Closed += (_, _) => desktop.Shutdown();
-                adminWindow.Show();
                 return;
             }
 
@@ -49,7 +48,6 @@ public partial class App : Application
                 DataContext = new MainWindowViewModel()
             };
 
-            desktop.MainWindow = _mainWindow;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // Set up tray icon
@@ -69,7 +67,7 @@ public partial class App : Application
             var args = Environment.GetCommandLineArgs();
             if (!args.Contains("--minimized"))
             {
-                _mainWindow.Show();
+                desktop.MainWindow = _mainWindow;
             }
         }
 

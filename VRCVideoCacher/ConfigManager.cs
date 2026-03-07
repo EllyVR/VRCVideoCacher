@@ -157,6 +157,12 @@ public class ConfigManager
             return;
 
         Log.Information("Config changed, saving...");
+        // Ensure the directory exists before saving
+        var dir = Path.GetDirectoryName(ConfigFilePath);
+        if (!string.IsNullOrEmpty(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
         File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Config, Formatting.Indented));
         Log.Information("Config saved.");
         OnConfigChanged?.Invoke();
@@ -167,10 +173,10 @@ public class ConfigManager
     {
         var defaultOption = defaultValue ? "Y/n" : "y/N";
         var message = $"{prompt} ({defaultOption}):";
-        message = message.TrimStart();
-        Log.Information(message);
-        var input = Console.ReadLine();
-        return string.IsNullOrEmpty(input) ? defaultValue : input.Equals("y", StringComparison.CurrentCultureIgnoreCase);
+        Log.Information(message.TrimStart());
+        
+        // Bypass CLI input prompt for the WinExe UI version
+        return defaultValue;
     }
 
     private static void FirstRun()

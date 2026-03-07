@@ -119,20 +119,37 @@ public class Updater
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to update: {Message}", ex.Message);
-                File.Move(BackupFilePath, FilePath);
-                Console.ReadKey();
+                Log.Error(ex, "Failed to update: {Message}", ex.Message);
+                try
+                {
+                    if (File.Exists(BackupFilePath) && !File.Exists(FilePath))
+                    {
+                        File.Move(BackupFilePath, FilePath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Failed to restore backup: {Message}", e.Message);
+                }
             }
         }
     }
 
-    private static async Task<bool> HashCheck(string githubHash)
+    private static async Task<bool> HashCheck(string? githubHash)
     {
+        if (string.IsNullOrEmpty(githubHash))
+        {
+            Log.Warning("No hash provided by GitHub, skipping hash check.");
+            return true;
+        }
+
         using var sha256 = SHA256.Create();
         await using var stream = File.Open(TempFilePath, FileMode.Open);
         var hashBytes = await sha256.ComputeHashAsync(stream);
         var hashString = Convert.ToHexString(hashBytes);
-        githubHash = githubHash.Split(':')[1];
+        if (githubHash.Contains(':'))
+            githubHash = githubHash.Split(':')[1];
+            
         var hashMatches = string.Equals(githubHash, hashString, StringComparison.OrdinalIgnoreCase);
         Log.Information("FileHash: {FileHash} GitHubHash: {GitHubHash} HashMatch: {HashMatches}", hashString, githubHash, hashMatches);
         return hashMatches;
