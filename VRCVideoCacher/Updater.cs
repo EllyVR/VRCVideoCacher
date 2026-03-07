@@ -92,7 +92,7 @@ public class Updater
                 if (!await HashCheck(asset.digest))
                 {
                     Log.Information("Hash check failed, Reverting update.");
-                    File.Move(BackupFilePath, FilePath);
+                    File.Delete(TempFilePath);
                     return;
                 }
 
