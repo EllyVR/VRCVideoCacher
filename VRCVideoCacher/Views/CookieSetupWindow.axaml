@@ -130,10 +130,9 @@
 
         <!-- Footer Buttons -->
         <Grid Grid.Row="2" Margin="0,20,0,0">
-            <CheckBox Content="{loc:Tr Don\'t show this again}" IsChecked="{Binding DontShowAgainChecked}"
+            <CheckBox Content="{loc:Tr DontShowThisAgain}" IsChecked="{Binding DontShowAgainChecked}"
                   VerticalAlignment="Bottom" IsVisible="{Binding IsDontShowAgainCheckboxVisible}" Margin="0,0,20,0" Grid.Column="0"/>
             <StackPanel Grid.Row="2"  Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
-                <!--<CheckBox Content="{loc:Tr Don\'t show this message again}" IsChecked="{Binding DontShowAgainChecked}" Margin="0,0,20,0" VerticalAlignment="Center" IsVisible="{Binding !IsStep5}"/>-->
                 <Button Content="{loc:Tr Cancel}" Command="{Binding CancelCommand}" IsVisible="{Binding !IsStep5}"/>
                 <Button Content="{loc:Tr Back}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}"/>
                 <Button Content="{Binding NextButtonText}" Command="{Binding NextCommand}"
