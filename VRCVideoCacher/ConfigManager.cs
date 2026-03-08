@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Serilog;
+using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -203,9 +204,9 @@ public class ConfigManager
             AutoStartShortcut.CreateShortcut();
         }
 
-        if (YtdlManager.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config? (this is necessary for VRCVideoCacher to function)", true))
+        if (YtdlpGlobalConfig.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config? (this is necessary for VRCVideoCacher to function)", true))
         {
-            YtdlManager.DeleteGlobalYtdlConfig();
+            YtdlpGlobalConfig.DeleteGlobalYtdlConfig();
         }
 
         Log.Information("You'll need to install our companion extension to fetch youtube cookies (This will fix YouTube bot errors)");
