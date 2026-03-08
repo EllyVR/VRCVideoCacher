@@ -12,7 +12,6 @@ public class ConfigManager
     public static ConfigModel Config { get; private set; }
     private static readonly ILogger Log = Program.Logger.ForContext<ConfigManager>();
     private static readonly string ConfigFilePath;
-    public static readonly string UtilsPath;
 
     // Events for UI
     public static event Action? OnConfigChanged;
@@ -52,12 +51,6 @@ public class ConfigManager
         
         if (Config.YtdlpWebServerUrl.EndsWith('/'))
             Config.YtdlpWebServerUrl = Config.YtdlpWebServerUrl.TrimEnd('/');
-
-        UtilsPath = Path.GetDirectoryName(Config.YtdlpPath) ?? string.Empty;
-        if (!Path.IsPathRooted(UtilsPath))
-            UtilsPath = Path.Join(Program.DataPath, "Utils");
-
-        Directory.CreateDirectory(UtilsPath);
 
         Log.Information("Loaded config.");
         TrySaveConfig();
@@ -124,7 +117,7 @@ public class ConfigManager
             return new ConfigModel
             {
                 YtdlpWebServerUrl = legacyConfig.ytdlWebServerURL,
-                YtdlpPath = legacyConfig.ytdlPath,
+                YtdlpGlobalPath = string.IsNullOrEmpty(legacyConfig.ytdlPath),
                 YtdlpUseCookies = legacyConfig.ytdlUseCookies,
                 YtdlpAutoUpdate = legacyConfig.ytdlAutoUpdate,
                 YtdlpAdditionalArgs = legacyConfig.ytdlAdditionalArgs,
@@ -223,7 +216,7 @@ public class ConfigModel
 {
     // yt-dlp
     public string YtdlpWebServerUrl = "http://localhost:9696";
-    public string YtdlpPath = OperatingSystem.IsWindows() ? "Utils\\yt-dlp.exe" : Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VRCVideoCacher/Utils/yt-dlp");
+    public bool YtdlpGlobalPath = false;
     public bool YtdlpUseCookies = true;
     public bool YtdlpAutoUpdate = true;
     public string YtdlpAdditionalArgs = string.Empty;

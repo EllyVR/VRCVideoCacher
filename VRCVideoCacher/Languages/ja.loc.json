@@ -37,7 +37,7 @@
   "ServerSettings": "サーバー設定",
   "WebServerUrl": "Webサーバー URL",
   "DownloadSettings": "ダウンロード設定",
-  "YtdlpPathLabel": "yt-dlp パス（空の場合はグローバルPATHを使用）",
+  "YtdlpPathGlobalLabel": "yt-dlp を PATH 環境変数から使用",
   "UseYouTubeCookies": "YouTube Cookieを使用する（ブラウザ拡張機能が必要）",
   "AutoUpdateUtils": "ユーティリティを自動更新する（yt-dlp、FFmpeg、Deno）",
   "AdditionalYtdlpArgs": "yt-dlp 追加引数",

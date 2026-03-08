@@ -11,20 +11,6 @@ public class Versions
 
     static Versions()
     {
-        var oldVersionFile = Path.Join(Program.DataPath, "yt-dlp.version.txt");
-        if (File.Exists(oldVersionFile))
-        {
-            CurrentVersion = new VersionJson
-            {
-                ytdlp = File.ReadAllText(oldVersionFile).Trim(),
-                ffmpeg = string.Empty,
-                deno = string.Empty
-            };
-            File.Delete(oldVersionFile);
-            Save();
-            return;
-        }
-
         if (File.Exists(VersionPath))
         {
             try

@@ -66,10 +66,7 @@
                 <StackPanel Spacing="15">
                     <TextBlock Text="{loc:Tr DownloadSettings}" FontWeight="SemiBold" FontSize="16"/>
 
-                    <StackPanel Spacing="5">
-                        <TextBlock Text="{loc:Tr YtdlpPathLabel}"/>
-                        <TextBox Text="{Binding YtdlPath}" Watermark="Utils\yt-dlp.exe"/>
-                    </StackPanel>
+                    <CheckBox IsChecked="{Binding YtdlpGlobalPath}" Content="{loc:Tr YtdlpPathGlobalLabel}"/>
 
                     <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="{loc:Tr UseYouTubeCookies}"/>
                     <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="{loc:Tr AutoUpdateUtils}"/>

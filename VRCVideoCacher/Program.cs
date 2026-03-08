@@ -26,6 +26,7 @@ internal sealed class Program
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
+    public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
     public static bool HasGui;
     public static event Action? OnCookiesUpdated;
 
@@ -136,7 +137,7 @@ internal sealed class Program
             Environment.Exit(0);
         }
 
-        Directory.CreateDirectory(DataPath);
+        Directory.CreateDirectory(UtilsPath);
         await Updater.CheckForUpdates();
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
@@ -154,7 +155,7 @@ internal sealed class Program
 
         YtdlpHash = GetOurYtdlpHash();
         await VvcConfigService.GetConfig();
-        if (ConfigManager.Config.YtdlpAutoUpdate && !string.IsNullOrEmpty(ConfigManager.Config.YtdlpPath))
+        if (ConfigManager.Config.YtdlpAutoUpdate && !ConfigManager.Config.YtdlpGlobalPath)
         {
             await YtdlManager.TryDownloadYtdlp();
             YtdlManager.StartYtdlDownloadThread();

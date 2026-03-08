@@ -37,7 +37,7 @@
   "ServerSettings": "服务器设置",
   "WebServerUrl": "Web 服务器地址",
   "DownloadSettings": "下载设置",
-  "YtdlpPathLabel": "yt-dlp 路径（留空则使用全局 PATH）",
+  "YtdlpPathGlobalLabel": "yt-dlp use PATH 环境变量",
   "UseYouTubeCookies": "使用 YouTube Cookie（需要浏览器扩展）",
   "AutoUpdateUtils": "自动更新工具（yt-dlp、FFmpeg 和 Deno）",
   "AdditionalYtdlpArgs": "yt-dlp 附加参数",
