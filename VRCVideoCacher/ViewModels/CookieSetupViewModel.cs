@@ -34,6 +34,11 @@ public partial class CookieSetupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hostState;
 
+    [ObservableProperty]
+    private bool _dontShowAgainChecked;
+
+    public bool IsDontShowAgainCheckboxVisible => !IsStep5 && !(ConfigManager.Config?.CookieSetupCompleted ?? false);
+
     public bool IsStep1 => CurrentStep == 1;
     public bool IsStep2 => CurrentStep == 2;
     public bool IsStep3 => CurrentStep == 3;
@@ -88,6 +93,7 @@ public partial class CookieSetupViewModel : ViewModelBase
         _hostState = ElevatorManager.HasHostsLine;
 
         Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedComputedProperties);
+        DontShowAgainChecked = false;
     }
 
     private void RefreshLocalizedComputedProperties()
@@ -208,6 +214,12 @@ public partial class CookieSetupViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel()
     {
+        if (DontShowAgainChecked)
+        {
+            ConfigManager.Config.CookieSetupCompleted = true;
+            ConfigManager.TrySaveConfig();
+        }
+
         VRCVideoCacher.Program.OnCookiesUpdated -= OnCookiesUpdated;
         RequestClose?.Invoke();
     }
