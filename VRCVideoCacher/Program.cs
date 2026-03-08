@@ -71,7 +71,7 @@ internal sealed class Program
 
         // Configure Serilog with UI sink
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
             .WriteTo.Console(new ExpressionTemplate(
                 "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n\r{@x}",
                 theme: TemplateTheme.Literate))
@@ -190,13 +190,21 @@ internal sealed class Program
     public static bool IsCookiesEnabledAndValid()
     {
         if (!ConfigManager.Config.YtdlpUseCookies)
+        {
+            Logger.Information("Cookies not enabled in config");
             return false;
+        }
 
         if (!File.Exists(YtdlManager.CookiesPath))
+        {
+            Logger.Information("Cookies file not found at: {Path}", YtdlManager.CookiesPath);
             return false;
+        }
 
         var cookies = File.ReadAllText(YtdlManager.CookiesPath);
-        return IsCookiesValid(cookies);
+        var valid = IsCookiesValid(cookies);
+        Logger.Information("Cookies file exists, basic validation: {Valid}", valid);
+        return valid;
     }
 
     public static bool IsCookiesValid(string cookies)
@@ -255,7 +263,12 @@ internal sealed class Program
 
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             using var response = await client.GetAsync("https://www.youtube.com/account", cts.Token);
-            return response.StatusCode == HttpStatusCode.OK;
+            // Log the actual status code for debugging
+            Logger.Information("Cookie validation request returned status: {StatusCode}", response.StatusCode);
+            // Accept OK (200) or any redirect (301, 302, 307, 308) as valid
+            // Redirect means cookies work but YouTube wants to send us elsewhere
+            return response.StatusCode == HttpStatusCode.OK ||
+                   (int)response.StatusCode >= 300 && (int)response.StatusCode < 400;
         }
         catch (Exception ex)
         {
