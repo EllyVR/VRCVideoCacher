@@ -16,7 +16,7 @@ public class YtdlManager
     public static readonly string CookiesPath;
 
     public static readonly string YtdlPath =
-        Path.Join(Program.DataPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
+        Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
     private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
     private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
