@@ -106,21 +106,15 @@ public partial class HistoryViewModel : ViewModelBase
 
     private void RefreshHistory()
     {
-        var history = DatabaseManager.GetPlayHistory(100);
-        var ids = history.Select(h => h.Id).Where(id => id != null).Cast<string>();
-        var meta = DatabaseManager.GetVideoInfoCacheByIds(ids);
-
-        var items = history.Select(h =>
-        {
-            meta.TryGetValue(h.Id ?? string.Empty, out var info);
-            return new HistoryItemViewModel(h, info);
-        }).ToList();
+        var historyCache = DatabaseManager.GetVideoHistoryAsCache();
 
         Dispatcher.UIThread.InvokeAsync(() =>
         {
             HistoryItems.Clear();
-            foreach (var item in items)
+            foreach (var item in historyCache.OrderByDescending(h => h.Timestamp))
+            {
                 HistoryItems.Add(item);
+            }
             StatusText = string.Format(Loc.Tr("EntriesCountFormat"), HistoryItems.Count);
         });
     }

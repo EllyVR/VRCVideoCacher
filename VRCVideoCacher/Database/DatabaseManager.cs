@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.ViewModels;
 
 namespace VRCVideoCacher.Database;
 
@@ -72,12 +73,17 @@ public static class DatabaseManager
             .ToList();
     }
 
-    public static Dictionary<string, VideoInfoCache> GetVideoInfoCacheByIds(IEnumerable<string> ids)
+    public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50)
     {
-        var idList = ids.Where(id => !string.IsNullOrEmpty(id)).ToList();
-        return Database.VideoInfoCache
+        return Database.PlayHistory
             .AsNoTracking()
-            .Where(v => idList.Contains(v.Id))
-            .ToDictionary(v => v.Id);
+            .OrderByDescending(h => h.Timestamp)
+            .Take(limit)
+            .Join(Database.VideoInfoCache,
+                h => h.Id,
+                v => v.Id,
+                (h, v) => new HistoryItemViewModel(h, v))
+            .ToList()
+            .DistinctBy(h => h.Url);
     }
 }
