@@ -96,7 +96,7 @@ public class PyPyDanceApiService
         }
         catch (Exception ex)
         {
-            Logger.Error("Failed to download video metadata: {Ex}", ex.Message);
+            Logger.Error("Failed to download video metadata: {Ex}", ex.ToString());
         }
     }
 }

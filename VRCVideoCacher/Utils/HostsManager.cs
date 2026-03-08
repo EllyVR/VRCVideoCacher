@@ -22,7 +22,7 @@ public class HostsManager
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to add host entry: " + ex.Message);
+                Log.Error(ex, "Failed to add host entry: " + ex.ToString());
                 Environment.Exit(1);
             }
         }
@@ -36,7 +36,7 @@ public class HostsManager
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to remove host entry: " + ex.Message);
+                Log.Error(ex, "Failed to remove host entry: " + ex.ToString());
                 Environment.Exit(1);
             }
         }

@@ -259,7 +259,7 @@ internal sealed class Program
         }
         catch (Exception ex)
         {
-            Logger.Warning("Failed to validate cookies online: {Error}", ex.Message);
+            Logger.Warning("Failed to validate cookies online: {Error}", ex.ToString());
             return null;
         }
     }

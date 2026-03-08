@@ -71,7 +71,7 @@ public class VideoDownloader
             }
             catch (Exception ex)
             {
-                Log.Error("Exception during download: {Ex}", ex.Message);
+                Log.Error("Exception during download: {Ex}", ex.ToString());
                 success = false;
             }
 
@@ -122,7 +122,7 @@ public class VideoDownloader
         }
         catch (Exception ex)
         {
-            Log.Error("Not downloading YouTube video: {URL} {ex}", url, ex.Message);
+            Log.Error("Not downloading YouTube video: {URL} {ex}", url, ex.ToString());
             return false;
         }
 
@@ -206,7 +206,7 @@ public class VideoDownloader
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to delete temp file: {ex}", ex.Message);
+                Log.Error("Failed to delete temp file: {ex}", ex.ToString());
             }
             return false;
         }

@@ -177,7 +177,7 @@ public class CacheManager
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to delete {FileName}: {Error}", fileName, ex.Message);
+                Log.Error("Failed to delete {FileName}: {Error}", fileName, ex.ToString());
             }
         }
         CachedAssets.Clear();

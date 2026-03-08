@@ -85,7 +85,7 @@ public class BulkPreCache
             }
             catch (HttpRequestException ex)
             {
-                Log.Error("Error downloading {FileName}: {ExMessage}", file.FileName, ex.Message);
+                Log.Error("Error downloading {FileName}: {ExMessage}", file.FileName, ex.ToString());
             }
         }
     }

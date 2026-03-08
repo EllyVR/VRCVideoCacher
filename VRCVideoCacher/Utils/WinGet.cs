@@ -65,7 +65,7 @@ public class WinGet
         }
         catch (Exception ex)
         {
-            Log.Error(ex.Message);
+            Log.Error(ex.ToString());
             return false;
         }
     }
@@ -114,7 +114,7 @@ public class WinGet
         }
         catch (Exception ex)
         {
-            Log.Error(ex.Message);
+            Log.Error(ex.ToString());
         }
     }
 }

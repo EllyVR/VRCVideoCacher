@@ -125,7 +125,7 @@ public class Updater
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to update: {Message}", ex.Message);
+                Log.Error("Failed to update: {Message}", ex.ToString());
                 File.Move(BackupFilePath, FilePath);
                 Console.ReadKey();
             }

@@ -205,7 +205,7 @@ public class YtdlManager
         }
         catch (Exception ex)
         {
-            Log.Warning($"Skipping ffmpeg download: {ex.GetType().Name}: {ex.Message}");
+            Log.Warning($"Skipping ffmpeg download: {ex.ToString()}");
             return;
         }
 
