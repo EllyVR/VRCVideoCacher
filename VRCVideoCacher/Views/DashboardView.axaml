@@ -114,6 +114,12 @@
                                 <TextBlock Text="{loc:Tr SetupYouTubeCookieExtension}"/>
                             </StackPanel>
                         </Button>
+                        <Button Command="{Binding ClearCookiesCommand}" Margin="0,0,10,10" IsEnabled="{Binding CookiesFileExists}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="Delete" Width="16" Height="16"/>
+                                <TextBlock Text="{loc:Tr ClearCookies}"/>
+                            </StackPanel>
+                        </Button>
                     </WrapPanel>
                 </StackPanel>
             </Border>

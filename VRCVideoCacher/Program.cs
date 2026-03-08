@@ -191,6 +191,20 @@ internal sealed class Program
             .WithInterFont()
             .LogToTrace();
 
+    public static void DeleteCookieFile()
+    {
+        if (File.Exists(YtdlManager.CookiesPath))
+        {
+            File.Delete(YtdlManager.CookiesPath);
+            Logger.Information("Deleted cookie file.");
+        }
+    }
+
+    public static bool DoesCookieFileExist()
+    {
+        return File.Exists(YtdlManager.CookiesPath);
+    }
+
     public static bool IsCookiesEnabledAndValid()
     {
         if (!ConfigManager.Config.YtdlpUseCookies)

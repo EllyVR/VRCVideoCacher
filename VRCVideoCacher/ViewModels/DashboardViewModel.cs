@@ -46,6 +46,9 @@ public partial class DashboardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasMotd))]
     private string? _motd;
     
+    [ObservableProperty]
+    private bool _cookiesFileExists = false;
+
     public bool HasMotd => !string.IsNullOrWhiteSpace(Motd);
 
     public DashboardViewModel()
@@ -173,6 +176,8 @@ public partial class DashboardViewModel : ViewModelBase
 
     private async Task ValidateCookiesAsync()
     {
+        CookiesFileExists = Program.DoesCookieFileExist();
+
         if (!Program.IsCookiesEnabledAndValid())
         {
             Dispatcher.UIThread.Post(() => CookieStatus = Loc.Tr("NotSet"));
@@ -211,5 +216,12 @@ public partial class DashboardViewModel : ViewModelBase
             // Refresh cookies status after dialog closes
             _ = ValidateCookiesAsync();
         }
+    }
+
+    [RelayCommand]
+    private async Task ClearCookies()
+    {
+        Program.DeleteCookieFile();
+        await ValidateCookiesAsync();
     }
 }
