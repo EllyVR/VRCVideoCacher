@@ -42,7 +42,8 @@ public class ConfigManager
         {
             Log.Information("No valid config found, creating new one...");
             Config = new ConfigModel();
-            FirstRun();
+            if (!Program.HasGui)
+                FirstRunConsole();
         }
         else
         {
@@ -174,7 +175,7 @@ public class ConfigManager
         return string.IsNullOrEmpty(input) ? defaultValue : input.Equals("y", StringComparison.CurrentCultureIgnoreCase);
     }
 
-    private static void FirstRun()
+    private static void FirstRunConsole()
     {
         Log.Information("It appears this is your first time running VRCVideoCacher. Let's create a basic config file.");
 

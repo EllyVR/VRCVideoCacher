@@ -26,6 +26,7 @@ internal sealed class Program
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
+    public static bool HasGui;
     public static event Action? OnCookiesUpdated;
 
     [STAThread]
@@ -64,8 +65,9 @@ internal sealed class Program
         // Check for --nogui flag
         if (args.Contains("--nogui"))
         {
+            HasGui = false;
             // Run backend only (console mode)
-            InitVRCVideoCacher(false).GetAwaiter().GetResult();
+            InitVRCVideoCacher().GetAwaiter().GetResult();
             return;
         }
 
@@ -95,7 +97,8 @@ internal sealed class Program
             {
                 try
                 {
-                    await InitVRCVideoCacher(true);
+                    HasGui = true;
+                    await InitVRCVideoCacher();
                 }
                 catch (Exception ex)
                 {
@@ -108,7 +111,7 @@ internal sealed class Program
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
-    public static async Task InitVRCVideoCacher(bool hasGui)
+    public static async Task InitVRCVideoCacher()
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
 
@@ -127,7 +130,7 @@ internal sealed class Program
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
 
-        if (!hasGui && AdminCheck.ShouldShowAdminWarning())
+        if (!HasGui && AdminCheck.ShouldShowAdminWarning())
         {
             Logger.Error(AdminCheck.AdminWarningMessage);
             Environment.Exit(0);
