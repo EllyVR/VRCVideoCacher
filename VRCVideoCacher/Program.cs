@@ -22,7 +22,7 @@ internal sealed class Program
 {
     public static string YtdlpHash = string.Empty;
     // Versioning is YEAR.MONTH.RELEASE
-    public const string Version = "2026.3.8";
+    public const string Version = "2026.3.9";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
