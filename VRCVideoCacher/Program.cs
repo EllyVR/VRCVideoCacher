@@ -254,7 +254,7 @@ internal sealed class Program
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
 
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            using var response = await client.GetAsync("https://www.youtube.com/account", cts.Token);
+            using var response = await client.GetAsync("https://www.youtube.com/new", cts.Token);
             return response.StatusCode == HttpStatusCode.OK;
         }
         catch (Exception ex)
