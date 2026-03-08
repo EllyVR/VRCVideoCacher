@@ -27,7 +27,7 @@ jobs:
         with:
           upload_sources: true
           upload_translations: false
-          crowdin_branch_name: main
+          crowdin_branch_name: UI
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
           pull_request_title: 'chore: update translations from Crowdin'
           pull_request_body: 'Automated translation update from Crowdin.'
           pull_request_base_branch_name: main
-          crowdin_branch_name: main
+          crowdin_branch_name: UI
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_TOKEN }}
