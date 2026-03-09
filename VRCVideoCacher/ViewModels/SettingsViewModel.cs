@@ -152,23 +152,29 @@ public partial class SettingsViewModel : ViewModelBase
         StatusMessage = string.Empty;
     }
 
-    partial void OnWebServerUrlChanged(string value) => HasChanges = true;
-    partial void OnYtdlpGlobalPathChanged(bool value) => HasChanges = true;
-    partial void OnYtdlUseCookiesChanged(bool value) => HasChanges = true;
-    partial void OnYtdlAutoUpdateChanged(bool value) => HasChanges = true;
-    partial void OnYtdlAdditionalArgsChanged(string value) => HasChanges = true;
-    partial void OnYtdlDubLanguageChanged(string value) => HasChanges = true;
-    partial void OnCachedAssetPathChanged(string value) => HasChanges = true;
-    partial void OnCacheYouTubeChanged(bool value) => HasChanges = true;
-    partial void OnCacheYouTubeMaxResolutionChanged(int value) => HasChanges = true;
-    partial void OnCacheYouTubeMaxLengthChanged(int value) => HasChanges = true;
-    partial void OnCacheMaxSizeInGbChanged(float value) => HasChanges = true;
-    partial void OnCachePyPyDanceChanged(bool value) => HasChanges = true;
-    partial void OnCacheVRDancingChanged(bool value) => HasChanges = true;
-    partial void OnPatchResoniteChanged(bool value) => HasChanges = true;
-    partial void OnPatchVRCChanged(bool value) => HasChanges = true;
-    partial void OnAutoUpdateChanged(bool value) => HasChanges = true;
-    partial void OnCloseToTrayChanged(bool value) => HasChanges = true;
+    private void SetHasChanges()
+    {
+        HasChanges = true;
+        StatusMessage = Loc.Tr("SettingsUnsavedChanges");
+    }
+
+    partial void OnWebServerUrlChanged(string value) => SetHasChanges();
+    partial void OnYtdlpGlobalPathChanged(bool value) => SetHasChanges();
+    partial void OnYtdlUseCookiesChanged(bool value) => SetHasChanges();
+    partial void OnYtdlAutoUpdateChanged(bool value) => SetHasChanges();
+    partial void OnYtdlAdditionalArgsChanged(string value) => SetHasChanges();
+    partial void OnYtdlDubLanguageChanged(string value) => SetHasChanges();
+    partial void OnCachedAssetPathChanged(string value) => SetHasChanges();
+    partial void OnCacheYouTubeChanged(bool value) => SetHasChanges();
+    partial void OnCacheYouTubeMaxResolutionChanged(int value) => SetHasChanges();
+    partial void OnCacheYouTubeMaxLengthChanged(int value) => SetHasChanges();
+    partial void OnCacheMaxSizeInGbChanged(float value) => SetHasChanges();
+    partial void OnCachePyPyDanceChanged(bool value) => SetHasChanges();
+    partial void OnCacheVRDancingChanged(bool value) => SetHasChanges();
+    partial void OnPatchResoniteChanged(bool value) => SetHasChanges();
+    partial void OnPatchVRCChanged(bool value) => SetHasChanges();
+    partial void OnAutoUpdateChanged(bool value) => SetHasChanges();
+    partial void OnCloseToTrayChanged(bool value) => SetHasChanges();
 
     [RelayCommand]
     private void SaveSettings()
@@ -216,13 +222,13 @@ public partial class SettingsViewModel : ViewModelBase
     private void AddBlockedUrl()
     {
         BlockedUrls.Add("https://");
-        HasChanges = true;
+        SetHasChanges();
     }
 
     [RelayCommand]
     private void RemoveBlockedUrl(string url)
     {
         BlockedUrls.Remove(url);
-        HasChanges = true;
+        SetHasChanges();
     }
 }

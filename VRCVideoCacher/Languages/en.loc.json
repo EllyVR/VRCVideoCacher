@@ -64,6 +64,7 @@
   "BlockedUrlRedirect": "Blocked URL Redirect",
   "SettingsSaved": "Settings saved!",
   "SettingsReset": "Settings reset to last saved values.",
+  "SettingsUnsavedChanges": "You have unsaved changes.",
 
   "OpenFolder": "Open Folder",
   "DeleteAllCache": "Delete All Cache",

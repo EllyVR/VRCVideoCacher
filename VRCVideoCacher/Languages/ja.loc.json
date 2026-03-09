@@ -64,6 +64,7 @@
   "BlockedUrlRedirect": "ブロックURL リダイレクト先",
   "SettingsSaved": "設定を保存しました！",
   "SettingsReset": "設定を最後に保存した値にリセットしました。",
+  "SettingsUnsavedChanges": "保存されていない設定の変更があります。",
 
   "OpenFolder": "フォルダを開く",
   "DeleteAllCache": "全キャッシュを削除",
