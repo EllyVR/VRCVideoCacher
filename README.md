@@ -1,10 +1,19 @@
-# STEAM RELEASE WITH NEW UI RELEASED
-### [Click here](https://store.steampowered.com/app/4296960/VRCVideoCacher/) to Download
 
-[![img](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4296960/d1bac93e4abb00108cda2137260b76a25bcffea4/header.jpg)](https://store.steampowered.com/app/4296960/VRCVideoCacher/)
-
-
-# VRCVideoCacher
+<div align="center">
+  <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4296960/d1bac93e4abb00108cda2137260b76a25bcffea4/header.jpg" alt="VRCVideoCacher Steam Header" style="max-width:100%;" />
+  <br>
+  <h1>
+    <a href="https://store.steampowered.com/app/4296960/VRCVideoCacher/">
+      <img src="https://img.shields.io/badge/Steam-Download-blue?logo=steam" alt="Steam Download" />
+    </a>
+    <a href="https://github.com/EllyVR/VRCVideoCacher/releases/latest">
+      <img src="https://img.shields.io/badge/Github-Download-blue?logo=github" alt="Github Download" />
+    </a>
+    <a href="https://discord.gg/ellyvr">
+      <img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord" alt="Discord" />
+    </a>
+  </h1>
+</div>
 
 ### What is VRCVideoCacher?
 
