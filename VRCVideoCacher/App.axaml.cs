@@ -32,15 +32,6 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            if (AdminCheck.ShouldShowAdminWarning())
-            {
-                var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
-                desktop.MainWindow = adminWindow;
-                adminWindow.Closed += (_, _) => desktop.Shutdown();
-                adminWindow.Show();
-                return;
-            }
-
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit
             BindingPlugins.DataValidators.RemoveAt(0);
 
@@ -70,6 +61,12 @@ public partial class App : Application
             if (!args.Contains("--minimized"))
             {
                 _mainWindow.Show();
+            }
+
+            if (AdminCheck.ShouldShowAdminWarning())
+            {
+                var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
+                _ = adminWindow.ShowDialog(_mainWindow);
             }
         }
 
