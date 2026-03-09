@@ -33,8 +33,25 @@
                 <StackPanel Spacing="15">
                     <TextBlock Text="{loc:Tr Links}" FontWeight="SemiBold" FontSize="16"/>
 
-                    <StackPanel Spacing="5">
-
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <Button Click="OnDiscordClick" ToolTip.Tip="Discord">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Forum" Width="24" Height="24"/>
+                                <TextBlock Text="Discord" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnGitHubClick" ToolTip.Tip="GitHub">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Github" Width="24" Height="24"/>
+                                <TextBlock Text="GitHub" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnSteamClick" ToolTip.Tip="Steam">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Steam" Width="24" Height="24"/>
+                                <TextBlock Text="Steam" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Border>
