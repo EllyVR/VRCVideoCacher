@@ -25,6 +25,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public DownloadQueueViewModel DownloadQueue { get; }
     public LogViewerViewModel LogViewer { get; }
     public HistoryViewModel History { get; }
+    public AboutViewModel About { get; }
 
     public MainWindowViewModel()
     {
@@ -34,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DownloadQueue = new DownloadQueueViewModel();
         LogViewer = new LogViewerViewModel();
         History = new HistoryViewModel();
+        About = new AboutViewModel();
 
         _currentView = Dashboard;
 
@@ -89,4 +91,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void NavigateToHistory() => CurrentView = History;
+
+    [RelayCommand]
+    public void NavigateToAbout() => CurrentView = About;
 }
