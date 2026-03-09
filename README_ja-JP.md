@@ -10,6 +10,8 @@
 <hr>
 </div>
 
+**Language:** [English](./README.md) | **日本語**
+
 ### VRCVideoCacher とは何でしょうか？
 
 VRCVideoCacher は、VRChat での動画をローカルディスクにキャッシュしたり、YouTube の動画の読み込み失敗を修正などを行うためのツールです。
