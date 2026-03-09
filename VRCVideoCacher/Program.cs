@@ -52,8 +52,6 @@ internal sealed class Program
 
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
-        AdminCheck.SetupArguements(args);
-
         var processes = Process.GetProcessesByName("VRCVideoCacher");
         if (processes.Length > 1)
         {
@@ -62,6 +60,8 @@ internal sealed class Program
         }
         foreach (var process in processes)
             process.Dispose();
+
+        AdminCheck.SetupArguments(args);
 
         // Check for --nogui flag
         if (args.Contains("--nogui"))
@@ -90,23 +90,19 @@ internal sealed class Program
             Logger.Warning("Application is running with administrator privileges. This is not recommended for security reasons.");
         }
 
-        // Don't run backend if admin warning is shown
-        if (!AdminCheck.ShouldShowAdminWarning())
+        // Start backend on background thread
+        Task.Run(async () =>
         {
-            // Start backend on background thread
-            Task.Run(async () =>
+            try
             {
-                try
-                {
-                    HasGui = true;
-                    await InitVRCVideoCacher();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Backend error " + ex.Message + " " + ex.StackTrace);
-                }
-            });
-        }
+                HasGui = true;
+                await InitVRCVideoCacher();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Backend error " + ex.Message + " " + ex.StackTrace);
+            }
+        });
 
         // Start the UI
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -129,12 +125,12 @@ internal sealed class Program
         const string elly = "Elly";
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
+        const string dubyadude = "DubyaDude";
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {DubyaDude}", Version, elly, natsumi, haxy, dubyadude);
 
-        if (!HasGui && AdminCheck.ShouldShowAdminWarning())
+        if (AdminCheck.ShouldShowAdminWarning())
         {
             Logger.Error(AdminCheck.AdminWarningMessage);
-            Environment.Exit(0);
         }
 
         Directory.CreateDirectory(UtilsPath);
