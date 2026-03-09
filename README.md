@@ -38,6 +38,11 @@ Sync system time, Open Windows Settings -> Time & Language -> Date & Time, under
 
 Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add this new line `127.0.0.1 localhost.youtube.com` to the bottom of the file, edit `Config.json` and set `ytdlWebServerURL` to `http://localhost.youtube.com:9696`
 
+### CLI args
+
+- `--nogui` run in command line only mode without UI.
+- `--bypass-admin-warning` if you *really* need to run as admin so some unknown reason.
+
 ### Running on Linux
 
 - Install `dotnet-runtime-10.0`
@@ -47,6 +52,7 @@ Run notepad as Admin then browse to `C:\Windows\System32\drivers\etc\hosts` add 
 ### Uninstalling
 
 - If you have VRCX, delete the startup shortcut "VRCVideoCacher" from `%AppData%\VRCX\startup`
+- Delete config and cache from `%AppData%\VRCVideoCacher`
 - Delete "yt-dlp.exe" from `%AppData%\..\LocalLow\VRChat\VRChat\Tools` and restart VRChat or rejoin world.
 
 ### Config Options
