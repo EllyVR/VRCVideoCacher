@@ -1,11 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using CodingSeb.Localization;
 using CodingSeb.Localization.Loaders;
 using Newtonsoft.Json.Linq;
@@ -46,16 +48,24 @@ public partial class App : Application
             // Set up tray icon
             SetupTrayIcon(desktop);
 
-            // Handle window closing - minimize to tray instead
+            // Handle window closing - minimize to tray instead, but allow OS/programmatic closes
             _mainWindow.Closing += (_, e) =>
             {
-                if (!_isExiting)
+                if (!_isExiting && !e.IsProgrammatic)
                 {
                     e.Cancel = true;
                     _mainWindow.Hide();
                 }
             };
 
+            // Allow the app to exit cleanly on OS shutdown/logoff
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                _isExiting = true;
+                _trayIcon?.Dispose();
+                _trayIcon = null;
+            };
+            
             // Check for --minimized flag
             var args = Environment.GetCommandLineArgs();
             if (!args.Contains("--minimized"))
@@ -124,12 +134,70 @@ public partial class App : Application
     }
 
     private bool _isExiting;
+    private IClassicDesktopStyleApplicationLifetime? _desktop;
     private NativeMenuItem? _showItem;
     private NativeMenuItem? _openCacheItem;
     private NativeMenuItem? _exitItem;
 
+    // Win32 message constants for close interception
+    private const uint WmClose = 0x0010;
+    private const uint WmSysCommand = 0x0112;
+    private const int ScClose = 0xF060;
+
+    private IntPtr Win32WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        // User clicked the title-bar X button (generates SC_CLOSE before WM_CLOSE).
+        // Marking as handled suppresses the subsequent WM_CLOSE, so the Closing
+        // event never fires for a normal user-initiated close on Windows.
+        if (msg == WmSysCommand && (wParam.ToInt32() & 0xFFF0) == ScClose)
+        {
+            _mainWindow?.Hide();
+            handled = true;
+            return IntPtr.Zero;
+        }
+
+        // Raw WM_CLOSE arriving here means it came from an external source
+        // (taskkill, Task Manager) — a user close via SC_CLOSE would have been
+        // caught above and never reached this point.
+        if (msg == WmClose && !_isExiting)
+        {
+            _isExiting = true;
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            _desktop?.Shutdown();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        _desktop = desktop;
+
+        // On Windows, hook WndProc to distinguish a user clicking X (SC_CLOSE)
+        // from an external kill signal (raw WM_CLOSE from taskkill/Task Manager).
+        if (OperatingSystem.IsWindows())
+            Win32Properties.AddWndProcHookCallback(_mainWindow!, Win32WndProc);
+
+        // On Linux, SIGTERM bypasses the Closing event entirely.  Intercept it
+        // and route through desktop.Shutdown() so the tray icon is disposed and
+        // Avalonia state is cleaned up properly before the process exits.
+        if (OperatingSystem.IsLinux())
+        {
+            PosixSignalRegistration.Create(PosixSignal.SIGTERM, ctx =>
+            {
+                ctx.Cancel = true; // suppress default immediate-kill behaviour
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _isExiting = true;
+                    _trayIcon?.Dispose();
+                    _trayIcon = null;
+                    _desktop?.Shutdown();
+                });
+            });
+        }
+
         _showItem = new NativeMenuItem(Loc.Tr("TrayShow"));
         _showItem.Click += (_, _) => ShowMainWindow();
 
@@ -142,7 +210,7 @@ public partial class App : Application
             _isExiting = true;
             desktop.Shutdown();
         };
-
+        
         Loc.Instance.CurrentLanguageChanged += (_, _) =>
         {
             if (_showItem != null) _showItem.Header = Loc.Tr("TrayShow");
