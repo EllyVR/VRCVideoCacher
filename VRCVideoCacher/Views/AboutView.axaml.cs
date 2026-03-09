@@ -5,7 +5,7 @@ namespace VRCVideoCacher.Views;
 public partial class AboutView : UserControl
 {
     private const string GithubUrl = "https://github.com/EllyVR/VRCVideoCacher";
-    private const string DiscordUrl = "https://github.com/EllyVR/VRCVideoCacher";
+    private const string DiscordUrl = "https://discord.gg/t6x6p6Tzs";
     private const string SteamUrl = "https://store.steampowered.com/app/4296960/";
 
     public AboutView()
