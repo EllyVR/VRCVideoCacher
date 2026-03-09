@@ -88,8 +88,8 @@ public partial class CookieSetupViewModel : ViewModelBase
 
     public CookieSetupViewModel()
     {
-        VRCVideoCacher.Program.OnCookiesUpdated += OnCookiesUpdated;
-        CookiesReceived = VRCVideoCacher.Program.IsCookiesEnabledAndValid();
+        Program.OnCookiesUpdated += OnCookiesUpdated;
+        CookiesReceived = Program.IsCookiesEnabledAndValid();
         _hostState = ElevatorManager.HasHostsLine;
 
         Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedComputedProperties);
@@ -109,7 +109,7 @@ public partial class CookieSetupViewModel : ViewModelBase
     {
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            CookiesReceived = VRCVideoCacher.Program.IsCookiesEnabledAndValid();
+            CookiesReceived = Program.IsCookiesEnabledAndValid();
             OnPropertyChanged(nameof(CanGoNext));
             OnPropertyChanged(nameof(CookieStatusText));
             OnPropertyChanged(nameof(CookieStatusIcon));
@@ -196,7 +196,7 @@ public partial class CookieSetupViewModel : ViewModelBase
         {
             ConfigManager.Config.CookieSetupCompleted = true;
             ConfigManager.TrySaveConfig();
-            VRCVideoCacher.Program.OnCookiesUpdated -= OnCookiesUpdated;
+            Program.OnCookiesUpdated -= OnCookiesUpdated;
             RequestClose?.Invoke();
             return;
         }
@@ -220,7 +220,7 @@ public partial class CookieSetupViewModel : ViewModelBase
             ConfigManager.TrySaveConfig();
         }
 
-        VRCVideoCacher.Program.OnCookiesUpdated -= OnCookiesUpdated;
+        Program.OnCookiesUpdated -= OnCookiesUpdated;
         RequestClose?.Invoke();
     }
 

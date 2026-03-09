@@ -21,18 +21,18 @@ public partial class MainWindow : Window
         // Show if: cookies are enabled, setup not completed, and cookies not already valid
         if (ConfigManager.Config.YtdlpUseCookies &&
             !ConfigManager.Config.CookieSetupCompleted &&
-            !VRCVideoCacher.Program.IsCookiesEnabledAndValid())
+            !Program.IsCookiesEnabledAndValid())
         {
             // Delay slightly to let the main window fully render
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                await System.Threading.Tasks.Task.Delay(500);
+                await Task.Delay(500);
                 await ShowCookieSetupDialog();
             });
         }
     }
 
-    private async System.Threading.Tasks.Task ShowCookieSetupDialog()
+    private async Task ShowCookieSetupDialog()
     {
         var viewModel = new CookieSetupViewModel();
         var window = new CookieSetupWindow

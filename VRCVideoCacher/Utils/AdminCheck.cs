@@ -55,7 +55,7 @@ public static class AdminCheck
                 return false;
             }
         }
-        else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
         {
             return Environment.UserName == "root";
         }
