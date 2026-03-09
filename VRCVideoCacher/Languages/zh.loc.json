@@ -5,6 +5,7 @@
   "Downloads": "下载",
   "History": "历史记录",
   "Logs": "日志",
+  "About": "关于",
 
   "Refresh": "刷新",
   "Save": "保存",
@@ -25,6 +26,7 @@
   "QuickActions": "快捷操作",
   "OpenCacheFolder": "打开缓存文件夹",
   "SetupYouTubeCookieExtension": "设置 YouTube Cookie 扩展",
+  "ClearCookies": "清除 YouTube Cookie",
   "Running": "运行中",
   "Stopped": "已停止",
   "None": "无",
@@ -116,7 +118,13 @@
   "OpenChromeWebStore": "打开 Chrome 网上应用店",
   "OpenFirefoxAddons": "打开 Firefox 附加组件",
 
+  "DontShowThisAgain": "不再显示",
   "TrayShow": "显示",
   "TrayOpenCacheFolder": "打开缓存文件夹",
-  "TrayExit": "退出"
+  "TrayExit": "退出",
+
+  "CreatedBy": "由以下人员创建",
+  "ReportAnIssue": "报告问题",
+  "OpenIssueOnGitHub": "在 GitHub 上打开问题",
+  "JoinOurDiscord": "加入我们的 Discord 以报告问题"
 }

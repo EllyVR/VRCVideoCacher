@@ -1,3 +1,5 @@
+using System.Globalization;
+using CodingSeb.Localization;
 using Newtonsoft.Json;
 using Serilog;
 using VRCVideoCacher.Utils;
@@ -40,7 +42,10 @@ public class ConfigManager
         if (Config == null)
         {
             Log.Information("No valid config found, creating new one...");
-            Config = new ConfigModel();
+            Config = new ConfigModel
+            {
+                Language = GetSystemLanguage()
+            };
             if (!Program.HasGui)
                 FirstRunConsole();
         }
@@ -208,6 +213,12 @@ public class ConfigManager
         Log.Information("Firefox: https://addons.mozilla.org/en-US/firefox/addon/vrcvideocachercookiesexporter/");
         Log.Information("More info: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
         TrySaveConfig();
+    }
+    
+    private static string GetSystemLanguage()
+    {
+        var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        return Loc.Instance.AvailableLanguages.Contains(culture) ? culture : "en";
     }
 }
 

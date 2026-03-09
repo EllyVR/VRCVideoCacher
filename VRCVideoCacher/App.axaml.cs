@@ -88,7 +88,7 @@ public partial class App : Application
         LoadEmbeddedLanguageFiles();
 
         var configLang = ConfigManager.Config.Language;
-        var lang = string.IsNullOrEmpty(configLang) ? GetSystemLanguage() : configLang;
+        var lang = string.IsNullOrEmpty(configLang) ? "en" : configLang;
         Loc.Instance.CurrentLanguage = lang;
     }
 
@@ -125,12 +125,6 @@ public partial class App : Application
                 // Skip malformed resources — non-fatal.
             }
         }
-    }
-
-    private static string GetSystemLanguage()
-    {
-        var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        return Loc.Instance.AvailableLanguages.Contains(culture) ? culture : "en";
     }
 
     private bool _isExiting;

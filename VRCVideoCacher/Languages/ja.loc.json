@@ -5,6 +5,7 @@
   "Downloads": "ダウンロード",
   "History": "履歴",
   "Logs": "ログ",
+  "About": "情報",
 
   "Refresh": "更新",
   "Save": "保存",
@@ -25,6 +26,7 @@
   "QuickActions": "クイックアクション",
   "OpenCacheFolder": "キャッシュフォルダを開く",
   "SetupYouTubeCookieExtension": "YouTube Cookie拡張機能のセットアップ",
+  "ClearCookies": "YouTube Cookieをクリア",
   "Running": "実行中",
   "Stopped": "停止中",
   "None": "なし",
@@ -116,7 +118,13 @@
   "OpenChromeWebStore": "Chrome ウェブストアを開く",
   "OpenFirefoxAddons": "Firefox アドオンを開く",
 
+  "DontShowThisAgain": "次回から表示しない",
   "TrayShow": "表示",
   "TrayOpenCacheFolder": "キャッシュフォルダを開く",
-  "TrayExit": "終了"
+  "TrayExit": "終了",
+
+  "CreatedBy": "作成者",
+  "ReportAnIssue": "問題を報告",
+  "OpenIssueOnGitHub": "GitHubで問題を開く",
+  "JoinOurDiscord": "問題を報告するためにDiscordに参加する"
 }

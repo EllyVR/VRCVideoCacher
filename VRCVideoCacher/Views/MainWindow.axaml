@@ -89,7 +89,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="Information" Width="20" Height="20"/>
-                            <TextBlock Text="About" VerticalAlignment="Center"/>
+                            <TextBlock Text="{loc:Tr About}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
