@@ -10,6 +10,6 @@ public class AboutViewModel : ViewModelBase
     public AboutViewModel()
     {
         Version = VRCVideoCacher.Program.Version;
-        CreatedBy = Loc.Tr("CreatedBy") + $" {VRCVideoCacher.Program.Creator_Elly}, {VRCVideoCacher.Program.Creator_Natsumi}, {VRCVideoCacher.Program.Creator_Haxy}, {VRCVideoCacher.Program.Creator_DubyaDude}";
+        CreatedBy = Loc.Tr("CreatedBy") + $" {VRCVideoCacher.Program.Creator_Elly}, {VRCVideoCacher.Program.Creator_Natsumi}, {VRCVideoCacher.Program.Creator_Haxy}, {VRCVideoCacher.Program.Creator_Hauskaz}, {VRCVideoCacher.Program.Creator_DubyaDude}";
     }
 }

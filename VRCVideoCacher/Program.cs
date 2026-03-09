@@ -26,6 +26,7 @@ internal sealed class Program
     public const string Creator_Elly = "Elly";
     public const string Creator_Natsumi = "Natsumi";
     public const string Creator_Haxy = "Haxy";
+    public const string Creator_Hauskaz = "Hauskaz";
     public const string Creator_DubyaDude = "DubyaDude";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
@@ -126,7 +127,7 @@ internal sealed class Program
                     theme: TemplateTheme.Literate))
                 .CreateLogger();
         }
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_DubyaDude);
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
 
         if (AdminCheck.ShouldShowAdminWarning())
         {
