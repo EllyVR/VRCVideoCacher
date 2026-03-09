@@ -131,12 +131,6 @@ internal sealed class Program
         const string haxy = "Haxy";
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
 
-        if (!HasGui && AdminCheck.ShouldShowAdminWarning())
-        {
-            Logger.Error(AdminCheck.AdminWarningMessage);
-            Environment.Exit(0);
-        }
-
         Directory.CreateDirectory(UtilsPath);
         await Updater.CheckForUpdates();
         Updater.Cleanup();
