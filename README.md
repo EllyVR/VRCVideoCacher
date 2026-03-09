@@ -6,9 +6,9 @@
     <img src="https://img.shields.io/badge/Steam-Download-blue?logo=steam" alt="Steam Download" />
   </a>
   <a href="https://github.com/EllyVR/VRCVideoCacher/releases/latest">
-    <img src="https://img.shields.io/badge/Github-Download-blue?logo=github" alt="Github Download" />
+    <img src="https://img.shields.io/badge/Github-Download-blue?logo=github" alt="Github Download" href="https://github.com/EllyVR/VRCVideoCacher/releases/latest" />
   </a>
-  <a href="https://discord.gg/ellyvr">
+  <a href="https://discord.gg/t6x6p6Tzs">
     <img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord" alt="Discord" />
   </a>
   <hr>
