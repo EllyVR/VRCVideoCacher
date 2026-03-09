@@ -82,6 +82,16 @@
                             <TextBlock Text="{loc:Tr Logs}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <Button Command="{Binding NavigateToAboutCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Classes="nav-button">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Information" Width="20" Height="20"/>
+                            <TextBlock Text="About" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
 
@@ -105,6 +115,9 @@
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
                         <views:HistoryView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:AboutViewModel}">
+                        <views:AboutView/>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>

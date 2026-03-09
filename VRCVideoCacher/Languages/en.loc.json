@@ -118,5 +118,11 @@
   "DontShowThisAgain": "Don't show this again",
   "TrayShow": "Show",
   "TrayOpenCacheFolder": "Open Cache Folder",
-  "TrayExit": "Exit"
+  "TrayExit": "Exit",
+
+  "CreatedBy": "Created By"
+  ,
+  "ReportAnIssue": "Report an Issue",
+  "OpenIssueOnGitHub": "Open an issue on GitHub",
+  "JoinOurDiscord": "Join our Discord to report an issue"
 }

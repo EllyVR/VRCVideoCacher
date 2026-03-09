@@ -23,6 +23,10 @@ internal sealed class Program
     public static string YtdlpHash = string.Empty;
     // Versioning is YEAR.MONTH.RELEASE
     public const string Version = "2026.3.9";
+    public const string Creator_Elly = "Elly";
+    public const string Creator_Natsumi = "Natsumi";
+    public const string Creator_Haxy = "Haxy";
+    public const string Creator_DubyaDude = "DubyaDude";
     public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
@@ -122,11 +126,7 @@ internal sealed class Program
                     theme: TemplateTheme.Literate))
                 .CreateLogger();
         }
-        const string elly = "Elly";
-        const string natsumi = "Natsumi";
-        const string haxy = "Haxy";
-        const string dubyadude = "DubyaDude";
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {DubyaDude}", Version, elly, natsumi, haxy, dubyadude);
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_DubyaDude);
 
         if (AdminCheck.ShouldShowAdminWarning())
         {

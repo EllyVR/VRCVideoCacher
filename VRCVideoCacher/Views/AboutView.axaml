@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             xmlns:vm="clr-namespace:VRCVideoCacher.ViewModels"
+             x:Class="VRCVideoCacher.Views.AboutView"
+             x:DataType="vm:AboutViewModel">
+
+    
+    <ScrollViewer>
+        <StackPanel Spacing="20" Margin="10">
+        
+            <!-- Header -->
+            <Grid ColumnDefinitions="*, Auto, Auto">
+                <TextBlock Text="{loc:Tr About}" FontSize="24" FontWeight="Bold"/>
+            </Grid>
+            
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock FontSize="16">
+						<Run Text="{loc:Tr VRCVideoCacher}" FontWeight="SemiBold"/>
+						<Run Text=""/>
+                        <Run Text="{Binding Version}"/>
+                    </TextBlock>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{Binding CreatedBy}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <Button Click="OnDiscordClick" ToolTip.Tip="Discord">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Forum" Width="24" Height="24"/>
+                                <TextBlock Text="Discord" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnGitHubClick" ToolTip.Tip="GitHub">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Github" Width="24" Height="24"/>
+                                <TextBlock Text="GitHub" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnSteamClick" ToolTip.Tip="Steam">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Steam" Width="24" Height="24"/>
+                                <TextBlock Text="Steam" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="{loc:Tr ReportAnIssue}" FontWeight="SemiBold" FontSize="16"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <Button ToolTip.Tip="{loc:Tr OpenIssueOnGitHub}" Click="OnGitHubIssueClick">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Github" Width="24" Height="24"/>
+                                <TextBlock Text="{loc:Tr OpenIssueOnGitHub}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button ToolTip.Tip="{loc:Tr JoinOurDiscord}" Click="OnDiscordIssueClick">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Forum" Width="24" Height="24"/>
+                                <TextBlock Text="{loc:Tr JoinOurDiscord}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
