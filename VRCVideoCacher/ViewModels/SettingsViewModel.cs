@@ -70,6 +70,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoUpdate;
 
+    [ObservableProperty]
+    private bool _closeToTray;
+
     // Blocked URLs
     public ObservableCollection<string> BlockedUrls { get; } = [];
 
@@ -133,6 +136,7 @@ public partial class SettingsViewModel : ViewModelBase
         PatchResonite = config.PatchResonite;
         PatchVRC = config.PatchVrChat;
         AutoUpdate = config.AutoUpdateVrcVideoCacher;
+        CloseToTray = config.CloseToTray;
 
         BlockedUrls.Clear();
         foreach (var url in config.BlockedUrls)
@@ -164,6 +168,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnPatchResoniteChanged(bool value) => HasChanges = true;
     partial void OnPatchVRCChanged(bool value) => HasChanges = true;
     partial void OnAutoUpdateChanged(bool value) => HasChanges = true;
+    partial void OnCloseToTrayChanged(bool value) => HasChanges = true;
 
     [RelayCommand]
     private void SaveSettings()
@@ -191,6 +196,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.PatchResonite = PatchResonite;
         config.PatchVrChat = PatchVRC;
         config.AutoUpdateVrcVideoCacher = AutoUpdate;
+        config.CloseToTray = CloseToTray;
         config.BlockedUrls = BlockedUrls.ToArray();
         config.BlockRedirect = BlockRedirect;
 

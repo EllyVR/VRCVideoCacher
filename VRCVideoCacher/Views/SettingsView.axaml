@@ -33,7 +33,7 @@
             <!-- General Settings -->
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="{loc:Tr Language}" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock Text="{loc:Tr General}" FontWeight="SemiBold" FontSize="16"/>
 
                     <StackPanel Spacing="5">
                         <TextBlock Text="{loc:Tr Language}"/>
@@ -46,6 +46,8 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
+                    
+                    <CheckBox IsChecked="{Binding CloseToTray}" Content="{loc:Tr CloseToTray}"/>
                 </StackPanel>
             </Border>
 

@@ -51,11 +51,11 @@ public partial class App : Application
             // Handle window closing - minimize to tray instead, but allow OS/programmatic closes
             _mainWindow.Closing += (_, e) =>
             {
-                if (!_isExiting && !e.IsProgrammatic)
-                {
-                    e.Cancel = true;
-                    _mainWindow.Hide();
-                }
+                if (!ConfigManager.Config.CloseToTray || _isExiting || e.IsProgrammatic)
+                    return;
+
+                e.Cancel = true;
+                _mainWindow.Hide();
             };
 
             // Allow the app to exit cleanly on OS shutdown/logoff
@@ -149,7 +149,9 @@ public partial class App : Application
         // User clicked the title-bar X button (generates SC_CLOSE before WM_CLOSE).
         // Marking as handled suppresses the subsequent WM_CLOSE, so the Closing
         // event never fires for a normal user-initiated close on Windows.
-        if (msg == WmSysCommand && (wParam.ToInt32() & 0xFFF0) == ScClose)
+        if (ConfigManager.Config.CloseToTray &&
+            msg == WmSysCommand &&
+            (wParam.ToInt32() & 0xFFF0) == ScClose)
         {
             _mainWindow?.Hide();
             handled = true;

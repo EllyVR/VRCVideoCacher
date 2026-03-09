@@ -16,6 +16,7 @@
   "Next": "Next",
   "Done": "Done",
   "Language": "Language",
+  "General": "General",
 
   "ToggleHostTooltip": "Toggle using YouTube domain for localhost cache",
   "ServerStatus": "Server Status",
@@ -57,6 +58,7 @@
   "PatchResonite": "Patch Resonite",
   "Updates": "Updates",
   "AutoUpdateVRCVideoCacher": "Auto-update VRCVideoCacher",
+  "CloseToTray": "Close to Tray",
   "BlockedUrls": "Blocked URLs",
   "BlockedUrlRedirect": "Blocked URL Redirect",
   "SettingsSaved": "Settings saved!",

@@ -16,6 +16,7 @@
   "Next": "次へ",
   "Done": "完了",
   "Language": "言語",
+  "General": "一般",
 
   "ToggleHostTooltip": "ローカルキャッシュにYouTubeドメインを使用するか切り替える",
   "ServerStatus": "サーバー状態",
@@ -56,6 +57,7 @@
   "PatchResonite": "Resoniteにパッチを適用する",
   "Updates": "アップデート",
   "AutoUpdateVRCVideoCacher": "VRCVideoCacherを自動更新する",
+  "CloseToTray": "トレイに閉じる",
   "BlockedUrls": "ブロックするURL",
   "BlockedUrlRedirect": "ブロックURL リダイレクト先",
   "SettingsSaved": "設定を保存しました！",
