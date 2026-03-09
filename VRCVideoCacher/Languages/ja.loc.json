@@ -54,7 +54,7 @@
   "CachePyPyDanceVideos": "PyPyDance の動画をキャッシュする",
   "CacheVRDancingVideos": "VRDancing の動画をキャッシュする",
   "OnlyServeCachedVideos": "キャッシュされた動画のみを配信する",
-  "GamePatching": "ゲームのパッチ",
+  "GamePatching": "ゲームをパッチ",
   "PatchVRChat": "VRChat をパッチ",
   "PatchResonite": "Resonite をパッチ",
   "Updates": "更新",
