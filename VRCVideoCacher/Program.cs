@@ -52,8 +52,6 @@ internal sealed class Program
 
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
-        AdminCheck.SetupArguements(args);
-
         var processes = Process.GetProcessesByName("VRCVideoCacher");
         if (processes.Length > 1)
         {
@@ -62,6 +60,8 @@ internal sealed class Program
         }
         foreach (var process in processes)
             process.Dispose();
+
+        AdminCheck.SetupArguments(args);
 
         // Check for --nogui flag
         if (args.Contains("--nogui"))

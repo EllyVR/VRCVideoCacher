@@ -12,7 +12,7 @@ public static class AdminCheck
 
     private static bool _isBypassArguementPresent;
 
-    public static void SetupArguements(params string[] args)
+    public static void SetupArguments(params string[] args)
     {
         _isBypassArguementPresent = false;
 
