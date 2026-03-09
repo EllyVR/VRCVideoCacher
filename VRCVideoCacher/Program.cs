@@ -90,23 +90,19 @@ internal sealed class Program
             Logger.Warning("Application is running with administrator privileges. This is not recommended for security reasons.");
         }
 
-        // Don't run backend if admin warning is shown
-        if (!AdminCheck.ShouldShowAdminWarning())
+        // Start backend on background thread
+        Task.Run(async () =>
         {
-            // Start backend on background thread
-            Task.Run(async () =>
+            try
             {
-                try
-                {
-                    HasGui = true;
-                    await InitVRCVideoCacher();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Backend error " + ex.Message + " " + ex.StackTrace);
-                }
-            });
-        }
+                HasGui = true;
+                await InitVRCVideoCacher();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Backend error " + ex.Message + " " + ex.StackTrace);
+            }
+        });
 
         // Start the UI
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
