@@ -83,10 +83,6 @@ internal sealed class Program
             .WriteTo.Console(new ExpressionTemplate(
                 "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n\r{@x}",
                 theme: TemplateTheme.Literate))
-            .WriteTo.File(
-                path: Path.Join(DataPath, "logs/VRCVideoCacher.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 5)
             .WriteTo.Sink(new UiLogSink())
             .CreateLogger();
 
