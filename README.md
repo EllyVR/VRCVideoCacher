@@ -9,6 +9,7 @@
 
 <hr>
 </div>
+**Language:** English | [日本語](README_ja-JP.md)
 
 ### What is VRCVideoCacher?
 
