@@ -118,5 +118,7 @@
   "DontShowThisAgain": "Don't show this again",
   "TrayShow": "Show",
   "TrayOpenCacheFolder": "Open Cache Folder",
-  "TrayExit": "Exit"
+  "TrayExit": "Exit",
+
+  "CreatedBy": "Created By"
 }

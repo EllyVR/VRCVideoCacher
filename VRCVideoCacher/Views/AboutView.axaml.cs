@@ -7,5 +7,6 @@ public partial class AboutView : UserControl
     public AboutView()
     {
         InitializeComponent();
+        DataContext = new VRCVideoCacher.ViewModels.AboutViewModel();
     }
 }

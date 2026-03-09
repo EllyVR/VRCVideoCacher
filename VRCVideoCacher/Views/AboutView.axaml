@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mi="using:Material.Icons.Avalonia"
              xmlns:loc="using:CodingSeb.Localization.Avalonia"
-             x:Class="VRCVideoCacher.Views.AboutView">
+             xmlns:vm="clr-namespace:VRCVideoCacher.ViewModels"
+             x:Class="VRCVideoCacher.Views.AboutView"
+             x:DataType="vm:AboutViewModel">
 
     
     <ScrollViewer>
@@ -15,11 +17,14 @@
             
             <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="15">
-                    <TextBlock Text="{loc:Tr VRCVideoCacher}" FontWeight="SemiBold" FontSize="16"/>
+                    <TextBlock FontSize="16">
+						<Run Text="{loc:Tr VRCVideoCacher}" FontWeight="SemiBold"/>
+						<Run Text=""/>
+                        <Run Text="{Binding Version}"/>
+                    </TextBlock>
 
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Version 1.0.0"/>
-                        <TextBlock Text="Created by EllyVR"/>
+                        <TextBlock Text="{Binding CreatedBy}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
