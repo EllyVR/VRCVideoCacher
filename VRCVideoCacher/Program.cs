@@ -129,7 +129,8 @@ internal sealed class Program
         const string elly = "Elly";
         const string natsumi = "Natsumi";
         const string haxy = "Haxy";
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}", Version, elly, natsumi, haxy);
+        const string dubyadude = "DubyaDude";
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {DubyaDude}", Version, elly, natsumi, haxy, dubyadude);
 
         if (AdminCheck.ShouldShowAdminWarning())
         {
