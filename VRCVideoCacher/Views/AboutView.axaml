@@ -26,13 +26,6 @@
                     <StackPanel Spacing="5">
                         <TextBlock Text="{Binding CreatedBy}"/>
                     </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="{loc:Tr Links}" FontWeight="SemiBold" FontSize="16"/>
-
                     <StackPanel Orientation="Horizontal" Spacing="15">
                         <Button Click="OnDiscordClick" ToolTip.Tip="Discord">
                             <StackPanel Orientation="Horizontal" Spacing="5">
@@ -60,8 +53,19 @@
                 <StackPanel Spacing="15">
                     <TextBlock Text="{loc:Tr ReportAnIssue}" FontWeight="SemiBold" FontSize="16"/>
 
-                    <StackPanel Spacing="5">
-
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <Button ToolTip.Tip="{loc:Tr OpenIssueOnGitHub}" Click="OnGitHubIssueClick">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Github" Width="24" Height="24"/>
+                                <TextBlock Text="{loc:Tr OpenIssueOnGitHub}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button ToolTip.Tip="{loc:Tr JoinOurDiscord}" Click="OnDiscordIssueClick">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <mi:MaterialIcon Kind="Forum" Width="24" Height="24"/>
+                                <TextBlock Text="{loc:Tr JoinOurDiscord}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Border>
