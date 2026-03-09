@@ -22,7 +22,7 @@ internal sealed class Program
 {
     public static string YtdlpHash = string.Empty;
     // Versioning is YEAR.MONTH.RELEASE
-    public const string Version = "2026.3.9";
+    public const string Version = "2026.3.10";
     public const string Creator_Elly = "Elly";
     public const string Creator_Natsumi = "Natsumi";
     public const string Creator_Haxy = "Haxy";
