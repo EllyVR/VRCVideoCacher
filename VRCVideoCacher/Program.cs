@@ -84,7 +84,7 @@ internal sealed class Program
                 "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n\r{@x}",
                 theme: TemplateTheme.Literate))
             .WriteTo.File(
-                path: "logs/VRCVideoCacher.log",
+                path: Path.Join(DataPath, "logs/VRCVideoCacher.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 5)
             .WriteTo.Sink(new UiLogSink())
