@@ -7,6 +7,7 @@ using Avalonia;
 using Steamworks;
 #endif
 using Serilog;
+using Serilog.Events;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
@@ -28,6 +29,7 @@ internal sealed class Program
     public const string Creator_Haxy = "Haxy";
     public const string Creator_Hauskaz = "Hauskaz";
     public const string Creator_DubyaDude = "DubyaDude";
+    public const string Sentry_DSN = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
     public static ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
@@ -38,6 +40,21 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Crash reporting
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = Sentry_DSN;
+            options.AutoSessionTracking = true;
+            options.IsGlobalModeEnabled = true;
+            options.Release = Version;
+            var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
+#if STEAMRELEASE
+            options.Environment = $"steam-{platform}";
+#else
+            options.Environment = platform;
+#endif
+        });
+        
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
 
@@ -72,6 +89,14 @@ internal sealed class Program
 #if !DEBUG
         AppDomain.CurrentDomain.UnhandledException += async(sender, e) =>
         {
+            SentrySdk.ConfigureScope(scope =>
+            {
+                var configPath = Path.Join(DataPath, "Config.json");
+                if (File.Exists(configPath))
+                    scope.AddAttachment(configPath);
+            });
+
+            if (e.ExceptionObject is Exception ex0) SentrySdk.CaptureException(ex0);
             try
             {
                 var ex = e.ExceptionObject as Exception;
@@ -131,7 +156,12 @@ internal sealed class Program
             .WriteTo.File(
                 path: Path.Combine(LogsPath, "VRCVideoCacher.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 5);
+                retainedFileCountLimit: 5)
+            .WriteTo.Sentry(o =>
+            {
+                o.Dsn = Sentry_DSN;
+                o.EnableLogs = true;
+            });
 
         if (LaunchArgs.HasGui)
         {
