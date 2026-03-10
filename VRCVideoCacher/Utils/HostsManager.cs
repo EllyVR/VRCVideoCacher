@@ -12,7 +12,6 @@ public class HostsManager
     
     public static void TryRun()
     {
-        CreateHostsIfNotExists();
         if (Environment.CommandLine.Contains("--addhost"))
         {
             try
@@ -45,6 +44,7 @@ public class HostsManager
 
     private static void Add()
     {
+        CreateHostsIfNotExists();
         var hostsFile = File.ReadAllText(HostsPath);
         if (hostsFile.Contains(Header))
             return;
@@ -55,6 +55,7 @@ public class HostsManager
 
     private static void Remove()
     {
+        CreateHostsIfNotExists();
         var hostsFile = File.ReadAllText(HostsPath);
         if (!hostsFile.Contains(Header))
             return;
