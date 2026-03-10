@@ -28,10 +28,11 @@ internal sealed class Program
     public const string Creator_Haxy = "Haxy";
     public const string Creator_Hauskaz = "Hauskaz";
     public const string Creator_DubyaDude = "DubyaDude";
-    public static readonly ILogger Logger = Log.ForContext("SourceContext", "Core");
+    public static ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
     public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
+    public static readonly string LogsPath = Path.Join(DataPath, "Logs");
     public static bool HasGui;
     public static event Action? OnCookiesUpdated;
 
@@ -67,24 +68,16 @@ internal sealed class Program
             process.Dispose();
 
         AdminCheck.SetupArguments(args);
+        HasGui = !args.Contains("--nogui");
 
-        // Check for --nogui flag
-        if (args.Contains("--nogui"))
+        InitializeLogger();
+
+        if (!HasGui)
         {
-            HasGui = false;
             // Run backend only (console mode)
             InitVRCVideoCacher().GetAwaiter().GetResult();
             return;
         }
-
-        // Configure Serilog with UI sink
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console(new ExpressionTemplate(
-                "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n\r{@x}",
-                theme: TemplateTheme.Literate))
-            .WriteTo.Sink(new UiLogSink())
-            .CreateLogger();
 
         if (AdminCheck.IsRunningAsAdmin())
         {
@@ -96,7 +89,6 @@ internal sealed class Program
         {
             try
             {
-                HasGui = true;
                 await InitVRCVideoCacher();
             }
             catch (Exception ex)
@@ -109,20 +101,31 @@ internal sealed class Program
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
+    private static void InitializeLogger()
+    {
+        var loggerConfiguration = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console(new ExpressionTemplate(
+                "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}" + Environment.NewLine + "{@x}",
+                theme: TemplateTheme.Literate))
+            .WriteTo.File(
+                path: Path.Combine(LogsPath, "VRCVideoCacher.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 5);
+
+        if (HasGui)
+        {
+            loggerConfiguration = loggerConfiguration.WriteTo.Sink(new UiLogSink());
+        }
+
+        Log.Logger = loggerConfiguration.CreateLogger();
+        Logger = Log.ForContext("SourceContext", "Core");
+    }
+
     public static async Task InitVRCVideoCacher()
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
 
-        // Only configure logger if not already configured (e.g., by UI)
-        if (Log.Logger.GetType().Name == "SilentLogger")
-        {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console(new ExpressionTemplate(
-                    "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}\n{@x}",
-                    theme: TemplateTheme.Literate))
-                .CreateLogger();
-        }
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
 
         if (AdminCheck.ShouldShowAdminWarning())
