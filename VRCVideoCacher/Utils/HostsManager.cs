@@ -68,7 +68,9 @@ public class HostsManager
     
     public static bool IsHostAdded()
     {
-        CreateHostsIfNotExists();
+        if(!File.Exists(HostsPath))
+            return false;
+
         var hostsFile = File.ReadAllText(HostsPath);
         return hostsFile.Contains(Header);
     }
