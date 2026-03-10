@@ -72,6 +72,29 @@ internal sealed class Program
 
         InitializeLogger();
 
+#if !DEBUG
+        AppDomain.CurrentDomain.UnhandledException += async(sender, e) =>
+        {
+            try
+            {
+                var ex = e.ExceptionObject as Exception;
+                Logger.Error(ex, "Unhandled Exception");
+            }
+            catch
+            {
+                try
+                {
+                    var ex = e.ExceptionObject as Exception;
+                    Console.WriteLine("Unhandled Exception: " + ex?.ToString());
+                }
+                catch
+                {
+                    // If logging fails, there's not much we can do. Just exit.
+                }
+            }
+        };
+#endif
+
         if (!HasGui)
         {
             // Run backend only (console mode)
