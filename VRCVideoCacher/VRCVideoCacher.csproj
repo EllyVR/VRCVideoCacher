@@ -23,6 +23,14 @@
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
         <!-- IL2037: EF Core 10 DynamicDependency on ExecuteUpdate overload not resolvable by ILLink -->
         <NoWarn>$(NoWarn);IL2037</NoWarn>
+        <!-- Sentry symbol upload for readable stack traces (requires SENTRY_AUTH_TOKEN env var) -->
+        <SentryUploadSymbols Condition="'$(SENTRY_AUTH_TOKEN)' != ''">true</SentryUploadSymbols>
+        <SentryUploadSources Condition="'$(SENTRY_AUTH_TOKEN)' != ''">true</SentryUploadSources>
+        <SentryOrg>phoenixvr</SentryOrg>
+        <SentryProject>vrcvideocacher</SentryProject>
+        <SentryUrl>https://sentry.ellyvr.dev</SentryUrl>
+        <!-- Keep PDB as a separate file so Sentry's MSBuild task can upload it -->
+        <DebugType>portable</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SteamRelease|AnyCPU'">
@@ -37,6 +45,14 @@
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
         <!-- IL2037: EF Core 10 DynamicDependency on ExecuteUpdate overload not resolvable by ILLink -->
         <NoWarn>$(NoWarn);IL2037</NoWarn>
+        <!-- Sentry symbol upload for readable stack traces (requires SENTRY_AUTH_TOKEN env var) -->
+        <SentryUploadSymbols Condition="'$(SENTRY_AUTH_TOKEN)' != ''">true</SentryUploadSymbols>
+        <SentryUploadSources Condition="'$(SENTRY_AUTH_TOKEN)' != ''">true</SentryUploadSources>
+        <SentryOrg>phoenixvr</SentryOrg>
+        <SentryProject>vrcvideocacher</SentryProject>
+        <SentryUrl>https://sentry.ellyvr.dev</SentryUrl>
+        <!-- Keep PDB as a separate file so Sentry's MSBuild task can upload it -->
+        <DebugType>portable</DebugType>
     </PropertyGroup>
     
     <ItemGroup Condition="'$(Configuration)' == 'SteamRelease'">
@@ -57,6 +73,8 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="securifybv.ShellLink" Version="0.1.0" />
         <PackageReference Include="Semver" Version="3.0.0" />
+        <PackageReference Include="Sentry" Version="6.1.0" />
+        <PackageReference Include="Sentry.Serilog" Version="6.1.0" />
         <PackageReference Include="Serilog" Version="4.3.1" />
         <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
