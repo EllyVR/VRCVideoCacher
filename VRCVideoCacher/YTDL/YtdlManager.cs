@@ -15,8 +15,7 @@ public class YtdlManager
     };
     public static readonly string CookiesPath;
 
-    public static readonly string YtdlPath =
-        Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
+    public static readonly string YtdlPath = Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
     private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
     private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
@@ -25,12 +24,6 @@ public class YtdlManager
     static YtdlManager()
     {
         CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
-
-        // try to locate in PATH
-        if (ConfigManager.Config.YtdlpGlobalPath)
-            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? 
-                       throw new FileNotFoundException("Unable to find yt-dlp");
-
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
     }
 

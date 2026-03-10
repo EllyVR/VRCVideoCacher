@@ -120,7 +120,6 @@ public partial class SettingsViewModel : ViewModelBase
         var config = ConfigManager.Config;
 
         WebServerUrl = config.YtdlpWebServerUrl;
-        YtdlpGlobalPath = config.YtdlpGlobalPath;
         YtdlUseCookies = config.YtdlpUseCookies;
         YtdlAutoUpdate = config.YtdlpAutoUpdate;
         YtdlAdditionalArgs = config.YtdlpAdditionalArgs;
@@ -187,7 +186,6 @@ public partial class SettingsViewModel : ViewModelBase
             WebServer.Init();
         }
 
-        config.YtdlpGlobalPath = YtdlpGlobalPath;
         config.YtdlpUseCookies = YtdlUseCookies;
         config.YtdlpAutoUpdate = YtdlAutoUpdate;
         config.YtdlpAdditionalArgs = YtdlAdditionalArgs;

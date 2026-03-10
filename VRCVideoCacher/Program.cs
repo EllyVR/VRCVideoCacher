@@ -204,7 +204,7 @@ internal sealed class Program
 
         YtdlpHash = GetOurYtdlpHash();
         await VvcConfigService.GetConfig();
-        if (ConfigManager.Config.YtdlpAutoUpdate && !ConfigManager.Config.YtdlpGlobalPath)
+        if (ConfigManager.Config.YtdlpAutoUpdate)
         {
             await YtdlManager.TryDownloadYtdlp();
             YtdlManager.StartYtdlDownloadThread();
