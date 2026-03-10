@@ -10,6 +10,8 @@
 <hr>
 </div>
 
+**Language:** **English** | [日本語](./README_ja-JP.md)
+
 ### What is VRCVideoCacher?
 
 VRCVideoCacher is a tool used to cache VRChat videos to your local disk and/or fix YouTube videos from failing to load.
