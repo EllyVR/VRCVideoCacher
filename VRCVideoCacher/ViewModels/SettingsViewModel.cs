@@ -17,9 +17,6 @@ public partial class SettingsViewModel : ViewModelBase
 
     // Download Settings
     [ObservableProperty]
-    private bool _ytdlpGlobalPath = false;
-
-    [ObservableProperty]
     private bool _ytdlUseCookies;
 
     [ObservableProperty]
@@ -120,7 +117,6 @@ public partial class SettingsViewModel : ViewModelBase
         var config = ConfigManager.Config;
 
         WebServerUrl = config.YtdlpWebServerUrl;
-        YtdlpGlobalPath = config.YtdlpGlobalPath;
         YtdlUseCookies = config.YtdlpUseCookies;
         YtdlAutoUpdate = config.YtdlpAutoUpdate;
         YtdlAdditionalArgs = config.YtdlpAdditionalArgs;
@@ -159,7 +155,6 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     partial void OnWebServerUrlChanged(string value) => SetHasChanges();
-    partial void OnYtdlpGlobalPathChanged(bool value) => SetHasChanges();
     partial void OnYtdlUseCookiesChanged(bool value) => SetHasChanges();
     partial void OnYtdlAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnYtdlAdditionalArgsChanged(string value) => SetHasChanges();
@@ -186,8 +181,7 @@ public partial class SettingsViewModel : ViewModelBase
             config.YtdlpWebServerUrl = WebServerUrl;
             WebServer.Init();
         }
-
-        config.YtdlpGlobalPath = YtdlpGlobalPath;
+        
         config.YtdlpUseCookies = YtdlUseCookies;
         config.YtdlpAutoUpdate = YtdlAutoUpdate;
         config.YtdlpAdditionalArgs = YtdlAdditionalArgs;

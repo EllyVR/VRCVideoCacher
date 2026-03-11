@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Serilog;
 using SharpCompress.Readers;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.YTDL;
 
@@ -27,7 +28,7 @@ public class YtdlManager
         CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
 
         // try to locate in PATH
-        if (ConfigManager.Config.YtdlpGlobalPath)
+        if (LaunchArgs.UseGlobalPath)
             YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? 
                        throw new FileNotFoundException("Unable to find yt-dlp");
 

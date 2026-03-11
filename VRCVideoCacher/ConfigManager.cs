@@ -44,7 +44,7 @@ public class ConfigManager
             {
                 Language = GetSystemLanguage()
             };
-            if (!Program.HasGui)
+            if (!LaunchArgs.HasGui)
                 FirstRunConsole();
         }
         else
@@ -132,7 +132,6 @@ public class ConfigModel
 {
     // yt-dlp
     public string YtdlpWebServerUrl = "http://localhost:9696";
-    public bool YtdlpGlobalPath = false;
     public bool YtdlpUseCookies = true;
     public bool YtdlpAutoUpdate = true;
     public string YtdlpAdditionalArgs = string.Empty;

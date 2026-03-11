@@ -73,9 +73,6 @@
                     <StackPanel Spacing="15">
                         <TextBlock Text="{loc:Tr DownloadSettings}" FontWeight="SemiBold" FontSize="16"/>
 
-                        <!-- This option triggers a crash by design when enabled, so it's better to hide it from users who don't know what it does -->
-                        <!-- <CheckBox IsChecked="{Binding YtdlpGlobalPath}" Content="{loc:Tr YtdlpPathGlobalLabel}"/> -->
-
                         <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="{loc:Tr UseYouTubeCookies}"/>
                         <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="{loc:Tr AutoUpdateUtils}"/>
 

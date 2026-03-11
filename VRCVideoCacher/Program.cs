@@ -33,7 +33,6 @@ internal sealed class Program
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
     public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
     public static readonly string LogsPath = Path.Join(DataPath, "Logs");
-    public static bool HasGui;
     public static event Action? OnCookiesUpdated;
 
     [STAThread]
@@ -67,9 +66,7 @@ internal sealed class Program
         foreach (var process in processes)
             process.Dispose();
 
-        AdminCheck.SetupArguments(args);
-        HasGui = !args.Contains("--nogui");
-
+        LaunchArgs.SetupArguments(args);
         InitializeLogger();
 
 #if !DEBUG
@@ -95,7 +92,7 @@ internal sealed class Program
         };
 #endif
 
-        if (!HasGui)
+        if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
             InitVRCVideoCacher().GetAwaiter().GetResult();
@@ -136,7 +133,7 @@ internal sealed class Program
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 5);
 
-        if (HasGui)
+        if (LaunchArgs.HasGui)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Sink(new UiLogSink());
         }
@@ -174,7 +171,7 @@ internal sealed class Program
 
         YtdlpHash = GetOurYtdlpHash();
         await VvcConfigService.GetConfig();
-        if (ConfigManager.Config.YtdlpAutoUpdate && !ConfigManager.Config.YtdlpGlobalPath)
+        if (ConfigManager.Config.YtdlpAutoUpdate && !LaunchArgs.UseGlobalPath)
         {
             await YtdlManager.TryDownloadYtdlp();
             YtdlManager.StartYtdlDownloadThread();
