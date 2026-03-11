@@ -106,7 +106,7 @@
   "OpenYouTube": "YouTube を開く",
   "CookieSetupStep3Note": "注意: Cookie を受信後は、拡張機能をアンインストールできます。ただし、ログインした状態で YouTube を再度閲覧すると Cookie が無効になる可能性があります。設定後にブラウザーから YouTube の Cookie を削除するか、拡張機能をインストールしたままにすることをご検討ください。",
   "CookieSetupStep4Header": "ステップ 4: localhost.youtube.com (任意)",
-  "CookieSetupStep4Desc": "localhost.youtube.com のホストエントリを追加すると、VRCVideoCacher は YouTube ドメインを使用してキャッシュされた動画を提供できるようになり、VRChat の動画プレーヤーとの互換性が向上します。",
+  "CookieSetupStep4Desc": "hosts エントリに localhost.youtube.com を追加すると、VRCVideoCacher は YouTube ドメインを使用してキャッシュされた動画を提供できるようになり、VRChat の動画プレーヤーとの互換性が向上します。",
   "CookieSetupStep4Note": "この機能は管理者権限が必要です。この手順をスキップして、後でダッシュボードから設定することもできます。",
   "CookieSetupComplete": "セットアップが完了しました！",
   "CookieSetupCompleteDesc": "YouTube の Cookie を受信しました。ボット検出エラーは表示されなくなります。",
@@ -115,7 +115,7 @@
   "HostsActive": "localhost.youtube.com は有効です",
   "NotConfigured": "未構成",
   "RemoveEntry": "エントリを削除",
-  "AddHostsEntry": "ホストエントリを追加",
+  "AddHostsEntry": "hosts エントリを追加",
   "OpenChromeWebStore": "Chrome ウェブストアを開く",
   "OpenFirefoxAddons": "Firefox Add-ons を開く",
 
