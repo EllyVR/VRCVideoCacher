@@ -113,11 +113,6 @@ public class ConfigManager
             AutoStartShortcut.CreateShortcut();
         }
 
-        if (YtdlpGlobalConfig.GlobalYtdlConfigExists() && GetUserConfirmation(@"Would you like to delete global YT-DLP config in %AppData%\yt-dlp\config? (this is necessary for VRCVideoCacher to function)", true))
-        {
-            YtdlpGlobalConfig.DeleteGlobalYtdlConfig();
-        }
-
         Log.Information("You'll need to install our companion extension to fetch youtube cookies (This will fix YouTube bot errors)");
         Log.Information("Chrome: https://chromewebstore.google.com/detail/vrcvideocacher-cookies-ex/kfgelknbegappcajiflgfbjbdpbpokge");
         Log.Information("Firefox: https://addons.mozilla.org/en-US/firefox/addon/vrcvideocachercookiesexporter/");

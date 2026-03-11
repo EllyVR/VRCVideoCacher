@@ -198,9 +198,6 @@ internal sealed class Program
         if (OperatingSystem.IsWindows())
             _ = WinGet.TryInstallPackages();
 
-        if (YtdlpGlobalConfig.GlobalYtdlConfigExists())
-            Logger.Error("Global yt-dlp config file found in \"%AppData%\\yt-dlp\". Please delete it to avoid conflicts with VRCVideoCacher.");
-
         await Task.Delay(-1);
     }
 
