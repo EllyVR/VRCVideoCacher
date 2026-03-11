@@ -109,7 +109,7 @@
   "CookieSetupStep4Desc": "hosts エントリに localhost.youtube.com を追加すると、VRCVideoCacher は YouTube ドメインを使用してキャッシュされた動画を提供できるようになり、VRChat の動画プレーヤーとの互換性が向上します。",
   "CookieSetupStep4Note": "この機能は管理者権限が必要です。この手順をスキップして、後でダッシュボードから設定することもできます。",
   "CookieSetupComplete": "セットアップが完了しました！",
-  "CookieSetupCompleteDesc": "YouTube の Cookie を受信しました。ボット検出エラーは表示されなくなります。",
+  "CookieSetupCompleteDesc": "YouTube の Cookie を受信しました。ボット検出によるエラーは表示されなくなります。",
   "CookiesReceived": "Cookie を受信しました！",
   "WaitingForCookies": "Cookie を待機中...",
   "HostsActive": "localhost.youtube.com は有効です",
