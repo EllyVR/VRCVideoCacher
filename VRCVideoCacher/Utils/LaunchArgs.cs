@@ -10,7 +10,7 @@ public class LaunchArgs
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
     public static bool ErrorReporting = true;
-    public static bool UseGlobalPath = false;
+    public static bool UseGlobalPath;
 
     public static void SetupArguments(params string[] args)
     {

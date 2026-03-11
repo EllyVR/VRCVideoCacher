@@ -3,11 +3,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
-#if STEAMRELEASE
-using Steamworks;
-#endif
 using Serilog;
-using Serilog.Events;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
@@ -16,6 +12,9 @@ using VRCVideoCacher.Elevator;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
+#if STEAMRELEASE
+using Steamworks;
+#endif
 
 namespace VRCVideoCacher;
 
@@ -29,32 +28,17 @@ internal sealed class Program
     public const string Creator_Haxy = "Haxy";
     public const string Creator_Hauskaz = "Hauskaz";
     public const string Creator_DubyaDude = "DubyaDude";
-    public const string Sentry_DSN = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
+    private const string SentryDsn = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
     public static ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
     public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
-    public static readonly string LogsPath = Path.Join(DataPath, "Logs");
+    private static readonly string LogsPath = Path.Join(DataPath, "Logs");
     public static event Action? OnCookiesUpdated;
 
     [STAThread]
     public static void Main(string[] args)
     {
-        // Crash reporting
-        SentrySdk.Init(options =>
-        {
-            options.Dsn = Sentry_DSN;
-            options.AutoSessionTracking = true;
-            options.IsGlobalModeEnabled = true;
-            options.Release = Version;
-            var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
-#if STEAMRELEASE
-            options.Environment = $"steam-{platform}";
-#else
-            options.Environment = platform;
-#endif
-        });
-        
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
 
@@ -84,21 +68,42 @@ internal sealed class Program
             process.Dispose();
 
         LaunchArgs.SetupArguments(args);
+        if (LaunchArgs.ErrorReporting)
+        {
+            SentrySdk.Init(options =>
+            {
+                options.Dsn = SentryDsn;
+                options.AutoSessionTracking = true;
+                options.IsGlobalModeEnabled = true;
+                options.Release = Version;
+                var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
+#if STEAMRELEASE
+                options.Environment = $"steam-{platform}";
+#else
+                options.Environment = platform;
+#endif
+            });
+        }
+
         InitializeLogger();
 
 #if !DEBUG
-        AppDomain.CurrentDomain.UnhandledException += async(sender, e) =>
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            SentrySdk.ConfigureScope(scope =>
-            {
-                var configPath = Path.Join(DataPath, "Config.json");
-                if (File.Exists(configPath))
-                    scope.AddAttachment(configPath);
-            });
-
-            if (e.ExceptionObject is Exception ex0) SentrySdk.CaptureException(ex0);
             try
             {
+                SentrySdk.ConfigureScope(scope =>
+                {
+                    var configPath = Path.Join(DataPath, "Config.json");
+                    if (File.Exists(configPath))
+                        scope.AddAttachment(configPath);
+                });
+                SentrySdk.SetTag("admin", AdminCheck.IsRunningAsAdmin().ToString());
+                SentrySdk.SetTag("noGui", LaunchArgs.HasGui.ToString());
+                SentrySdk.SetTag("globalPath", LaunchArgs.UseGlobalPath.ToString());
+                if (e.ExceptionObject is Exception ex0)
+                    SentrySdk.CaptureException(ex0);
+                
                 var ex = e.ExceptionObject as Exception;
                 Logger.Error(ex, "Unhandled Exception");
             }
@@ -107,7 +112,7 @@ internal sealed class Program
                 try
                 {
                     var ex = e.ExceptionObject as Exception;
-                    Console.WriteLine("Unhandled Exception: " + ex?.ToString());
+                    Console.WriteLine("Unhandled Exception: " + ex);
                 }
                 catch
                 {
@@ -120,7 +125,7 @@ internal sealed class Program
         if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
-            InitVRCVideoCacher().GetAwaiter().GetResult();
+            InitVrcVideoCacher().GetAwaiter().GetResult();
             return;
         }
 
@@ -134,7 +139,7 @@ internal sealed class Program
         {
             try
             {
-                await InitVRCVideoCacher();
+                await InitVrcVideoCacher();
             }
             catch (Exception ex)
             {
@@ -159,7 +164,7 @@ internal sealed class Program
                 retainedFileCountLimit: 5)
             .WriteTo.Sentry(o =>
             {
-                o.Dsn = Sentry_DSN;
+                o.Dsn = SentryDsn;
                 o.EnableLogs = true;
             });
 
@@ -172,7 +177,7 @@ internal sealed class Program
         Logger = Log.ForContext("SourceContext", "Core");
     }
 
-    public static async Task InitVRCVideoCacher()
+    public static async Task InitVrcVideoCacher()
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
 
@@ -305,12 +310,10 @@ internal sealed class Program
                 }
             }
 
-            using var handler = new HttpClientHandler
-            {
-                AllowAutoRedirect = false,
-                CookieContainer = cookieContainer,
-                UseCookies = true
-            };
+            using var handler = new HttpClientHandler();
+            handler.AllowAutoRedirect = false;
+            handler.CookieContainer = cookieContainer;
+            handler.UseCookies = true;
             using var client = new HttpClient(handler);
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
 
