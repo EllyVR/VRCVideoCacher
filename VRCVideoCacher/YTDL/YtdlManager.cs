@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Serilog;
 using SharpCompress.Readers;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.YTDL;
@@ -46,6 +47,7 @@ public class YtdlManager
         while (true)
         {
             await Task.Delay(interval);
+            await VvcConfigService.GetConfig();
             await TryDownloadYtdlp();
         }
         // ReSharper disable once FunctionNeverReturns
