@@ -93,7 +93,7 @@
   "EntriesCountFormat": "{0} 件のエントリ",
 
   "CookieSetupTitle": "YouTube の Cookie 拡張機能をセットアップ",
-  "CookieSetupSubtitle": "YouTube のボット検出を修正します",
+  "CookieSetupSubtitle": "YouTube のボット検出による問題を修正します",
   "CookieSetupStep1Header": "ステップ 1: ブラウザーを選択",
   "CookieSetupStep1Desc": "YouTube の視聴に使用しているブラウザーを選択してください。拡張機能は YouTube の Cookie を VRCVideoCacher にエクスポートします。",
   "Chrome": "Chrome",
