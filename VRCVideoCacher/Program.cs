@@ -3,6 +3,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
+using Sentry.Serilog;
 using Serilog;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
@@ -21,8 +22,10 @@ namespace VRCVideoCacher;
 internal sealed class Program
 {
     public static string YtdlpHash = string.Empty;
-    // Versioning is YEAR.MONTH.RELEASE
-    public const string Version = "2026.3.11";
+    // Versioning is YEAR.MONTH.RELEASE — set in the .csproj <Version> property
+    public static readonly string Version =
+        typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? "unknown";
     public const string Creator_Elly = "Elly";
     public const string Creator_Natsumi = "Natsumi";
     public const string Creator_Haxy = "Haxy";
@@ -35,6 +38,28 @@ internal sealed class Program
     public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
     private static readonly string LogsPath = Path.Join(DataPath, "Logs");
     public static event Action? OnCookiesUpdated;
+
+    private static void ConfigureSentryOptions(SentrySerilogOptions o)
+    {
+        o.Dsn = SentryDsn;
+        o.AutoSessionTracking = true;
+        o.IsGlobalModeEnabled = true;
+        o.Release = Version;
+        var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
+#if STEAMRELEASE
+        o.Environment = $"steam-{platform}";
+#else
+        o.Environment = platform;
+#endif
+        o.EnableLogs = true;
+    }
+
+    public static SentrySerilogOptions GetSentryOptions()
+    {
+        var options = new SentrySerilogOptions();
+        ConfigureSentryOptions(options);
+        return options;
+    }
 
     [STAThread]
     public static void Main(string[] args)
@@ -70,19 +95,7 @@ internal sealed class Program
         LaunchArgs.SetupArguments(args);
         if (LaunchArgs.ErrorReporting)
         {
-            SentrySdk.Init(options =>
-            {
-                options.Dsn = SentryDsn;
-                options.AutoSessionTracking = true;
-                options.IsGlobalModeEnabled = true;
-                options.Release = Version;
-                var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
-#if STEAMRELEASE
-                options.Environment = $"steam-{platform}";
-#else
-                options.Environment = platform;
-#endif
-            });
+            SentrySdk.Init(GetSentryOptions());
         }
 
         InitializeLogger();
@@ -121,7 +134,7 @@ internal sealed class Program
             }
         };
 #endif
-
+        
         if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
@@ -161,13 +174,13 @@ internal sealed class Program
             .WriteTo.File(
                 path: Path.Combine(LogsPath, "VRCVideoCacher.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 5)
-            .WriteTo.Sentry(o =>
-            {
-                o.Dsn = SentryDsn;
-                o.EnableLogs = true;
-            });
-
+                retainedFileCountLimit: 5);
+        
+        if (LaunchArgs.ErrorReporting)
+        {
+            loggerConfiguration = loggerConfiguration.WriteTo.Sentry(ConfigureSentryOptions);
+        }
+        
         if (LaunchArgs.HasGui)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Sink(new UiLogSink());

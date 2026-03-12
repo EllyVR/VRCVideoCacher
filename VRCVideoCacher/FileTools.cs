@@ -48,13 +48,13 @@ public class FileTools
         const string appid = "2519830";
         if (!OperatingSystem.IsWindows())
         {
-            Log.Error("GetResonitePath is currently only supported on Windows");
+            Log.Warning("GetResonitePath is currently only supported on Windows");
             return null;
         }
         const string libraryFolders = @"C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf";
         if (!Path.Exists(libraryFolders))
         {
-            Log.Error("GetResonitePath: Steam libraryfolders.vdf not found at expected location: {Path}", libraryFolders);
+            Log.Warning("GetResonitePath: Steam libraryfolders.vdf not found at expected location: {Path}", libraryFolders);
             return null;
         }
 
