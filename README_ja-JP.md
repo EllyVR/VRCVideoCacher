@@ -10,7 +10,7 @@
 <hr>
 </div>
 
-**Language:** [English](./README.md) | **日本語**
+**Language:** [English](./README.md) | **日本語** | [Magyar](./README_hu-HU.md)
 
 ### VRCVideoCacher とは何でしょうか？
 
