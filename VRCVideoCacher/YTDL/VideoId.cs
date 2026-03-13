@@ -182,17 +182,13 @@ public class VideoId
 
     public static async Task<string> TryGetYouTubeVideoId(string url)
     {
-        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
-        var cookieArg = string.Empty;
-        if (Program.IsCookiesEnabledAndValid())
-            cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-
+        var additionalArgs = YtdlManager.GenerateYtdlArgs();
         var process = new Process
         {
             StartInfo =
             {
                 FileName = YtdlManager.YtdlPath,
-                Arguments = $"--encoding utf-8 --ignore-config --no-playlist --no-warnings {additionalArgs} {cookieArg} -j \"{url}\"",
+                Arguments = $"{additionalArgs} -j \"{url}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -246,15 +242,11 @@ public class VideoId
             }
         };
 
-        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
-        var cookieArg = string.Empty;
-        if (Program.IsCookiesEnabledAndValid())
-            cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-
+        var additionalArgs = YtdlManager.GenerateYtdlArgs();
         var languageArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? string.Empty
             : $" -f [language={ConfigManager.Config.YtdlpDubLanguage}]";
-        process.StartInfo.Arguments = $"--encoding utf-8 --ignore-config --flat-playlist -i -J -s --no-playlist {languageArg} --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-warnings {cookieArg} {additionalArgs} {url}";
+        process.StartInfo.Arguments = $"--flat-playlist -i -J -s {languageArg} --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" {additionalArgs} {url}";
 
         process.Start();
         var output = await process.StandardOutput.ReadToEndAsync();
@@ -306,22 +298,18 @@ public class VideoId
 
         // yt-dlp -f best/bestvideo[height<=?720]+bestaudio --no-playlist --no-warnings --get-url https://youtu.be/GoSo8YOKSAE
         var url = videoInfo.VideoUrl;
-        var additionalArgs = ConfigManager.Config.YtdlpAdditionalArgs;
-        var cookieArg = string.Empty;
-        if (Program.IsCookiesEnabledAndValid())
-            cookieArg = $"--cookies \"{YtdlManager.CookiesPath}\"";
-
+        var additionalArgs = YtdlManager.GenerateYtdlArgs();
         var languageArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
             ? string.Empty
             : $"[language={ConfigManager.Config.YtdlpDubLanguage}]/(mp4/best)[height<=?1080][height>=?64][width>=?64]";
 
         if (avPro)
         {
-            process.StartInfo.Arguments = $"--encoding utf-8 --ignore-config -f \"(mp4/best)[height<=?1080][height>=?64][width>=?64]{languageArg}\" --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
+            process.StartInfo.Arguments = $"-f \"(mp4/best)[height<=?1080][height>=?64][width>=?64]{languageArg}\" --impersonate=\"safari\" --extractor-args=\"youtube:player_client=web\" {additionalArgs} --get-url \"{url}\"";
         }
         else
         {
-            process.StartInfo.Arguments = $"--encoding utf-8 --ignore-config -f \"(mp4/best)[vcodec!=av01][vcodec!=vp9.2][height<=?1080][height>=?64][width>=?64][protocol^=http]\" --no-playlist --no-warnings {cookieArg} {additionalArgs} --get-url \"{url}\"";
+            process.StartInfo.Arguments = $"-f \"(mp4/best)[vcodec!=av01][vcodec!=vp9.2][height<=?1080][height>=?64][width>=?64][protocol^=http]\" {additionalArgs} --get-url \"{url}\"";
         }
 
         process.Start();

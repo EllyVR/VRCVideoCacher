@@ -16,6 +16,7 @@ public class YtdlManager
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
     public static readonly string CookiesPath;
+    public static string YtdlGlobalArgs = string.Empty;
 
     public static readonly string YtdlPath =
         Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
@@ -34,6 +35,28 @@ public class YtdlManager
                        throw new FileNotFoundException("Unable to find yt-dlp");
 
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
+    }
+
+    public static string GenerateYtdlArgs()
+    {
+        var args = new List<string>
+        {
+            "--encoding utf-8",
+            "--ignore-config",
+            "--no-playlist",
+            "--no-warnings",
+            "--no-mtime",
+            "--no-progress"
+        };
+
+        if (Program.IsCookiesEnabledAndValid())
+            args.Add($"--cookies \"{CookiesPath}\"");
+        
+        var argsString = string.Join(' ', args);
+        if (!string.IsNullOrEmpty(ConfigManager.Config.YtdlpAdditionalArgs))
+            argsString += $" {ConfigManager.Config.YtdlpAdditionalArgs}";
+
+        return argsString;
     }
 
     public static void StartYtdlDownloadThread()
