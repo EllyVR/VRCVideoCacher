@@ -107,6 +107,9 @@ public class Updater
                     FileTools.MarkFileExecutable(TempFilePath);
 
                 File.Move(FilePath, BackupFilePath);
+                if (!OperatingSystem.IsWindows())
+                    await Task.Delay(1000); // Might fix Linux updater? `The file '/home/user/Applications/VRCVideoCacher' already exists.`
+
                 File.Move(TempFilePath, FilePath);
 
                 Log.Information("Updated to version {Version}", release.tag_name);
