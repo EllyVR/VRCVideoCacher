@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using VRCVideoCacher.Database;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher.ViewModels;
 
@@ -19,7 +20,8 @@ public partial class HistoryItemViewModel : ViewModelBase
     public string? Author { get; init; }
     public bool HasAuthor => !string.IsNullOrEmpty(Author);
 
-    private readonly string? _title;
+    private string? _title;
+    private string? _thumbnailUrl;
 
     public string DisplayTitle
     {
@@ -46,9 +48,7 @@ public partial class HistoryItemViewModel : ViewModelBase
         _ => new SolidColorBrush(Color.Parse("#555555"))
     };
 
-    public string? ThumbnailUrl => Type == UrlType.YouTube && Id?.Length == 11
-        ? $"https://img.youtube.com/vi/{Id}/mqdefault.jpg"
-        : null;
+    public string? ThumbnailUrl => _thumbnailUrl;
 
     public HistoryItemViewModel(History history, VideoInfoCache? meta)
     {
@@ -58,6 +58,32 @@ public partial class HistoryItemViewModel : ViewModelBase
         Type = history.Type;
         _title = meta?.Title;
         Author = meta?.Author;
+    }
+
+    public async Task LoadMetadataAsync()
+    {
+        if(Id == null)
+            return;
+
+        // Load from DB
+        var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(Id);
+
+        if (!string.IsNullOrEmpty(videoInfo?.Title))
+        {
+            _title = videoInfo.Title;
+            OnPropertyChanged(nameof(DisplayTitle));
+        }
+
+        // Load thumbnail
+        var thumbnailPath = ThumbnailManager.GetThumbnail(Id);
+        if (Id.Length == 11 && string.IsNullOrEmpty(thumbnailPath))
+            thumbnailPath = await YouTubeMetadataService.GetThumbnail(Id);
+
+        if (!string.IsNullOrEmpty(thumbnailPath))
+        {
+            _thumbnailUrl = thumbnailPath;
+            OnPropertyChanged(nameof(ThumbnailUrl));
+        }
     }
 
     [RelayCommand]
@@ -96,26 +122,32 @@ public partial class HistoryViewModel : ViewModelBase
 
     public HistoryViewModel()
     {
-        DatabaseManager.OnPlayHistoryAdded += () => Task.Run(RefreshHistory);
-        DatabaseManager.OnVideoInfoCacheUpdated += () => Task.Run(RefreshHistory);
-        Task.Run(RefreshHistory);
+        DatabaseManager.OnPlayHistoryAdded += () => Refresh();
+
+        // Causes infinite loop because we update cache inside LoadMetadataAsync, which triggers this event again.
+        // DatabaseManager.OnVideoInfoCacheUpdated += () => Refresh();
+
+        Refresh();
     }
 
     [RelayCommand]
-    private void Refresh() => Task.Run(RefreshHistory);
-
-    private void RefreshHistory()
+    private void Refresh()
     {
         var historyCache = DatabaseManager.GetVideoHistoryAsCache();
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        HistoryItems.Clear();
+        foreach (var item in historyCache.OrderByDescending(h => h.Timestamp))
         {
-            HistoryItems.Clear();
-            foreach (var item in historyCache.OrderByDescending(h => h.Timestamp))
+            HistoryItems.Add(item);
+        }
+        StatusText = string.Format(Loc.Tr("EntriesCountFormat"), HistoryItems.Count);
+
+        _ = Task.Run(async () =>
+        {
+            foreach (var item in historyCache)
             {
-                HistoryItems.Add(item);
+                await item.LoadMetadataAsync();
             }
-            StatusText = string.Format(Loc.Tr("EntriesCountFormat"), HistoryItems.Count);
         });
     }
 }

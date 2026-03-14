@@ -66,4 +66,13 @@ public static class YouTubeMetadataService
 
         return url;
     }
+
+    public static async Task<VideoInfoCache?> GetVideoMetadataAsync(string videoId)
+    {
+        var cachedInfo = await DatabaseManager.Database.VideoInfoCache.FindAsync(videoId);
+        if (cachedInfo != null && !string.IsNullOrEmpty(cachedInfo.Title))
+            return cachedInfo;
+
+        return await GetVideoTitleAsync(videoId);
+    }
 }

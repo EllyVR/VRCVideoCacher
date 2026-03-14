@@ -32,9 +32,7 @@ public partial class CacheItemViewModel : ViewModelBase
     public async Task LoadMetadataAsync()
     {
         // Load from DB
-        var videoInfo = await DatabaseManager.Database.VideoInfoCache.FindAsync(VideoId);
-        if (VideoId.Length == 11 && string.IsNullOrEmpty(videoInfo?.Title))
-            videoInfo = await YouTubeMetadataService.GetVideoTitleAsync(VideoId);
+        var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(VideoId);
         
         if (!string.IsNullOrEmpty(videoInfo?.Title))
         {
