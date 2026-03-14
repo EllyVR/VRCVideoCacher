@@ -47,7 +47,7 @@ public class BulkPreCache
                 return;
             }
             await DownloadVideos(files);
-            Log.Information("All {count} files for {URL} are up to date.", files.Count, url);
+            Log.Information("All {Count} files for {URL} are up to date.", files.Count, url);
         }
     }
 

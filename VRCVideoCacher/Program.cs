@@ -9,7 +9,6 @@ using Serilog.Templates;
 using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
 using VRCVideoCacher.Database;
-using VRCVideoCacher.Elevator;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
@@ -165,7 +164,7 @@ internal sealed class Program
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Backend error " + ex.Message + " " + ex.StackTrace);
+                Log.Error(ex, "Backend error");
             }
         });
 

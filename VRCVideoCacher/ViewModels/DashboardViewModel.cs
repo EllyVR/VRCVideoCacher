@@ -3,7 +3,6 @@ using Avalonia.Threading;
 using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VRCVideoCacher.Elevator;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.Views;
@@ -60,7 +59,7 @@ public partial class DashboardViewModel : ViewModelBase
         // Initial data load
         RefreshData();
 
-        Motd = VvcConfigService.CurrentConfig.motd;
+        Motd = VvcConfigService.CurrentConfig.Motd;
         
         // Subscribe to language changes to refresh localized strings
         Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedStrings);

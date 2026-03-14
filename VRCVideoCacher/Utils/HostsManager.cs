@@ -1,4 +1,4 @@
-﻿namespace VRCVideoCacher.Elevator;
+﻿namespace VRCVideoCacher.Utils;
 
 public class HostsManager
 {
@@ -22,7 +22,7 @@ public class HostsManager
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to add host entry: " + ex.ToString());
+                Log.Error(ex, "Failed to add host entry");
                 Environment.Exit(1);
             }
         }
@@ -36,7 +36,7 @@ public class HostsManager
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to remove host entry: " + ex.ToString());
+                Log.Error(ex, "Failed to remove host entry");
                 Environment.Exit(1);
             }
         }

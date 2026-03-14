@@ -55,13 +55,13 @@ public class WebServer
 
     private static Task OnHttpException(IHttpContext context, IHttpException httpException)
     {
-        Log.Information(httpException.Message!);
+        Log.Information("OnHttpException Error Occured: {ErrorMessage}", httpException.Message!);
         return Task.CompletedTask;
     }
 
     private static Task OnUnhandledException(IHttpContext context, Exception exception)
     {
-        Log.Information(exception.Message);
+        Log.Information(exception, "OnUnhandledException Error Occured");
         return Task.CompletedTask;
     }
 }

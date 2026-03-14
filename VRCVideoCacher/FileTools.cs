@@ -166,7 +166,7 @@ public class FileTools
     {
         if (!Directory.Exists(Path.GetDirectoryName(ytdlPath) ?? string.Empty))
         {
-            Log.Error("YT-DLP directory does not exist, Game may not be installed. {path}", ytdlPath);
+            Log.Error("YT-DLP directory does not exist, Game may not be installed. {Path}", ytdlPath);
             return;
         }
         if (File.Exists(ytdlPath))

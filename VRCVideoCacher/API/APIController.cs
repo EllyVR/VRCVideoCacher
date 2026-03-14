@@ -64,7 +64,7 @@ public class ApiController : WebApiController
 
         if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
         {
-            Log.Warning("URL Is Blocked: {url}", requestUrl);
+            Log.Warning("URL Is Blocked: {URL}", requestUrl);
             requestUrl = ConfigManager.Config.BlockRedirect;
         }
 
@@ -136,7 +136,7 @@ public class ApiController : WebApiController
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
-            Log.Error("Get URL: {error}", response);
+            Log.Error("Get URL: {Error}", response);
             // only send the error back if it's for YouTube, otherwise let it play the request URL normally
             if (videoInfo.UrlType == UrlType.YouTube)
             {

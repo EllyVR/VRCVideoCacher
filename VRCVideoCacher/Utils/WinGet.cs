@@ -8,7 +8,7 @@ namespace VRCVideoCacher;
 public class WinGet
 {
     private static readonly ILogger Log = Program.Logger.ForContext<WinGet>();
-    private static string WingetPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\WindowsApps\winget.exe");
+    private static readonly string WingetPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\WindowsApps\winget.exe");
     private static readonly Dictionary<string, string> WingetPackages = new()
     {
         { "VP9 Video Extensions", "9n4d0msmp0pt" },
@@ -65,7 +65,7 @@ public class WinGet
         }
         catch (Exception ex)
         {
-            Log.Error(ex.ToString());
+            Log.Error(ex, "Failed on IsPackageInstalled");
             return false;
         }
     }
@@ -101,7 +101,7 @@ public class WinGet
             while ((line = await process.StandardOutput.ReadLineAsync()) != null)
             {
                 if (!string.IsNullOrEmpty(line.Trim()))
-                    Log.Debug("{Winget}: " + line,"winget");
+                    Log.Debug("{Winget}: {Line}","winget", line);
             }
             var error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
@@ -110,11 +110,11 @@ public class WinGet
 
             var packageName = WingetPackages.FirstOrDefault(x => x.Value == packageId).Key;
             if (process.ExitCode == 0)
-                Log.Information("Successfully installed package: {packageName}", packageName);
+                Log.Information("Successfully installed package: {PackageName}", packageName);
         }
         catch (Exception ex)
         {
-            Log.Error(ex.ToString());
+            Log.Error(ex, "Failed on InstallPackage");
         }
     }
 }

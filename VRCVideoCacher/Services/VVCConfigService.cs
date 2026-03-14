@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace VRCVideoCacher.Services;
@@ -26,6 +27,9 @@ public class VvcConfigService
 
 public class VvcConfig
 {
-    public string motd { get; set; } = string.Empty;
-    public int retryCount { get; set; } = 7;
+    [JsonPropertyName("motd")]
+    public string Motd { get; set; } = string.Empty;
+
+    [JsonPropertyName("retryCount")]
+    public int RetryCount { get; set; } = 7;
 }

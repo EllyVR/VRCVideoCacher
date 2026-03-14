@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Serilog;
 using VRCVideoCacher.API;
-using VRCVideoCacher.Elevator;
 
 namespace VRCVideoCacher.Utils;
 

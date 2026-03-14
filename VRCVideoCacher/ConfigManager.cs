@@ -78,7 +78,7 @@ public class ConfigManager
         var defaultOption = defaultValue ? "Y/n" : "y/N";
         var message = $"{prompt} ({defaultOption}):";
         message = message.TrimStart();
-        Log.Information(message);
+        Log.Information("{UserConfirmationMessage}", message);
         var input = Console.ReadLine();
         return string.IsNullOrEmpty(input) ? defaultValue : input.Equals("y", StringComparison.CurrentCultureIgnoreCase);
     }

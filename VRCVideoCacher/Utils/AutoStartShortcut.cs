@@ -3,7 +3,7 @@ using Serilog;
 using ShellLink;
 using ShellLink.Structures;
 
-namespace VRCVideoCacher;
+namespace VRCVideoCacher.Utils;
 
 public class AutoStartShortcut
 {

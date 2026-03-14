@@ -35,7 +35,7 @@ internal partial class PyPyDanceBundleContext : JsonSerializerContext
 public class PyPyDanceApiService
 {
     private const string PyPyDanceApiUrl = "https://api.pypy.dance/bundle";
-    private static readonly ILogger Logger = Program.Logger.ForContext<VRDancingAPIService>();
+    private static readonly ILogger Logger = Program.Logger.ForContext<PyPyDanceApiService>();
     private static DateTime _lastFetch = DateTime.MinValue;
     private static List<PyPyDanceSong> _songs = [];
     private static readonly HttpClient HttpClient = new()
