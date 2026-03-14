@@ -70,9 +70,10 @@ public static class YouTubeMetadataService
     public static async Task<VideoInfoCache?> GetVideoMetadataAsync(string videoId)
     {
         var cachedInfo = await DatabaseManager.Database.VideoInfoCache.FindAsync(videoId);
-        if (cachedInfo != null && !string.IsNullOrEmpty(cachedInfo.Title))
-            return cachedInfo;
 
-        return await GetVideoTitleAsync(videoId);
+        if (videoId.Length == 11 && (cachedInfo == null || string.IsNullOrEmpty(cachedInfo?.Title)))
+            cachedInfo = await GetVideoTitleAsync(videoId);
+
+        return cachedInfo;
     }
 }
