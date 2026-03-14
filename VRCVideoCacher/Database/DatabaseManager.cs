@@ -79,7 +79,7 @@ public static class DatabaseManager
             .AsNoTracking()
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
-            .Join(Database.VideoInfoCache,
+            .LeftJoin(Database.VideoInfoCache,
                 h => h.Id,
                 v => v.Id,
                 (h, v) => new HistoryItemViewModel(h, v))
