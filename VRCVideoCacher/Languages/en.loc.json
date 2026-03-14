@@ -40,7 +40,6 @@
   "ServerSettings": "Server Settings",
   "WebServerUrl": "Web Server URL",
   "DownloadSettings": "Download Settings",
-  "YtdlpPathGlobalLabel": "yt-dlp from PATH environment variable",
   "UseYouTubeCookies": "Use YouTube Cookies (requires browser extension)",
   "AutoUpdateUtils": "Auto-update Utils (yt-dlp, FFmpeg, and Deno)",
   "AdditionalYtdlpArgs": "Additional yt-dlp Arguments",

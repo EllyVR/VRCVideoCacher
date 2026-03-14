@@ -16,10 +16,13 @@ public class YtdlManager
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
     public static readonly string CookiesPath;
-    public static string YtdlGlobalArgs = string.Empty;
 
     public static readonly string YtdlPath =
         Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp");
+    public static readonly string DenoPath =
+        Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
+    public static readonly string FfmpegPath =
+        Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
     private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
     private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
     private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
@@ -31,15 +34,21 @@ public class YtdlManager
 
         // try to locate in PATH
         if (LaunchArgs.UseGlobalPath)
-            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ?? 
+        {
+            YtdlPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp") ??
                        throw new FileNotFoundException("Unable to find yt-dlp");
+            DenoPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "deno.exe" : "deno") ??
+                       throw new FileNotFoundException("Unable to find Deno runtime");
+            FfmpegPath = FileTools.LocateFile(OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg") ??
+                         string.Empty;
+        }
 
         Log.Debug("Using ytdl path: {YtdlPath}", YtdlPath);
     }
 
-    public static string GenerateYtdlArgs()
+    public static string GenerateYtdlArgs(List<string> args, string urlArg)
     {
-        var args = new List<string>
+        var globalArgs = new List<string>
         {
             "--encoding utf-8",
             "--ignore-config",
@@ -48,15 +57,24 @@ public class YtdlManager
             "--no-mtime",
             "--no-progress"
         };
+        args.AddRange(globalArgs);
+
+        if (File.Exists(FfmpegPath))
+            args.Add($"--ffmpeg-location \"{FfmpegPath}\"");
+        
+        if (File.Exists(DenoPath))
+            args.Add($"--js-runtimes deno:\"{DenoPath}\"");
+        else
+            Log.Error("Deno runtime not found at path: {DenoPath}", DenoPath);
 
         if (Program.IsCookiesEnabledAndValid())
             args.Add($"--cookies \"{CookiesPath}\"");
-        
-        var argsString = string.Join(' ', args);
-        if (!string.IsNullOrEmpty(ConfigManager.Config.YtdlpAdditionalArgs))
-            argsString += $" {ConfigManager.Config.YtdlpAdditionalArgs}";
 
-        return argsString;
+        if (!string.IsNullOrEmpty(ConfigManager.Config.YtdlpAdditionalArgs))
+            args.Add(ConfigManager.Config.YtdlpAdditionalArgs);
+
+        args.Add(urlArg);
+        return string.Join(' ', args);
     }
 
     public static void StartYtdlDownloadThread()
@@ -122,8 +140,6 @@ public class YtdlManager
         if (!Directory.Exists(Program.UtilsPath))
             throw new Exception("Failed to get Utils path");
 
-        var denoPath = Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
-
         using var apiResponse = await HttpClient.GetAsync(DenoApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
@@ -139,7 +155,7 @@ public class YtdlManager
         }
 
         var currentDenoVersion = Versions.CurrentVersion.deno;
-        if (!File.Exists(denoPath))
+        if (!File.Exists(DenoPath))
             currentDenoVersion = "Not Installed";
 
         var latestVersion = json.tag_name;
@@ -222,8 +238,6 @@ public class YtdlManager
 
         if (!ConfigManager.Config.CacheYouTube)
             return;
-        
-        var ffmpegPath = Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
 
         using var apiResponse = await HttpClient.GetAsync(OperatingSystem.IsWindows() ? FfmpegApiUrl : FfmpegNightlyApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
@@ -240,7 +254,7 @@ public class YtdlManager
         }
 
         var currentffmpegVersion = Versions.CurrentVersion.ffmpeg;
-        if (!File.Exists(ffmpegPath))
+        if (!File.Exists(FfmpegPath))
             currentffmpegVersion = "Not Installed";
 
         var latestVersion = OperatingSystem.IsWindows() ? json.tag_name : json.name;
