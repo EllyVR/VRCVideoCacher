@@ -12,6 +12,11 @@
 
 **Language:** **English** | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md)
 
+### Wiki
+- [Launch Options](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
+- [Cli Config Options](https://github.com/EllyVR/VRCVideoCacher/wiki/Config-Options)
+- [Linux](https://github.com/EllyVR/VRCVideoCacher/wiki/Linux)
+
 ### What is VRCVideoCacher?
 
 VRCVideoCacher is a tool used to cache VRChat videos to your local disk and/or fix YouTube videos from failing to load.
