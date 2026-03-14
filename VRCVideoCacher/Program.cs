@@ -41,6 +41,9 @@ internal sealed class Program
 
     private static void ConfigureSentryOptions(SentrySerilogOptions o)
     {
+        SentrySdk.SetTag("admin", AdminCheck.IsRunningAsAdmin().ToString());
+        SentrySdk.SetTag("noGui", LaunchArgs.HasGui.ToString());
+        SentrySdk.SetTag("globalPath", LaunchArgs.UseGlobalPath.ToString());
         o.Dsn = SentryDsn;
         o.AutoSessionTracking = true;
         o.IsGlobalModeEnabled = true;
@@ -101,38 +104,38 @@ internal sealed class Program
         InitializeLogger();
 
 #if !DEBUG
-        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        if (LaunchArgs.ErrorReporting)
         {
-            try
-            {
-                SentrySdk.ConfigureScope(scope =>
-                {
-                    var configPath = Path.Join(DataPath, "Config.json");
-                    if (File.Exists(configPath))
-                        scope.AddAttachment(configPath);
-                });
-                SentrySdk.SetTag("admin", AdminCheck.IsRunningAsAdmin().ToString());
-                SentrySdk.SetTag("noGui", LaunchArgs.HasGui.ToString());
-                SentrySdk.SetTag("globalPath", LaunchArgs.UseGlobalPath.ToString());
-                if (e.ExceptionObject is Exception ex0)
-                    SentrySdk.CaptureException(ex0);
-                
-                var ex = e.ExceptionObject as Exception;
-                Logger.Error(ex, "Unhandled Exception");
-            }
-            catch
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
                 try
                 {
+                    SentrySdk.ConfigureScope(scope =>
+                    {
+                        var configPath = Path.Join(DataPath, "Config.json");
+                        if (File.Exists(configPath))
+                            scope.AddAttachment(configPath);
+                    });
+                    if (e.ExceptionObject is Exception ex0)
+                        SentrySdk.CaptureException(ex0);
+                    
                     var ex = e.ExceptionObject as Exception;
-                    Console.WriteLine("Unhandled Exception: " + ex);
+                    Logger.Error(ex, "Unhandled Exception");
                 }
                 catch
                 {
-                    // If logging fails, there's not much we can do. Just exit.
+                    try
+                    {
+                        var ex = e.ExceptionObject as Exception;
+                        Console.WriteLine("Unhandled Exception: " + ex);
+                    }
+                    catch
+                    {
+                        // If logging fails, there's not much we can do. Just exit.
+                    }
                 }
-            }
-        };
+            };
+        }
 #endif
         
         if (!LaunchArgs.HasGui)

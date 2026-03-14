@@ -20,7 +20,7 @@ namespace VRCVideoCacher;
 public partial class App : Application
 {
     private TrayIcon? _trayIcon;
-    private MainWindow? _mainWindow;
+    public static MainWindow? MainWindow;
 
     public override void Initialize()
     {
@@ -37,25 +37,25 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit
             BindingPlugins.DataValidators.RemoveAt(0);
 
-            _mainWindow = new MainWindow
+            MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel()
             };
 
-            desktop.MainWindow = _mainWindow;
+            desktop.MainWindow = MainWindow;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // Set up tray icon
             SetupTrayIcon(desktop);
 
             // Handle window closing - minimize to tray instead, but allow OS/programmatic closes
-            _mainWindow.Closing += (_, e) =>
+            MainWindow.Closing += (_, e) =>
             {
                 if (!ConfigManager.Config.CloseToTray || _isExiting || e.IsProgrammatic)
                     return;
 
                 e.Cancel = true;
-                _mainWindow.Hide();
+                MainWindow.Hide();
             };
 
             // Allow the app to exit cleanly on OS shutdown/logoff
@@ -70,13 +70,13 @@ public partial class App : Application
             var args = Environment.GetCommandLineArgs();
             if (!args.Contains("--minimized"))
             {
-                _mainWindow.Show();
+                MainWindow.Show();
             }
 
             if (AdminCheck.ShouldShowAdminWarning())
             {
                 var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
-                _ = adminWindow.ShowDialog(_mainWindow);
+                _ = adminWindow.ShowDialog(MainWindow);
             }
         }
 
@@ -147,7 +147,7 @@ public partial class App : Application
             msg == WmSysCommand &&
             (wParam.ToInt32() & 0xFFF0) == ScClose)
         {
-            _mainWindow?.Hide();
+            MainWindow?.Hide();
             handled = true;
             return IntPtr.Zero;
         }
@@ -174,7 +174,7 @@ public partial class App : Application
         // On Windows, hook WndProc to distinguish a user clicking X (SC_CLOSE)
         // from an external kill signal (raw WM_CLOSE from taskkill/Task Manager).
         if (OperatingSystem.IsWindows())
-            Win32Properties.AddWndProcHookCallback(_mainWindow!, Win32WndProc);
+            Win32Properties.AddWndProcHookCallback(MainWindow!, Win32WndProc);
 
         // On Linux, SIGTERM bypasses the Closing event entirely.  Intercept it
         // and route through desktop.Shutdown() so the tray icon is disposed and
@@ -236,11 +236,11 @@ public partial class App : Application
 
     private void ShowMainWindow()
     {
-        if (_mainWindow != null)
+        if (MainWindow != null)
         {
-            _mainWindow.Show();
-            _mainWindow.WindowState = WindowState.Normal;
-            _mainWindow.Activate();
+            MainWindow.Show();
+            MainWindow.WindowState = WindowState.Normal;
+            MainWindow.Activate();
         }
     }
 

@@ -3,6 +3,7 @@
         x:Class="VRCVideoCacher.Views.PopupWindow"
         Title="VRCVideoCacher"
         Width="600"
+        CanResize="False"
         SizeToContent="Height"
         WindowStartupLocation="CenterScreen">
     <StackPanel Margin="20">

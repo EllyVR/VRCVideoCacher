@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
+using Avalonia.Threading;
 using Serilog.Core;
 using Serilog.Events;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Views;
 
 namespace VRCVideoCacher.Services;
 
@@ -57,8 +59,20 @@ public static class LogService
 
 public class UiLogSink : ILogEventSink
 {
+    public static PopupWindow? _currentPopup;
+
     public void Emit(LogEvent logEvent)
     {
+        if (logEvent.Level >= LogEventLevel.Error)
+        {
+            Dispatcher.UIThread.Post(() =>
+             {
+                 _currentPopup?.Close();
+                 _currentPopup = null;
+                 _currentPopup = new PopupWindow(logEvent.RenderMessage());
+                 _ = _currentPopup.ShowDialog(App.MainWindow!);
+             });
+        }
         LogService.EmitLogEntry(logEvent);
     }
 }
