@@ -11,8 +11,7 @@ namespace VRCVideoCacher.API;
 
 public class ApiController : WebApiController
 {
-    // @TODO: Make this configurable via proposed API.
-    private int YoutubePrefetchMaxRetries = VvcConfigService.CurrentConfig.retryCount;
+    private static int YoutubePrefetchMaxRetries => VvcConfigService.CurrentConfig.RetryCount;
 
     private static readonly Serilog.ILogger Log = Program.Logger.ForContext<ApiController>();
     private static readonly HttpClient HttpClient = new()

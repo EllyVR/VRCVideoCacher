@@ -9,6 +9,7 @@ public class WebServerLogger : ILogger
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 
     public void Log(LogMessageReceivedEventArgs logEvent)
@@ -16,13 +17,13 @@ public class WebServerLogger : ILogger
         switch (logEvent.MessageType)
         {
             case LogLevel.Error:
-                WebServer.Log.Error(logEvent.Message);
+                WebServer.Log.Error("{WebServerLogEvent}", logEvent.Message);
                 break;
             case LogLevel.Warning:
-                WebServer.Log.Warning(logEvent.Message);
+                WebServer.Log.Warning("{WebServerLogEvent}", logEvent.Message);
                 break;
             case LogLevel.Info:
-                WebServer.Log.Information(logEvent.Message);
+                WebServer.Log.Information("{WebServerLogEvent}", logEvent.Message);
                 break;
         }
     }

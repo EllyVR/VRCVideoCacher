@@ -44,7 +44,7 @@ public class VideoId
             .Replace("+", "")
             .Replace("=", "");
     }
-    
+
     private static readonly List<string> YouTubeResolvers = new()
     {
         "dmn.moe",
@@ -57,13 +57,13 @@ public class VideoId
     public static async Task<VideoInfo?> GetVideoId(string url, bool avPro)
     {
         url = url.Trim();
-        
+
         if (url.StartsWith("https://dmn.moe"))
         {
             url = url.Replace("/sr/", "/yt/");
             Log.Information("YTS URL detected, modified to: {URL}", url);
         }
-        
+
         var uriObject = new Uri(url);
         if (YouTubeResolvers.Contains(uriObject.Host))
         {
@@ -103,7 +103,7 @@ public class VideoId
                 {
                     await PyPyDanceApiService.DownloadMetadata(idInt, pypyVideoId);
                 });
-                
+
 
                 return new VideoInfo
                 {

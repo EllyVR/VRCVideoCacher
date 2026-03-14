@@ -59,7 +59,7 @@ public static class LogService
 
 public class UiLogSink : ILogEventSink
 {
-    public static PopupWindow? _currentPopup;
+    private static PopupWindow? _currentPopup;
 
     public void Emit(LogEvent logEvent)
     {

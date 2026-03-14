@@ -61,7 +61,7 @@ public class YtdlManager
 
         if (File.Exists(FfmpegPath))
             args.Add($"--ffmpeg-location \"{FfmpegPath}\"");
-        
+
         if (File.Exists(DenoPath))
             args.Add($"--js-runtimes deno:\"{DenoPath}\"");
         else
@@ -114,7 +114,7 @@ public class YtdlManager
             return;
         }
 
-        var currentYtdlVersion = Versions.CurrentVersion.ytdlp;
+        var currentYtdlVersion = Versions.CurrentVersion.Ytdlp;
         if (!File.Exists(YtdlPath))
             currentYtdlVersion = "Not Installed";
 
@@ -154,7 +154,7 @@ public class YtdlManager
             return;
         }
 
-        var currentDenoVersion = Versions.CurrentVersion.deno;
+        var currentDenoVersion = Versions.CurrentVersion.Deno;
         if (!File.Exists(DenoPath))
             currentDenoVersion = "Not Installed";
 
@@ -222,7 +222,7 @@ public class YtdlManager
             await using var entryStream = await reader.OpenEntryStreamAsync();
             await entryStream.CopyToAsync(outputStream);
             FileTools.MarkFileExecutable(path);
-            Versions.CurrentVersion.deno = json.tag_name;
+            Versions.CurrentVersion.Deno = json.tag_name;
             Versions.Save();
             Log.Information("Deno downloaded and extracted.");
             return;
@@ -253,7 +253,7 @@ public class YtdlManager
             return;
         }
 
-        var currentffmpegVersion = Versions.CurrentVersion.ffmpeg;
+        var currentffmpegVersion = Versions.CurrentVersion.Ffmpeg;
         if (!File.Exists(FfmpegPath))
             currentffmpegVersion = "Not Installed";
 
@@ -334,7 +334,7 @@ public class YtdlManager
             return;
         }
 
-        Versions.CurrentVersion.ffmpeg = latestVersion;
+        Versions.CurrentVersion.Ffmpeg = latestVersion;
         Versions.Save();
         Log.Information("FFmpeg downloaded and extracted.");
     }
@@ -384,7 +384,7 @@ public class YtdlManager
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
             FileTools.MarkFileExecutable(YtdlPath);
-            Versions.CurrentVersion.ytdlp = json.tag_name;
+            Versions.CurrentVersion.Ytdlp = json.tag_name;
             Versions.Save();
             return;
         }

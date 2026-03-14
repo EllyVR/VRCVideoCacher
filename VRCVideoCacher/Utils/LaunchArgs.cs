@@ -6,7 +6,7 @@ public class LaunchArgs
     private const string NoGuiArg = "--no-gui";
     private const string DisableErrorReportingArg = "--disable-error-reporting";
     private const string GlobalPathArg = "--global-path";
-    
+
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
     public static bool ErrorReporting = true;
@@ -20,13 +20,13 @@ public class LaunchArgs
         {
             if (arg.Equals(AdminBypassArg, StringComparison.OrdinalIgnoreCase))
                 IsBypassArgumentPresent = true;
-            
+
             if (arg.Equals(NoGuiArg, StringComparison.OrdinalIgnoreCase))
                 HasGui = false;
-            
+
             if (arg.Equals(DisableErrorReportingArg, StringComparison.OrdinalIgnoreCase))
                 ErrorReporting = false;
-            
+
             if (arg.Equals(GlobalPathArg, StringComparison.OrdinalIgnoreCase))
                 UseGlobalPath = true;
         }

@@ -12,10 +12,10 @@ internal class YtdlpVideoInfo
 
     [JsonPropertyName("is_live")]
     public bool? IsLive { get; set; }
-    
+
     [JsonPropertyName("title")]
     public string? Name { get; set; }
-    
+
     [JsonPropertyName("author_name")]
     public string? Author { get; set; }
 }

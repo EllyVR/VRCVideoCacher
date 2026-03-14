@@ -9,7 +9,7 @@ public class HostsManager
     private static readonly string HostsPath = OperatingSystem.IsWindows()
         ? $"{Environment.GetFolderPath(Environment.SpecialFolder.System)}/drivers/etc/hosts"
         : "/etc/hosts";
-    
+
     public static void TryRun()
     {
         if (Environment.CommandLine.Contains("--addhost"))
@@ -48,7 +48,7 @@ public class HostsManager
         var hostsFile = File.ReadAllText(HostsPath);
         if (hostsFile.Contains(Header))
             return;
-        
+
         File.AppendAllText(HostsPath,
             $"{Header}127.0.0.1 localhost.youtube.com{Footer}");
     }
@@ -65,10 +65,10 @@ public class HostsManager
         var newHostsFile = hostsFile.Remove(headerStart, headerEnd - headerStart);
         File.WriteAllText(HostsPath, newHostsFile);
     }
-    
+
     public static bool IsHostAdded()
     {
-        if(!File.Exists(HostsPath))
+        if (!File.Exists(HostsPath))
             return false;
 
         var hostsFile = File.ReadAllText(HostsPath);

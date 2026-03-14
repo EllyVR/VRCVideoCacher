@@ -141,7 +141,7 @@ public partial class DownloadQueueViewModel : ViewModelBase
             StatusMessage = $"Error: {ex}";
         }
     }
-    
+
     [RelayCommand]
     private void ClearQueue()
     {

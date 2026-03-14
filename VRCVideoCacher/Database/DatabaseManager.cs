@@ -40,7 +40,7 @@ public static class DatabaseManager
     {
         if (string.IsNullOrEmpty(videoInfoCache.Id))
             return;
-        
+
         var existingCache = Database.VideoInfoCache.Find(videoInfoCache.Id);
         if (existingCache != null)
         {

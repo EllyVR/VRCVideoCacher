@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -62,7 +61,7 @@ public partial class HistoryItemViewModel : ViewModelBase
 
     public async Task LoadMetadataAsync()
     {
-        if(Id == null)
+        if (Id == null)
             return;
 
         // Load from DB

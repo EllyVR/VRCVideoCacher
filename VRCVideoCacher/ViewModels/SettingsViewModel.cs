@@ -175,13 +175,13 @@ public partial class SettingsViewModel : ViewModelBase
     private void SaveSettings()
     {
         var config = ConfigManager.Config;
-        
+
         if (config.YtdlpWebServerUrl != WebServerUrl)
         {
             config.YtdlpWebServerUrl = WebServerUrl;
             WebServer.Init();
         }
-        
+
         config.YtdlpUseCookies = YtdlUseCookies;
         config.YtdlpAutoUpdate = YtdlAutoUpdate;
         config.YtdlpAdditionalArgs = YtdlAdditionalArgs;

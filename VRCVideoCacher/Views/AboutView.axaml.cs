@@ -13,7 +13,7 @@ public partial class AboutView : UserControl
         InitializeComponent();
         DataContext = new VRCVideoCacher.ViewModels.AboutViewModel();
     }
-    
+
     private void OnDiscordClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         OpenUrl(DiscordUrl);

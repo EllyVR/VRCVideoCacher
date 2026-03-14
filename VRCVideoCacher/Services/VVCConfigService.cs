@@ -5,8 +5,8 @@ namespace VRCVideoCacher.Services;
 
 public class VvcConfigService
 {
-    public static VvcConfig CurrentConfig = new VvcConfig();
-    private static HttpClient httpClient;
+    public static VvcConfig CurrentConfig = new();
+    private static readonly HttpClient httpClient;
 
     static VvcConfigService()
     {
@@ -19,7 +19,7 @@ public class VvcConfigService
         if (req.IsSuccessStatusCode)
         {
             var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
-            if(deserialized!=null)
+            if (deserialized != null)
                 CurrentConfig = deserialized;
         }
     }

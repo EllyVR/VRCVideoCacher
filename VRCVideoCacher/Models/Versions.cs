@@ -36,7 +36,7 @@ public class Versions
 
 public class VersionJson
 {
-    public string ytdlp { get; set; } = string.Empty;
-    public string ffmpeg { get; set; } = string.Empty;
-    public string deno { get; set; } = string.Empty;
+    public string Ytdlp { get; set; } = string.Empty;
+    public string Ffmpeg { get; set; } = string.Empty;
+    public string Deno { get; set; } = string.Empty;
 }

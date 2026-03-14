@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Avalonia;
@@ -65,7 +64,7 @@ public partial class App : Application
                 _trayIcon?.Dispose();
                 _trayIcon = null;
             };
-            
+
             // Check for --minimized flag
             var args = Environment.GetCommandLineArgs();
             if (!args.Contains("--minimized"))
@@ -206,7 +205,7 @@ public partial class App : Application
             _isExiting = true;
             desktop.Shutdown();
         };
-        
+
         Loc.Instance.CurrentLanguageChanged += (_, _) =>
         {
             if (_showItem != null) _showItem.Header = Loc.Tr("TrayShow");

@@ -23,7 +23,7 @@ public class VRDancingAPIService
         var str = await req.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<VRDSongInfo>(str);
     }
-    
+
     public static async Task DownloadMetadata(string code, string videoId)
     {
         try
@@ -31,7 +31,7 @@ public class VRDancingAPIService
             var vrdData = await GetVideoInfo(code);
             if (vrdData == null)
                 return;
-            
+
             await ThumbnailManager.TrySaveThumbnail(videoId, vrdData.ThumbnailURL);
             DatabaseManager.AddVideoInfoCache(new VideoInfoCache
             {

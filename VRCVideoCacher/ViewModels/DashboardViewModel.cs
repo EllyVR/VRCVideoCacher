@@ -40,11 +40,11 @@ public partial class DashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _hostState;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasMotd))]
     private string? _motd;
-    
+
     [ObservableProperty]
     private bool _cookiesFileExists = false;
 
@@ -60,7 +60,7 @@ public partial class DashboardViewModel : ViewModelBase
         RefreshData();
 
         Motd = VvcConfigService.CurrentConfig.Motd;
-        
+
         // Subscribe to language changes to refresh localized strings
         Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedStrings);
 

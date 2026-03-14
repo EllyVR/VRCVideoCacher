@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using Serilog;
 
-namespace VRCVideoCacher;
+namespace VRCVideoCacher.Utils;
 
 public class WinGet
 {
@@ -101,7 +101,7 @@ public class WinGet
             while ((line = await process.StandardOutput.ReadLineAsync()) != null)
             {
                 if (!string.IsNullOrEmpty(line.Trim()))
-                    Log.Debug("{Winget}: {Line}","winget", line);
+                    Log.Debug("{Winget}: {Line}", "winget", line);
             }
             var error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();

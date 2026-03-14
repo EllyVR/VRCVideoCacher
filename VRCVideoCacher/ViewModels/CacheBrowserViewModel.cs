@@ -3,7 +3,6 @@ using Avalonia.Threading;
 using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VRCVideoCacher.Database;
 using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher.ViewModels;
@@ -33,7 +32,7 @@ public partial class CacheItemViewModel : ViewModelBase
     {
         // Load from DB
         var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(VideoId);
-        
+
         if (!string.IsNullOrEmpty(videoInfo?.Title))
         {
             Title = videoInfo.Title;

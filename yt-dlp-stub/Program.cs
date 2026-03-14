@@ -25,7 +25,7 @@ internal static class Program
         var appDataPath =
             Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low", @"VRChat\VRChat\Tools");
         _logFilePath = Path.Join(appDataPath, "ytdl.log");
-        
+
         var url = string.Empty;
         var avPro = true;
         string source = "vrchat";
@@ -43,16 +43,16 @@ internal static class Program
                 source = "resonite";
                 continue;
             }
-            
+
             if (!arg.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 continue;
-            
+
             url = arg;
             break;
         }
-        
+
         WriteLog($"Starting with args: {string.Join(" ", args)}, avPro: {avPro}, source: {source}");
-        
+
         if (string.IsNullOrEmpty(url))
         {
             WriteLog("[Error] No URL found in arguments");
@@ -60,7 +60,7 @@ internal static class Program
             Environment.ExitCode = 1;
             return;
         }
-        
+
         try
         {
             using var httpClient = new HttpClient();

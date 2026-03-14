@@ -58,7 +58,7 @@ public static class YouTubeMetadataService
         var localPath = ThumbnailManager.GetThumbnailPath(videoId);
         if (File.Exists(localPath))
             return localPath;
-        
+
         var url = $"https://img.youtube.com/vi/{videoId}/mqdefault.jpg";
         var thumbnailPath = await ThumbnailManager.TrySaveThumbnail(videoId, url);
         if (!string.IsNullOrEmpty(thumbnailPath))

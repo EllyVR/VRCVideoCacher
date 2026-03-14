@@ -84,7 +84,7 @@ public class CacheManager
             {
                 File.Delete(filePath);
                 cacheSize -= oldestFile.Value.Size;
-                
+
                 // delete thumbnail if not in recent history
                 var videoId = Path.GetFileNameWithoutExtension(oldestFile.Value.FileName);
                 if (recentPlayHistory.All(h => h.Id != videoId))
@@ -165,7 +165,7 @@ public class CacheManager
             try
             {
                 File.Delete(filePath);
-                
+
                 // delete thumbnail if not in recent history
                 var videoId = Path.GetFileNameWithoutExtension(fileName);
                 if (recentPlayHistory.All(h => h.Id != videoId))

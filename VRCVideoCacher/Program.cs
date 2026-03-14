@@ -142,7 +142,7 @@ internal sealed class Program
             };
         }
 #endif
-        
+
         if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
@@ -183,12 +183,12 @@ internal sealed class Program
                 path: Path.Combine(LogsPath, "VRCVideoCacher.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 5);
-        
+
         if (LaunchArgs.ErrorReporting)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Sentry(ConfigureSentryOptions);
         }
-        
+
         if (LaunchArgs.HasGui)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Sink(new UiLogSink());
@@ -296,7 +296,7 @@ internal sealed class Program
 
         return false;
     }
-    
+
     public static async Task<bool?> ValidateCookiesAsync()
     {
         if (!IsCookiesEnabledAndValid())

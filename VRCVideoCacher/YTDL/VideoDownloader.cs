@@ -100,7 +100,7 @@ public class VideoDownloader
         DownloadQueue.Enqueue(videoInfo);
         OnQueueChanged?.Invoke();
     }
-    
+
     public static void ClearQueue()
     {
         DownloadQueue.Clear();

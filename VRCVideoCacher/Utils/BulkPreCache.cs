@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using Serilog;
 
-namespace VRCVideoCacher;
+namespace VRCVideoCacher.Utils;
 
 public class BulkPreCache
 {

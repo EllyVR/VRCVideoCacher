@@ -17,13 +17,13 @@ public class PyPyDanceSong
 {
     [JsonPropertyName("i")]
     public int? Id { get; set; }
-    
+
     [JsonPropertyName("n")]
     public string? Name { get; set; }
-    
+
     [JsonPropertyName("s")]
     public int? StartTime { get; set; }
-    
+
     [JsonPropertyName("e")]
     public int? EndTime { get; set; }
 }
@@ -46,7 +46,7 @@ public class PyPyDanceApiService
 
     private static async Task<PyPyDanceSong?> GetVideoInfo(int? videoId)
     {
-        if (videoId == 0  || videoId == null)
+        if (videoId == 0 || videoId == null)
             return null;
 
         try
@@ -70,21 +70,21 @@ public class PyPyDanceApiService
         if (bundle?.Songs != null)
             _songs = bundle.Songs;
     }
-    
+
     public static async Task DownloadMetadata(int idInt, string videoId)
     {
         try
         {
             var thumbnailUrl = $"https://api.pypy.dance/thumb?id={idInt}";
             await ThumbnailManager.TrySaveThumbnail(videoId, thumbnailUrl);
-            
+
             var songInfo = await GetVideoInfo(idInt);
             int? duration = null;
             if (songInfo?.EndTime != null)
                 duration = songInfo.EndTime;
             if (songInfo?.StartTime != null && duration != null)
                 duration -= songInfo.StartTime;
-            
+
             DatabaseManager.AddVideoInfoCache(new VideoInfoCache
             {
                 Id = videoId,

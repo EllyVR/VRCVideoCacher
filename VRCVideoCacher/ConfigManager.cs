@@ -3,7 +3,6 @@ using CodingSeb.Localization;
 using Newtonsoft.Json;
 using Serilog;
 using VRCVideoCacher.Utils;
-using VRCVideoCacher.YTDL;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 
@@ -51,14 +50,14 @@ public class ConfigManager
         {
             Log.Information("Config loaded successfully.");
         }
-        
+
         if (Config.YtdlpWebServerUrl.EndsWith('/'))
             Config.YtdlpWebServerUrl = Config.YtdlpWebServerUrl.TrimEnd('/');
 
         Log.Information("Loaded config.");
         TrySaveConfig();
     }
-    
+
     public static void TrySaveConfig()
     {
         var newConfig = JsonConvert.SerializeObject(Config, Formatting.Indented);
@@ -119,7 +118,7 @@ public class ConfigManager
         Log.Information("More info: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
         TrySaveConfig();
     }
-    
+
     private static string GetSystemLanguage()
     {
         var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
