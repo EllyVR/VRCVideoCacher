@@ -128,12 +128,12 @@ public class VideoDownloader
 
         if (File.Exists(TempDownloadMp4Path))
         {
-            Log.Error("Temp file already exists, deleting...");
+            Log.Warning("Temp file already exists, deleting...");
             File.Delete(TempDownloadMp4Path);
         }
         if (File.Exists(TempDownloadWebmPath))
         {
-            Log.Error("Temp file already exists, deleting...");
+            Log.Warning("Temp file already exists, deleting...");
             File.Delete(TempDownloadWebmPath);
         }
 
@@ -233,12 +233,12 @@ public class VideoDownloader
     {
         if (File.Exists(TempDownloadMp4Path))
         {
-            Log.Error("Temp file already exists, deleting...");
+            Log.Warning("Temp file already exists, deleting...");
             File.Delete(TempDownloadMp4Path);
         }
         if (File.Exists(TempDownloadWebmPath))
         {
-            Log.Error("Temp file already exists, deleting...");
+            Log.Warning("Temp file already exists, deleting...");
             File.Delete(TempDownloadWebmPath);
         }
 

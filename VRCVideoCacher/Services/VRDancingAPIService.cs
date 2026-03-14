@@ -50,9 +50,9 @@ public class VRDancingAPIService
 
 public class VRDSongInfo
 {
-    public string Artist;
-    public string Song;
-    public string Instructor;
-    public string ThumbnailURL;
-    public string Hash;
+    public string Artist = string.Empty;
+    public string Song = string.Empty;
+    public string Instructor = string.Empty;
+    public string ThumbnailURL = string.Empty;
+    public string Hash = string.Empty;
 }

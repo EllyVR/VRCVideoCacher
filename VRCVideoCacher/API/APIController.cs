@@ -23,6 +23,7 @@ public class ApiController : WebApiController
     [Route(HttpVerbs.Post, "/youtube-cookies")]
     public async Task ReceiveYoutubeCookies()
     {
+        HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
         using var reader = new StreamReader(HttpContext.OpenRequestStream(), Encoding.UTF8);
         var cookies = await reader.ReadToEndAsync();
         if (!Program.IsCookiesValid(cookies))

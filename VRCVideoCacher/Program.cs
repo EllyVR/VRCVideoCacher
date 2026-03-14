@@ -190,7 +190,7 @@ internal sealed class Program
         Logger = Log.ForContext("SourceContext", "Core");
     }
 
-    public static async Task InitVrcVideoCacher()
+    private static async Task InitVrcVideoCacher()
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
 
@@ -246,7 +246,7 @@ internal sealed class Program
         await Task.Delay(-1);
     }
 
-    public static AppBuilder BuildAvaloniaApp()
+    private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()

@@ -73,7 +73,7 @@ public class FileTools
         }
         catch (Exception e)
         {
-            Log.Error("GetResonitePath: Exception while reading libraryfolders.vdf: {Error}", e.Message);
+            Log.Warning("GetResonitePath: Exception while reading libraryfolders.vdf: {Error}", e.Message);
         }
 
         return null;
