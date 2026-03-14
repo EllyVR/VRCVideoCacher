@@ -118,21 +118,27 @@ internal sealed class Program
                     });
                     if (e.ExceptionObject is Exception ex0)
                         SentrySdk.CaptureException(ex0);
-                    
+                }
+                catch
+                {
+                }
+
+                try
+                {
                     var ex = e.ExceptionObject as Exception;
                     Logger.Error(ex, "Unhandled Exception");
                 }
                 catch
                 {
-                    try
-                    {
-                        var ex = e.ExceptionObject as Exception;
-                        Console.WriteLine("Unhandled Exception: " + ex);
-                    }
-                    catch
-                    {
-                        // If logging fails, there's not much we can do. Just exit.
-                    }
+                }
+
+                try
+                {
+                    var ex = e.ExceptionObject as Exception;
+                    Console.WriteLine("Unhandled Exception: " + ex);
+                }
+                catch
+                {
                 }
             };
         }
