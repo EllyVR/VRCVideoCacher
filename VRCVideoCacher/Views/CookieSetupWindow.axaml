@@ -26,18 +26,20 @@
                 <TextBlock Text="{loc:Tr CookieSetupStep1Desc}" TextWrapping="Wrap" Foreground="#cccccc"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center" Margin="0,20,0,0">
-                    <Button Command="{Binding SelectChromeCommand}" Width="150" Height="100" Background="#3d3d3d"
+                    <Button Command="{Binding SelectChromeCommand}" Width="200" Height="150" Background="#3d3d3d"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                         <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <mi:MaterialIcon Kind="GoogleChrome" Width="40" Height="40" HorizontalAlignment="Center"/>
                             <TextBlock Text="{loc:Tr Chrome}" FontSize="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{loc:Tr ChromeBased}" FontSize="11" Foreground="#888888" HorizontalAlignment="Center" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding SelectFirefoxCommand}" Width="150" Height="100" Background="#3d3d3d"
+                    <Button Command="{Binding SelectFirefoxCommand}" Width="200" Height="150" Background="#3d3d3d"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                         <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <mi:MaterialIcon Kind="Firefox" Width="40" Height="40" HorizontalAlignment="Center"/>
                             <TextBlock Text="{loc:Tr Firefox}" FontSize="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{loc:Tr FirefoxBased}" FontSize="11" Foreground="#888888" HorizontalAlignment="Center" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

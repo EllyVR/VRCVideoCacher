@@ -119,6 +119,11 @@ public class VideoDownloader
         try
         {
             videoId = await VideoId.TryGetYouTubeVideoId(url);
+            if (string.IsNullOrEmpty(videoId))
+            {
+                Log.Warning("Invalid YouTube URL: {URL}", url);
+                return false;
+            }
         }
         catch (Exception ex)
         {

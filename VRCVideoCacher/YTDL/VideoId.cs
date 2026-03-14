@@ -205,11 +205,17 @@ public class VideoId
         if (process.ExitCode != 0)
             throw new Exception($"Failed to get video ID: {error.Trim()}");
         if (string.IsNullOrEmpty(rawData))
-            throw new Exception("Failed to get video ID");
+        {
+            Log.Warning("Failed to get video ID");
+            return string.Empty;
+        }
         var data = JsonSerializer.Deserialize(rawData, VideoIdJsonContext.Default.YtdlpVideoInfo);
         if (data?.Id is null || data.Duration is null)
-            throw new Exception("Failed to get video ID");
-        
+        {
+            Log.Warning("Failed to get video ID");
+            return string.Empty;
+        }
+
         DatabaseManager.AddVideoInfoCache(new VideoInfoCache
         {
             Id = data.Id,
@@ -220,9 +226,15 @@ public class VideoId
         });
 
         if (data.IsLive == true)
-            throw new Exception("Failed to get video ID: Video is a stream");
+        {
+            Log.Warning("Failed to get video ID: Video is a stream");
+            return string.Empty;
+        }
         if (data.Duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
-            throw new Exception($"Failed to get video ID: Video is longer than configured max length ({data.Duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
+        {
+            Log.Warning($"Failed to get video ID: Video is longer than configured max length ({data.Duration / 60}/{ConfigManager.Config.CacheYouTubeMaxLength})");
+            return string.Empty;
+        }
 
         return data.Id;
     }
