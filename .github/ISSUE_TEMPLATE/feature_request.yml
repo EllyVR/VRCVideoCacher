@@ -1,0 +1,11 @@
+name: Feature Request
+description: "You have a feature you'd like implemented? Let us know! Make sure to open one issue per request."
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Your feature request, described in detail.
+    validations:
+      required: true
