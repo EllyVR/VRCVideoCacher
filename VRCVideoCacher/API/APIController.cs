@@ -54,7 +54,7 @@ public class ApiController : WebApiController
 
         if (string.IsNullOrEmpty(requestUrl))
         {
-            Log.Error("No URL provided.");
+            Log.Warning("No URL provided.");
             await HttpContext.SendStringAsync("No URL provided.", "text/plain", Encoding.UTF8);
             return;
         }
@@ -135,7 +135,7 @@ public class ApiController : WebApiController
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
-            Log.Error("Get URL: {Error}", response);
+            Log.Warning("Get URL: {Error}", response);
             // only send the error back if it's for YouTube, otherwise let it play the request URL normally
             if (videoInfo.UrlType == UrlType.YouTube)
             {
