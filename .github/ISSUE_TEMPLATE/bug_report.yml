@@ -50,7 +50,7 @@ body:
           - Both
     validations:
       required: true
-  - type: textarea
+  - type: input
     id: operatingsystemdescription
     attributes:
       label: Exact Operating System
