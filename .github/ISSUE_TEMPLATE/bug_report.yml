@@ -19,7 +19,7 @@ body:
   - type: dropdown
     id: release
     attributes:
-        label: "What release of the application are you using/tested on?"
+        label: "Application Release Source"
         multiple: false
         options:
           - Steam
@@ -30,7 +30,7 @@ body:
   - type: dropdown
     id: operatingsystem
     attributes:
-        label: "What kind of operating system are you using/tested on?"
+        label: "Operating System"
         multiple: false
         options:
           - Windows
