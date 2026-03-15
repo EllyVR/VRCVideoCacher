@@ -1,19 +1,19 @@
 name: Bug Report
-description: File a report for a bug in the application. Make sure to open one issue per bug.
+description: "File a report for a bug in the application. Make sure to open one issue per bug."
 labels: ["bug"]
 body:
   - type: textarea
     id: description
     attributes:
       label: "Description - Describe the issue you're having. Include any relevant logs or screenshots."
-      placeholder: What is the problem?
+      placeholder: "What is the problem?"
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: "Reproduction Steps - How did you encounter this issue, if applicable? What steps did you take to have this issue occur?"
-      placeholder: Anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem.
+      placeholder: "Anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem."
     validations:
       required: false
   - type: dropdown
@@ -41,6 +41,7 @@ body:
   - type: input
     id: operatingsystemdescription
     attributes:
-      label: "Exact Operating System - Which Operating system are you using? ex: Windows 10, Windows 11, Debian, Ubuntu, etc."
+      label: "Exact Operating System - Which Operating system are you using?"
+      placeholder: "Windows 10, Windows 11, Debian, Ubuntu, etc."
     validations:
       required: true
