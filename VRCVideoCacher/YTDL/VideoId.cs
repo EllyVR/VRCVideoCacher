@@ -157,7 +157,7 @@ public class VideoId
             }
             if (string.IsNullOrEmpty(videoId))
             {
-                Log.Error("Failed to parse video ID from YouTube URL: {URL}", url);
+                Log.Warning("Failed to parse video ID from YouTube URL: {URL}", url);
                 return null;
             }
             videoId = videoId.Length > 11 ? videoId.Substring(0, 11) : videoId;

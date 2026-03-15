@@ -229,9 +229,11 @@ internal sealed class Program
         await VvcConfigService.GetConfig();
         if (ConfigManager.Config.YtdlpAutoUpdate && !LaunchArgs.UseGlobalPath)
         {
-            await YtdlManager.TryDownloadYtdlp();
-            YtdlManager.StartYtdlDownloadThread();
-            _ = YtdlManager.TryDownloadDeno();
+            await Task.WhenAll(
+                YtdlManager.TryDownloadYtdlp(),
+                YtdlManager.TryDownloadDeno()
+            );
+            YtdlManager.StartYtdlUpdaterThread();
             _ = YtdlManager.TryDownloadFfmpeg();
         }
 

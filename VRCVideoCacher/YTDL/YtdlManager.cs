@@ -77,12 +77,12 @@ public class YtdlManager
         return string.Join(' ', args);
     }
 
-    public static void StartYtdlDownloadThread()
+    public static void StartYtdlUpdaterThread()
     {
-        Task.Run(YtdlDownloadTask);
+        Task.Run(YtdlUpdaterTask);
     }
 
-    private static async Task YtdlDownloadTask()
+    private static async Task YtdlUpdaterTask()
     {
         const int interval = 60 * 60 * 1000; // 1 hour
         while (true)
