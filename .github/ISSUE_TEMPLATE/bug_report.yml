@@ -54,6 +54,6 @@ body:
     id: operatingsystemdescription
     attributes:
       label: Exact Operating System
-      placeholder: Exactly which Operating system are you using? ex: Windows 10, Windows 11, Debian, Ubuntu, etc.
+      placeholder: "Exactly which Operating system are you using? ex: Windows 10, Windows 11, Debian, Ubuntu, etc."
     validations:
       required: true
