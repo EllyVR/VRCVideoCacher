@@ -1,0 +1,47 @@
+name: Bug Report
+description: "File a report for a bug in the application. Make sure to open one issue per bug."
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      placeholder: "Describe the issue you're having. Include any relevant logs or screenshots."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Reproduction Steps"
+      placeholder: "How did you encounter this issue, if applicable? What steps did you take to have this issue occur? Include anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem."
+    validations:
+      required: false
+  - type: dropdown
+    id: release
+    attributes:
+        label: "Application Release Source"
+        multiple: false
+        options:
+          - Steam
+          - Github
+          - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: operatingsystem
+    attributes:
+        label: "Operating System"
+        multiple: false
+        options:
+          - Windows
+          - Linux
+          - Both
+    validations:
+      required: true
+  - type: input
+    id: operatingsystemdescription
+    attributes:
+      label: "Operating System Version"
+      placeholder: "Windows 10, Windows 11, Debian 13, Ubuntu 24.04 LTS, etc."
+    validations:
+      required: true
