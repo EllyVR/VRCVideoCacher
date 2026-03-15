@@ -5,15 +5,15 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: "Description - Describe the issue you're having. Include any relevant logs or screenshots."
-      placeholder: "What is the problem?"
+      label: "Description"
+      placeholder: "Describe the issue you're having. Include any relevant logs or screenshots."
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: "Reproduction Steps - How did you encounter this issue, if applicable? What steps did you take to have this issue occur?"
-      placeholder: "Anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem."
+      label: "Reproduction Steps"
+      placeholder: "How did you encounter this issue, if applicable? What steps did you take to have this issue occur? Include anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem."
     validations:
       required: false
   - type: dropdown
@@ -41,7 +41,7 @@ body:
   - type: input
     id: operatingsystemdescription
     attributes:
-      label: "Exact Operating System - Which Operating system are you using?"
+      label: "Operating System Version"
       placeholder: "Windows 10, Windows 11, Debian, Ubuntu, etc."
     validations:
       required: true
