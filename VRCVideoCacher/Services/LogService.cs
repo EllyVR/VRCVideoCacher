@@ -70,7 +70,10 @@ public class UiLogSink : ILogEventSink
                 App.MainWindow?.Show();
                 _currentPopup?.Close();
                 _currentPopup = null;
-                _currentPopup = new PopupWindow(logEvent.RenderMessage());
+                _currentPopup = new PopupWindow(logEvent.RenderMessage())
+                {
+                    Title = $"Error from {logEvent.Properties["SourceContext"]}"
+                };
                 _ = _currentPopup.ShowDialog(App.MainWindow!);
             });
         }
