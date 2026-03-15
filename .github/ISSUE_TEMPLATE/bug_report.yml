@@ -1,0 +1,59 @@
+name: Bug Report
+description: File a report for a bug in the application. Make sure to open one issue per bug.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the issue you're having. Include any relevant logs or screenshots.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: What is the problem?
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        How did you encounter this issue, if applicable? What steps did you take to have this issue occur?
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      placeholder: Anything that can help us reproduce the issue. A step-by-step guide to reproducing the problem.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Now, we will need additional information to know what environment the app was running in.
+  - type: dropdown
+    id: release
+    attributes:
+        label: What release of the application are you using/tested on?
+        multiple: false
+        options:
+          - Steam
+          - Github
+          - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: operatingsystem
+    attributes:
+        label: What kind of operating system are you using/tested on?
+        multiple: false
+        options:
+          - Windows
+          - Linux
+          - Both
+    validations:
+      required: true
+  - type: textarea
+    id: operatingsystemdescription
+    attributes:
+      label: Exact Operating System
+      placeholder: Exactly which Operating system are you using? ex: Windows 10, Windows 11, Debian, Ubuntu, etc.
+    validations:
+      required: true
