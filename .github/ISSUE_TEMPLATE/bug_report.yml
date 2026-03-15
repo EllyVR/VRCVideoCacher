@@ -42,6 +42,6 @@ body:
     id: operatingsystemdescription
     attributes:
       label: "Operating System Version"
-      placeholder: "Windows 10, Windows 11, Debian, Ubuntu, etc."
+      placeholder: "Windows 10, Windows 11, Debian 13, Ubuntu 24.04 LTS, etc."
     validations:
       required: true
