@@ -26,6 +26,29 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    private static async void OnMainWindowOpened(object? sender, EventArgs e)
+    {
+        if (MainWindow == null)
+            return;
+
+        MainWindow.Opened -= OnMainWindowOpened;
+
+        if (!ConfigManager.Config.StartMinimized)
+            return;
+
+        // Let Avalonia finish the initial open/layout/render work first.
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+        // Then minimize/hide on the next UI turn.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (ConfigManager.Config.CloseToTray)
+                MainWindow.Hide();
+            else
+                MainWindow.WindowState = WindowState.Minimized;
+        }, DispatcherPriority.Background);
+    }
+
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "DataValidators is safe to access at startup")]
     public override void OnFrameworkInitializationCompleted()
     {
@@ -56,6 +79,9 @@ public partial class App : Application
                 e.Cancel = true;
                 MainWindow.Hide();
             };
+ 
+            // Minimize at startup if needed
+            MainWindow.Opened += OnMainWindowOpened;
 
             // Allow the app to exit cleanly on OS shutdown/logoff
             desktop.ShutdownRequested += (_, _) =>
@@ -65,15 +91,9 @@ public partial class App : Application
                 _trayIcon = null;
             };
 
-            // Check for --minimized flag
-            var args = Environment.GetCommandLineArgs();
-            if (!args.Contains("--minimized"))
-            {
-                MainWindow.Show();
-            }
-
             if (AdminCheck.ShouldShowAdminWarning())
             {
+                MainWindow.Show();
                 var adminWindow = new PopupWindow(AdminCheck.AdminWarningMessage);
                 _ = adminWindow.ShowDialog(MainWindow);
             }

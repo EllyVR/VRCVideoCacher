@@ -66,12 +66,13 @@ public class UiLogSink : ILogEventSink
         if (logEvent.Level >= LogEventLevel.Error)
         {
             Dispatcher.UIThread.Post(() =>
-             {
-                 _currentPopup?.Close();
-                 _currentPopup = null;
-                 _currentPopup = new PopupWindow(logEvent.RenderMessage());
-                 _ = _currentPopup.ShowDialog(App.MainWindow!);
-             });
+            {
+                App.MainWindow?.Show();
+                _currentPopup?.Close();
+                _currentPopup = null;
+                _currentPopup = new PopupWindow(logEvent.RenderMessage());
+                _ = _currentPopup.ShowDialog(App.MainWindow!);
+            });
         }
         LogService.EmitLogEntry(logEvent);
     }

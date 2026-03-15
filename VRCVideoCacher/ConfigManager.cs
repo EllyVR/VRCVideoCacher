@@ -159,6 +159,7 @@ public class ConfigModel
     // Video Cacher
     public bool AutoUpdateVrcVideoCacher = true;
     public bool CloseToTray = true;
+    public bool StartMinimized = false;
     public bool CookieSetupCompleted = false;
 
     // Localization

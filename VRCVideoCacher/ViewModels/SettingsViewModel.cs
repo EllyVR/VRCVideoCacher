@@ -70,6 +70,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _closeToTray;
 
+    [ObservableProperty]
+    private bool _startMinimized;
+
     // Blocked URLs
     public ObservableCollection<string> BlockedUrls { get; } = [];
 
@@ -133,6 +136,7 @@ public partial class SettingsViewModel : ViewModelBase
         PatchVRC = config.PatchVrChat;
         AutoUpdate = config.AutoUpdateVrcVideoCacher;
         CloseToTray = config.CloseToTray;
+        StartMinimized = config.StartMinimized;
 
         BlockedUrls.Clear();
         foreach (var url in config.BlockedUrls)
@@ -170,6 +174,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnPatchVRCChanged(bool value) => SetHasChanges();
     partial void OnAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnCloseToTrayChanged(bool value) => SetHasChanges();
+    partial void OnStartMinimizedChanged(bool value) => SetHasChanges();
 
     [RelayCommand]
     private void SaveSettings()
@@ -197,6 +202,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.PatchVrChat = PatchVRC;
         config.AutoUpdateVrcVideoCacher = AutoUpdate;
         config.CloseToTray = CloseToTray;
+        config.StartMinimized = StartMinimized;
         config.BlockedUrls = BlockedUrls.ToArray();
         config.BlockRedirect = BlockRedirect;
 

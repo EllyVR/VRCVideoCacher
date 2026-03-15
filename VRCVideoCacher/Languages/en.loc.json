@@ -59,6 +59,7 @@
   "Updates": "Updates",
   "AutoUpdateVRCVideoCacher": "Auto-update VRCVideoCacher",
   "CloseToTray": "Close to Tray",
+  "StartMinimized": "Start Minimized",
   "BlockedUrls": "Blocked URLs",
   "BlockedUrlRedirect": "Blocked URL Redirect",
   "SettingsSaved": "Settings saved!",

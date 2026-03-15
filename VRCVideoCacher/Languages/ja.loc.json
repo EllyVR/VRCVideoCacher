@@ -59,6 +59,7 @@
   "Updates": "更新",
   "AutoUpdateVRCVideoCacher": "VRCVideoCacher を自動更新する",
   "CloseToTray": "タスクトレイに収納する",
+  "StartMinimized": "最小化して起動する",
   "BlockedUrls": "ブロックする URL",
   "BlockedUrlRedirect": "ブロックした URL のリダイレクト",
   "SettingsSaved": "設定を保存しました！",

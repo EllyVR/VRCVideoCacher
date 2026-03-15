@@ -59,6 +59,7 @@
   "Updates": "업데이트",
   "AutoUpdateVRCVideoCacher": "VRCVideoCacher 자동 업데이트",
   "CloseToTray": "닫을 때 트레이로 최소화",
+  "StartMinimized": "최소화된 상태로 시작",
   "BlockedUrls": "차단된 URL",
   "BlockedUrlRedirect": "차단된 URL 리디렉션",
   "SettingsSaved": "설정이 저장되었습니다!",
