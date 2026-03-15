@@ -8,22 +8,37 @@ namespace VRCVideoCacher;
 public class FileTools
 {
     private static readonly ILogger Log = Program.Logger.ForContext<FileTools>();
-    private static readonly string YtdlPathVrc;
-    private static readonly string BackupPathVrc;
-    private static readonly string YtdlPathReso;
-    private static readonly string BackupPathReso;
+    private static readonly string? YtdlPathVrc;
+    private static readonly string? BackupPathVrc;
+    private static readonly string? YtdlPathReso;
+    private static readonly string? BackupPathReso;
     private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
 
     static FileTools()
     {
         string resoPath;
         if (!string.IsNullOrEmpty(ConfigManager.Config.ResonitePath))
+        {
             resoPath = ConfigManager.Config.ResonitePath;
+        }
         else
-            resoPath = $@"{GetResonitePath()}\steamapps\common\Resonite";
-
-        YtdlPathReso = $@"{resoPath}\RuntimeData\yt-dlp.exe";
-        BackupPathReso = $"{YtdlPathReso}.bkp";
+        {
+            var path = GetResonitePath();
+            if (string.IsNullOrEmpty(path))
+            {
+                Log.Warning("Unable to find Resonite path at: {path}, Resonite patching will be unavailable.", path);
+                resoPath = string.Empty;
+            }
+            else
+            {
+                resoPath = $@"{path}\steamapps\common\Resonite";
+            }
+        }
+        if (!string.IsNullOrEmpty(resoPath))
+        {
+            YtdlPathReso = $@"{resoPath}\RuntimeData\yt-dlp.exe";
+            BackupPathReso = $"{YtdlPathReso}.bkp";
+        }
 
         string localLowPath;
         if (OperatingSystem.IsWindows())
@@ -39,8 +54,16 @@ public class FileTools
         {
             throw new NotImplementedException("Unknown platform");
         }
-        YtdlPathVrc = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
-        BackupPathVrc = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe.bkp");
+        var vrcPath = Path.Join(localLowPath, "VRChat/VRChat/Tools/yt-dlp.exe");
+        if (!File.Exists(vrcPath))
+        {
+            Log.Warning("YT-DLP not found at expected VRChat path: {Path}", vrcPath);
+        }
+        else
+        {
+            YtdlPathVrc = vrcPath;
+            BackupPathVrc = $"{vrcPath}.bkp";
+        }
     }
 
     private static string? GetResonitePath()
@@ -162,9 +185,11 @@ public class FileTools
         RestoreYtdl(YtdlPathReso, BackupPathReso);
     }
 
-    private static void BackupAndReplaceYtdl(string ytdlPath, string backupPath)
+    private static void BackupAndReplaceYtdl(string? ytdlPath, string? backupPath)
     {
-        if (!Directory.Exists(Path.GetDirectoryName(ytdlPath) ?? string.Empty))
+        if (string.IsNullOrEmpty(ytdlPath) ||
+            string.IsNullOrEmpty(backupPath) ||
+            !Directory.Exists(Path.GetDirectoryName(ytdlPath)))
         {
             Log.Error("YT-DLP directory does not exist, Game may not be installed. {Path}", ytdlPath);
             return;
@@ -195,9 +220,11 @@ public class FileTools
         Log.Information("Patched YT-DLP.");
     }
 
-    private static void RestoreYtdl(string ytdlPath, string backupPath)
+    private static void RestoreYtdl(string? ytdlPath, string? backupPath)
     {
-        if (!File.Exists(backupPath))
+        if (string.IsNullOrEmpty(ytdlPath) ||
+            string.IsNullOrEmpty(backupPath) ||
+            !File.Exists(backupPath))
             return;
 
         Log.Information("Restoring yt-dlp...");
