@@ -65,7 +65,7 @@ public class WinGet
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed on IsPackageInstalled");
+            Log.Warning(ex, "Failed on IsPackageInstalled");
             return false;
         }
     }
@@ -114,7 +114,7 @@ public class WinGet
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed on InstallPackage");
+            Log.Warning(ex, "Failed on InstallPackage");
         }
     }
 }
