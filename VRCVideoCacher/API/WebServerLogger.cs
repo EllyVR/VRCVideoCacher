@@ -14,16 +14,18 @@ public class WebServerLogger : ILogger
 
     public void Log(LogMessageReceivedEventArgs logEvent)
     {
+        var trace = logEvent.Exception != null ? logEvent.Exception.ToString() : string.Empty;
+        var message = string.IsNullOrEmpty(trace) ? logEvent.Message : $"{logEvent.Message}\n{trace}";
         switch (logEvent.MessageType)
         {
             case LogLevel.Error:
-                WebServer.Log.Error("{WebServerLogEvent}", logEvent.Message);
+                WebServer.Log.Error("{WebServerLogEvent}", message);
                 break;
             case LogLevel.Warning:
-                WebServer.Log.Warning("{WebServerLogEvent}", logEvent.Message);
+                WebServer.Log.Warning("{WebServerLogEvent}", message);
                 break;
             case LogLevel.Info:
-                WebServer.Log.Information("{WebServerLogEvent}", logEvent.Message);
+                WebServer.Log.Information("{WebServerLogEvent}", message);
                 break;
         }
     }

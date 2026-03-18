@@ -70,9 +70,13 @@ public class UiLogSink : ILogEventSink
                 App.MainWindow?.Show();
                 _currentPopup?.Close();
                 _currentPopup = null;
-                _currentPopup = new PopupWindow(logEvent.RenderMessage())
+                var source = logEvent.Properties.TryGetValue("SourceContext", out var sourceContext)
+                    ? sourceContext.ToString().Trim('"')
+                    : "Unknown";
+                var message = logEvent.RenderMessage().Trim('"');
+                _currentPopup = new PopupWindow(message)
                 {
-                    Title = $"Error from {logEvent.Properties["SourceContext"]}"
+                    Title = $"Error from {source}"
                 };
                 _ = _currentPopup.ShowDialog(App.MainWindow!);
             });
