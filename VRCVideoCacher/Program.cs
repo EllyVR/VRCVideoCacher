@@ -20,7 +20,6 @@ namespace VRCVideoCacher;
 
 internal sealed class Program
 {
-    public static string YtdlpHash = string.Empty;
     // Versioning is YEAR.MONTH.RELEASE — set in the .csproj <Version> property
     public static readonly string Version =
         typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -219,13 +218,14 @@ internal sealed class Program
         }
         if (Environment.CommandLine.Contains("--Hash"))
         {
-            Console.WriteLine(GetOurYtdlpHash());
+            Console.WriteLine(GetYtdlpHash(false));
+            if (OperatingSystem.IsLinux())
+                Console.WriteLine(GetYtdlpHash(true));
             Environment.Exit(0);
         }
         Console.CancelKeyPress += (_, _) => Environment.Exit(0);
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
-        YtdlpHash = GetOurYtdlpHash();
         await VvcConfigService.GetConfig();
         if (ConfigManager.Config.YtdlpAutoUpdate && !LaunchArgs.UseGlobalPath)
         {
@@ -351,9 +351,9 @@ internal sealed class Program
         }
     }
 
-    public static Stream GetYtDlpStub()
+    public static Stream GetYtDlpStub(bool linux)
     {
-        return GetEmbeddedResource("VRCVideoCacher.yt-dlp-stub.exe");
+        return GetEmbeddedResource($"VRCVideoCacher.yt-dlp-stub{(linux ? "_linux" : ".exe")}");
     }
 
     public static Stream GetEmbeddedResource(string resourceName)
@@ -366,9 +366,9 @@ internal sealed class Program
         return stream;
     }
 
-    private static string GetOurYtdlpHash()
+    public static string GetYtdlpHash(bool linux)
     {
-        var stream = GetYtDlpStub();
+        var stream = GetYtDlpStub(linux);
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
         stream.Dispose();
