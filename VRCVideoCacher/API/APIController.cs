@@ -25,6 +25,7 @@ public class ApiController : WebApiController
         HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
         using var reader = new StreamReader(HttpContext.OpenRequestStream(), Encoding.UTF8);
         var cookies = await reader.ReadToEndAsync();
+        cookies = FilterCookies(cookies);
         if (!Program.IsCookiesValid(cookies))
         {
             Log.Error("Invalid cookies received, maybe you haven't logged in yet, not saving.");
@@ -42,6 +43,20 @@ public class ApiController : WebApiController
         Program.NotifyCookiesUpdated();
         if (!ConfigManager.Config.YtdlpUseCookies)
             Log.Warning("Config is NOT set to use cookies from browser extension.");
+    }
+
+    private static string FilterCookies(string cookies)
+    {
+        var lines = cookies.Split('\n');
+        var filtered = lines.Where(line =>
+        {
+            var parts = line.Split('\t');
+            // Netscape cookie format: domain flag path secure expiration name value
+            // Skip lines where the cookie name (index 5) starts with "ST-"
+            // Breaks YT cookie checks otherwise, seems to be a mostly firefox issue.
+            return parts.Length < 6 || !parts[5].StartsWith("ST-", StringComparison.Ordinal);
+        });
+        return string.Join('\n', filtered);
     }
 
     [Route(HttpVerbs.Get, "/getvideo")]
