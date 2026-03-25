@@ -145,6 +145,8 @@ public class ConfigModel
     public bool CachePyPyDance = false;
     public bool CacheVrDancing = false;
     public bool CacheOnly = false;
+    public bool DeferCacheDownloads = false;
+    public int CacheDownloadRateLimitKBs = 0; // 0 = unlimited
 
     // Cache Rules
     public string[] BlockedUrls = ["https://na2.vrdancing.club/sampleurl.mp4"];

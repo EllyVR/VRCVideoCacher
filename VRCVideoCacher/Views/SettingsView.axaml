@@ -122,6 +122,19 @@
                         <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{loc:Tr CachePyPyDanceVideos}"/>
                         <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{loc:Tr CacheVRDancingVideos}"/>
                         <CheckBox IsChecked="{Binding CacheOnly}" Content="{loc:Tr OnlyServeCachedVideos}"/>
+
+                        <CheckBox IsChecked="{Binding DeferCacheDownloads}"
+                                  Content="{loc:Tr DeferCacheDownloads}"
+                                  ToolTip.Tip="{loc:Tr DeferCacheDownloadsTooltip}"/>
+
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{loc:Tr CacheDownloadRateLimit}"
+                                       ToolTip.Tip="{loc:Tr CacheDownloadRateLimitTooltip}"/>
+                            <NumericUpDown Value="{Binding CacheDownloadRateLimitKBs}"
+                                           Minimum="0" Maximum="100000" Increment="256"
+                                           Watermark="0"
+                                           ToolTip.Tip="{loc:Tr CacheDownloadRateLimitTooltip}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

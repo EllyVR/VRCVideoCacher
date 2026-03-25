@@ -56,6 +56,12 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _cacheOnly;
 
+    [ObservableProperty]
+    private bool _deferCacheDownloads;
+
+    [ObservableProperty]
+    private int _cacheDownloadRateLimitKBs;
+
     // Patching
     [ObservableProperty]
     private bool _patchResonite;
@@ -132,6 +138,8 @@ public partial class SettingsViewModel : ViewModelBase
         CachePyPyDance = config.CachePyPyDance;
         CacheVRDancing = config.CacheVrDancing;
         CacheOnly = config.CacheOnly;
+        DeferCacheDownloads = config.DeferCacheDownloads;
+        CacheDownloadRateLimitKBs = config.CacheDownloadRateLimitKBs;
         PatchResonite = config.PatchResonite;
         PatchVRC = config.PatchVrChat;
         AutoUpdate = config.AutoUpdateVrcVideoCacher;
@@ -170,6 +178,8 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnCacheMaxSizeInGbChanged(float value) => SetHasChanges();
     partial void OnCachePyPyDanceChanged(bool value) => SetHasChanges();
     partial void OnCacheVRDancingChanged(bool value) => SetHasChanges();
+    partial void OnDeferCacheDownloadsChanged(bool value) => SetHasChanges();
+    partial void OnCacheDownloadRateLimitKBsChanged(int value) => SetHasChanges();
     partial void OnPatchResoniteChanged(bool value) => SetHasChanges();
     partial void OnPatchVRCChanged(bool value) => SetHasChanges();
     partial void OnAutoUpdateChanged(bool value) => SetHasChanges();
@@ -198,6 +208,8 @@ public partial class SettingsViewModel : ViewModelBase
         config.CacheMaxSizeInGb = CacheMaxSizeInGb;
         config.CachePyPyDance = CachePyPyDance;
         config.CacheVrDancing = CacheVRDancing;
+        config.DeferCacheDownloads = DeferCacheDownloads;
+        config.CacheDownloadRateLimitKBs = CacheDownloadRateLimitKBs;
         config.PatchResonite = PatchResonite;
         config.PatchVrChat = PatchVRC;
         config.AutoUpdateVrcVideoCacher = AutoUpdate;

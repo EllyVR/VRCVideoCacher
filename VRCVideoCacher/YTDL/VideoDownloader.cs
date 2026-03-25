@@ -48,6 +48,17 @@ public class VideoDownloader
             if (queueItem == null)
                 continue;
 
+            // Wait until no video is actively streaming to avoid bandwidth contention.
+            // Re-check every 60 seconds.
+            if (ConfigManager.Config.DeferCacheDownloads)
+            {
+                while (ActiveStreamTracker.IsAnyStreaming())
+                {
+                    Log.Information("Video is currently streaming, deferring cache download for {VideoId}. Retrying in 60s.", queueItem.VideoId);
+                    await Task.Delay(TimeSpan.FromSeconds(60));
+                }
+            }
+
             _currentDownload = queueItem;
             OnDownloadStarted?.Invoke(queueItem);
 
@@ -145,6 +156,10 @@ public class VideoDownloader
         var args = new List<string>();
         args.Add("-q");
 
+        var rateLimitKBs = ConfigManager.Config.CacheDownloadRateLimitKBs;
+        if (rateLimitKBs > 0)
+            args.Add($"--limit-rate {rateLimitKBs}K");
+
         var process = new Process
         {
             StartInfo =
@@ -234,6 +249,26 @@ public class VideoDownloader
         return true;
     }
 
+    private static async Task ThrottledCopyAsync(Stream source, Stream destination, long bytesPerSecond)
+    {
+        var buffer = new byte[81920];
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        long totalBytesRead = 0;
+
+        int bytesRead;
+        while ((bytesRead = await source.ReadAsync(buffer)) > 0)
+        {
+            await destination.WriteAsync(buffer.AsMemory(0, bytesRead));
+            totalBytesRead += bytesRead;
+
+            // Throttle: if we've written faster than the limit, delay
+            var expectedMs = (double)totalBytesRead / bytesPerSecond * 1000;
+            var elapsedMs = stopwatch.Elapsed.TotalMilliseconds;
+            if (elapsedMs < expectedMs)
+                await Task.Delay(TimeSpan.FromMilliseconds(expectedMs - elapsedMs));
+        }
+    }
+
     private static async Task<bool> DownloadVideoWithId(VideoInfo videoInfo)
     {
         if (File.Exists(TempDownloadMp4Path))
@@ -264,7 +299,12 @@ public class VideoDownloader
 
         await using var stream = await response.Content.ReadAsStreamAsync();
         await using var fileStream = new FileStream(TempDownloadMp4Path, FileMode.Create, FileAccess.Write, FileShare.None);
-        await stream.CopyToAsync(fileStream);
+
+        var rateLimitKBs = ConfigManager.Config.CacheDownloadRateLimitKBs;
+        if (rateLimitKBs > 0)
+            await ThrottledCopyAsync(stream, fileStream, rateLimitKBs * 1024L);
+        else
+            await stream.CopyToAsync(fileStream);
         fileStream.Close();
         response.Dispose();
         await Task.Delay(10);

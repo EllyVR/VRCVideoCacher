@@ -100,6 +100,10 @@ public class ApiController : WebApiController
         var (isCached, filePath, fileName) = GetCachedFile(videoInfo.VideoId, avPro);
         if (isCached)
         {
+            // Cached video served locally — no external streaming needed.
+            // Clear any active stream flags so queued downloads can proceed.
+            ActiveStreamTracker.ClearAll();
+
             File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
             var url = $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}";
             Log.Information("Responding with Cached URL: {URL}", url);
@@ -178,6 +182,12 @@ public class ApiController : WebApiController
 
         Log.Information("Responding with URL: {URL}", response);
         await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
+
+        // A new video is now streaming; clear previous entries since VRChat
+        // only plays one video at a time, then mark this one as active.
+        ActiveStreamTracker.ClearAll();
+        ActiveStreamTracker.MarkStreaming(videoInfo.VideoId);
+
         // check if file is cached again to handle race condition
         (isCached, _, _) = GetCachedFile(videoInfo.VideoId, avPro);
         if (!isCached && (
