@@ -66,6 +66,13 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Handle self-update installation before any other init
+        if (args.Contains("--do-update"))
+        {
+            Updater.RunUpdateHandler(args);
+            return;
+        }
+
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
 

@@ -18,7 +18,7 @@ public class Updater
     private static readonly string FileName = OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
     private static readonly string FilePath = Path.Join(Program.CurrentProcessPath, FileName);
     private static readonly string BackupFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
-    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
+    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, OperatingSystem.IsWindows() ? "VRCVideoCacher.Temp.exe" : "VRCVideoCacher.Temp");
 
     public static async Task CheckForUpdates()
     {
@@ -69,8 +69,11 @@ public class Updater
     public static void Cleanup()
     {
         if (File.Exists(BackupFilePath))
-        {
             File.Delete(BackupFilePath);
+        if (File.Exists(TempFilePath))
+        {
+            Log.Information("Leftover temp file found, deleting.");
+            File.Delete(TempFilePath);
         }
     }
 
@@ -96,31 +99,35 @@ public class Updater
 
                 if (!await HashCheck(asset.digest))
                 {
-                    Log.Information("Hash check failed, Reverting update.");
+                    Log.Information("Hash check failed, aborting update.");
                     File.Delete(TempFilePath);
                     return;
                 }
 
-                Log.Information("Hash check passed, Replacing binary.");
+                Log.Information("Hash check passed, launching updater.");
 
                 if (!OperatingSystem.IsWindows())
                     FileTools.MarkFileExecutable(TempFilePath);
 
-                File.Move(FilePath, BackupFilePath);
-                if (!OperatingSystem.IsWindows())
-                    await Task.Delay(1000); // Might fix Linux updater? `The file '/home/user/Applications/VRCVideoCacher' already exists.`
+                // Build args: --do-update <original-exe> --old-pid <pid> [passthrough-args]
+                var pid = Environment.ProcessId;
+                var passthroughArgs = Environment.GetCommandLineArgs().Skip(1)
+                    .Where(a => !a.Equals("--do-update", StringComparison.OrdinalIgnoreCase));
+                var argsList = new List<string>
+                {
+                    "--do-update", FilePath,
+                    "--old-pid", pid.ToString()
+                };
+                argsList.AddRange(passthroughArgs);
 
-                File.Move(TempFilePath, FilePath);
-
-                Log.Information("Updated to version {Version}", release.tag_name);
-
-                var process = new Process()
+                var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = FilePath,
+                        FileName = TempFilePath,
                         UseShellExecute = true,
-                        WorkingDirectory = Program.CurrentProcessPath
+                        WorkingDirectory = Program.CurrentProcessPath,
+                        Arguments = string.Join(" ", argsList.Select(QuoteArg))
                     }
                 };
                 process.Start();
@@ -129,11 +136,146 @@ public class Updater
             catch (Exception ex)
             {
                 Log.Error("Failed to update: {Message}", ex.ToString());
-                File.Move(BackupFilePath, FilePath);
-                Console.ReadKey();
+                if (File.Exists(TempFilePath))
+                    File.Delete(TempFilePath);
             }
         }
     }
+
+    /// <summary>
+    /// Handles the --do-update flow. Called from Program.Main before any other init.
+    /// Waits for the old process to exit, copies self to the target path, verifies the
+    /// hash, then launches the new binary and exits.
+    /// </summary>
+    public static void RunUpdateHandler(string[] args)
+    {
+        string? originalPath = null;
+        int? oldPid = null;
+        var passthrough = new List<string>();
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].Equals("--do-update", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                originalPath = args[++i];
+            }
+            else if (args[i].Equals("--old-pid", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                if (int.TryParse(args[++i], out var pid))
+                    oldPid = pid;
+            }
+            else
+            {
+                passthrough.Add(args[i]);
+            }
+        }
+
+        if (originalPath == null)
+        {
+            Console.Error.WriteLine("[Updater] --do-update requires a target path argument.");
+            Environment.Exit(1);
+            return;
+        }
+
+        Console.WriteLine($"[Updater] Waiting for old process (PID {oldPid}) to exit...");
+        if (oldPid.HasValue)
+        {
+            try
+            {
+                using var oldProcess = Process.GetProcessById(oldPid.Value);
+                oldProcess.WaitForExit(10_000);
+            }
+            catch
+            {
+                // Process already gone — that's fine
+            }
+        }
+        else
+        {
+            Thread.Sleep(1500);
+        }
+
+        var selfPath = Environment.ProcessPath!;
+        Console.WriteLine($"[Updater] Copying {selfPath} → {originalPath}");
+
+        try
+        {
+            File.Copy(selfPath, originalPath, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[Updater] Copy failed: {ex.Message}");
+            Environment.Exit(1);
+            return;
+        }
+
+        // Verify the copy matches self
+        if (!FilesHashMatch(selfPath, originalPath))
+        {
+            Console.Error.WriteLine("[Updater] Hash mismatch after copy — aborting.");
+            Environment.Exit(1);
+            return;
+        }
+
+        Console.WriteLine("[Updater] Hash verified. Update complete.");
+
+        if (!OperatingSystem.IsWindows())
+        {
+            FileTools.MarkFileExecutable(originalPath);
+            Console.WriteLine("[Updater] Marked as executable.");
+        }
+
+        // Launch the newly placed binary
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = originalPath,
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(originalPath),
+                Arguments = passthrough.Count > 0 ? string.Join(" ", passthrough.Select(QuoteArg)) : string.Empty
+            }
+        };
+        process.Start();
+
+        // Clean up self (the temp file)
+        DeleteSelf(selfPath);
+
+        Environment.Exit(0);
+    }
+
+    private static bool FilesHashMatch(string pathA, string pathB)
+    {
+        using var sha = SHA256.Create();
+        using var a = File.OpenRead(pathA);
+        using var b = File.OpenRead(pathB);
+        var hashA = Convert.ToHexString(sha.ComputeHash(a));
+        sha.Initialize();
+        var hashB = Convert.ToHexString(sha.ComputeHash(b));
+        var match = string.Equals(hashA, hashB, StringComparison.OrdinalIgnoreCase);
+        Console.WriteLine($"[Updater] Hash self={hashA} copy={hashB} match={match}");
+        return match;
+    }
+
+    private static void DeleteSelf(string selfPath)
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            try
+            {
+                File.Delete(selfPath);
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(500);
+            }
+        }
+        // Non-critical — leftover temp file is cleaned up by Cleanup() on next run
+    }
+
+    private static string QuoteArg(string arg) =>
+        arg.Contains(' ') ? $"\"{arg.Replace("\"", "\\\"")}\"" : arg;
 
     private static async Task<bool> HashCheck(string githubHash)
     {
