@@ -211,6 +211,18 @@ public partial class App : Application
                     _desktop?.Shutdown();
                 });
             });
+            
+            //Pressing X on window does not remove the tray nor stop the console process
+            MainWindow!.Closing += (_, _) =>
+            {
+                if (ConfigManager.Config.CloseToTray || _isExiting)
+                    return;
+                
+                _isExiting = true;
+                _trayIcon?.Dispose();
+                _trayIcon = null;
+                _desktop?.Shutdown();
+            };
         }
 
         _showItem = new NativeMenuItem(Loc.Tr("TrayShow"));
