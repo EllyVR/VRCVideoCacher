@@ -115,7 +115,7 @@
 
                             <StackPanel Spacing="5">
                                 <TextBlock Text="{loc:Tr MaxVideoLength}"/>
-                                <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Maximum="600" Increment="10"/>
+                                <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Increment="10"/>
                             </StackPanel>
                         </StackPanel>
 
