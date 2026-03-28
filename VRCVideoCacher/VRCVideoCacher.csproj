@@ -74,6 +74,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
         <PackageReference Include="EmbedIO" Version="3.5.2" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="OVRSharp" Version="1.2.0" />
         <PackageReference Include="securifybv.ShellLink" Version="0.1.0" />
         <PackageReference Include="Semver" Version="3.0.0" />
         <PackageReference Include="Sentry" Version="6.1.0" />
@@ -99,6 +100,9 @@
         <EmbeddedResource Include="yt-dlp-stub.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
+        <None Update="manifest.vrmanifest">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>

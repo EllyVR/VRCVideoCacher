@@ -82,7 +82,7 @@ internal sealed class Program
             Environment.Exit(1);
             return;
         }
-
+        OpenVRService.InitOVR()
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
         var processes = Process.GetProcessesByName("VRCVideoCacher");
