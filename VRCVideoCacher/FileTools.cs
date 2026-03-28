@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
+using System.Runtime.Versioning;
+using Microsoft.Win32;
 using Serilog;
 using ValveKeyValue;
 
@@ -12,42 +14,35 @@ public class FileTools
     private static readonly string? BackupPathVrc;
     private static readonly string? YtdlPathReso;
     private static readonly string? BackupPathReso;
-    private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".local/share/Steam"];
+    private static readonly ImmutableList<string> SteamPaths = [".var/app/com.valvesoftware.Steam", ".steam/steam", ".steam/debian-installation", ".local/share/Steam"];
+    private const string ResoniteAppId = "2519830";
+    private const string VrcAppId = "438100";
 
     static FileTools()
     {
-        string resoPath;
+        string? resoPath;
         if (!string.IsNullOrEmpty(ConfigManager.Config.ResonitePath))
         {
             resoPath = ConfigManager.Config.ResonitePath;
         }
         else
         {
-            var path = GetResonitePath();
-            if (string.IsNullOrEmpty(path))
-            {
-                Log.Warning("Unable to find Resonite path at: {path}, Resonite patching will be unavailable.", path);
-                resoPath = string.Empty;
-            }
-            else
-            {
-                resoPath = $@"{path}\steamapps\common\Resonite";
-            }
+            resoPath = GetAppLibraryPath(ResoniteAppId)?.Select(path => Path.Join(path, "steamapps", "common", "Resonite"))?.Where(Path.Exists)?.First();
         }
         if (!string.IsNullOrEmpty(resoPath))
         {
-            YtdlPathReso = $@"{resoPath}\RuntimeData\yt-dlp.exe";
+            YtdlPathReso = OperatingSystem.IsLinux() ? $"{resoPath}/RuntimeData/yt-dlp_linux" : $@"{resoPath}\RuntimeData\yt-dlp.exe";
             BackupPathReso = $"{YtdlPathReso}.bkp";
         }
 
-        string localLowPath;
+        string? localLowPath = null;
         if (OperatingSystem.IsWindows())
         {
             localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
         }
         else if (OperatingSystem.IsLinux())
         {
-            var compatPath = GetCompatPath("438100") ?? throw new Exception("Unable to find VRChat compat data");
+            var compatPath = GetCompatPath(VrcAppId) ?? throw new Exception("Unable to find VRChat compat data");
             localLowPath = Path.Join(compatPath, "pfx/drive_c/users/steamuser/AppData/LocalLow");
         }
         else
@@ -66,76 +61,74 @@ public class FileTools
         }
     }
 
-    private static string? GetResonitePath()
+    private static List<string>? GetAppLibraryPath(string appid)
     {
-        const string appid = "2519830";
-        if (!OperatingSystem.IsWindows())
+        string steamPath;
+        if (OperatingSystem.IsWindows())
         {
-            Log.Warning("GetResonitePath is currently only supported on Windows");
-            return null;
-        }
-        const string libraryFolders = @"C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf";
-        if (!Path.Exists(libraryFolders))
-        {
-            Log.Warning("GetResonitePath: Steam libraryfolders.vdf not found at expected location: {Path}", libraryFolders);
-            return null;
-        }
-
-        try
-        {
-            var stream = File.OpenRead(libraryFolders);
-            KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
-            foreach (var folder in data)
+            string? steamInstallPath = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", "");
+            if (string.IsNullOrEmpty(steamInstallPath))
             {
-                var apps = (IEnumerable<KVObject>)folder["apps"];
-                if (apps.Any(app => app.Name == appid))
-                {
-                    return folder["path"].ToString(CultureInfo.InvariantCulture);
-                }
+                Log.Error("GetAppLibraryPath: Unable to find Steam installation directory");
+                return null;
             }
+            steamPath = steamInstallPath;
         }
-        catch (Exception e)
+        else if (OperatingSystem.IsLinux())
         {
-            Log.Warning("GetResonitePath: Exception while reading libraryfolders.vdf: {Error}", e.Message);
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            var steamPaths = SteamPaths.Select(path => Path.Join(home, path))
+                .Where(Path.Exists);
+            if (steamPaths.Count() == 0)
+            {
+                Log.Error("GetAppLibraryPath: Steam folder doesn't exist!");
+                return null;
+            }
+
+            steamPath = steamPaths.First();
         }
-
-        return null;
-    }
-
-    // Linux only
-    private static string? GetCompatPath(string appid)
-    {
-        if (!OperatingSystem.IsLinux())
-            throw new InvalidOperationException("GetCompatPath is only supported on Linux");
-
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var vdfPaths = SteamPaths
-            .Select(path => Path.Join(home, path, "steamapps/libraryfolders.vdf"))
-            .Where(File.Exists)
-            .ToList();
-
-        if (vdfPaths.Count == 0)
+        else
         {
-            Log.Error("No Steam folder exists!");
+            Log.Error("GetAppLibraryPath: Unsupported operating system {OperatingSystem}", Environment.OSVersion.Platform);
             return null;
         }
+
+        Log.Debug("GetAppLibraryPath: Using steam path {SteamPath}", steamPath);
 
         List<string> libraryPaths = [];
-        foreach (var libraryFolders in vdfPaths)
+        try
         {
-            Log.Debug("Checking Steam libraryfolders.vdf at {Path}", libraryFolders);
-            var stream = File.OpenRead(libraryFolders);
+            var stream = File.OpenRead(Path.Join(steamPath, "steamapps", "libraryfolders.vdf"));
             KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
             foreach (var folder in data)
             {
-                // var label = folder["label"]?.ToString(CultureInfo.InvariantCulture);
-                // var name = string.IsNullOrEmpty(label) ? folder.Name : label;
-                // See https://github.com/ValveResourceFormat/ValveKeyValue/issues/30#issuecomment-1581924891
                 var apps = (IEnumerable<KVObject>)folder["apps"];
                 if (apps.Any(app => app.Name == appid))
                     libraryPaths.Add(folder["path"].ToString(CultureInfo.InvariantCulture));
             }
         }
+        catch (Exception e)
+        {
+            Log.Error("GetAppLibraryPath: Exception while reading libraryfolders.vdf: {Error}", e.Message);
+            return null;
+        }
+
+        libraryPaths = [.. libraryPaths.Where(Path.Exists)];
+
+        if (libraryPaths.Count() == 0)
+        {
+            Log.Error("Failed to find library path for Steam app {AppId}.", appid);
+            return null;
+        }
+        return libraryPaths;
+    }
+
+    [SupportedOSPlatform("linux")]
+    private static string? GetCompatPath(string appid)
+    {
+        var libraryPaths = GetAppLibraryPath(appid);
+        if (libraryPaths == null) return null;
 
         var paths = libraryPaths
             .Select(path => Path.Join(path, $"steamapps/compatdata/{appid}"))
@@ -174,9 +167,9 @@ public class FileTools
     public static void BackupAllYtdl()
     {
         if (ConfigManager.Config.PatchVrChat)
-            BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc);
+            BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc, false);
         if (ConfigManager.Config.PatchResonite)
-            BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
+            BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso, OperatingSystem.IsLinux());
     }
 
     public static void RestoreAllYtdl()
@@ -185,7 +178,7 @@ public class FileTools
         RestoreYtdl(YtdlPathReso, BackupPathReso);
     }
 
-    private static void BackupAndReplaceYtdl(string? ytdlPath, string? backupPath)
+    private static void BackupAndReplaceYtdl(string? ytdlPath, string? backupPath, bool linux)
     {
         if (string.IsNullOrEmpty(ytdlPath) ||
             string.IsNullOrEmpty(backupPath) ||
@@ -197,7 +190,7 @@ public class FileTools
         if (File.Exists(ytdlPath))
         {
             var hash = Program.ComputeBinaryContentHash(File.ReadAllBytes(ytdlPath));
-            if (hash == Program.YtdlpHash)
+            if (hash == Program.GetYtdlpHash(linux))
             {
                 Log.Information("YT-DLP is already patched.");
                 return;
@@ -210,13 +203,14 @@ public class FileTools
             File.Move(ytdlPath, backupPath);
             Log.Information("Backed up YT-DLP.");
         }
-        using var stream = Program.GetYtDlpStub();
+        using var stream = Program.GetYtDlpStub(linux);
         using var fileStream = File.Create(ytdlPath);
         stream.CopyTo(fileStream);
         fileStream.Close();
         var attr = File.GetAttributes(ytdlPath);
         attr |= FileAttributes.ReadOnly;
         File.SetAttributes(ytdlPath, attr);
+        MarkFileExecutable(ytdlPath);
         Log.Information("Patched YT-DLP.");
     }
 
