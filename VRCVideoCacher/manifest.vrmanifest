@@ -1,0 +1,14 @@
+﻿{
+    "source" : "builtin",
+    "application" : [{
+        "app_key" : "com.github.ellyvr.vrcvideocacher",
+        "launch_type" : "url",
+        "url" : "steam://launch/4296960",
+        "is_dashboard_overlay" : true,
+        "strings": {
+            "en": {
+                "name": "VRCVideoCacher"
+            }
+        }
+    }]
+}

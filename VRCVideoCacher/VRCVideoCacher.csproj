@@ -99,6 +99,15 @@
         <EmbeddedResource Include="yt-dlp-stub.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
+        <None Update="OpenVR\openvr_api.dll">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <TargetPath>openvr_api.dll</TargetPath>
+        </None>
+        <None Update="OpenVR\libopenvr_api.so">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <TargetPath>libopenvr_api.so</TargetPath>
+        </None>
+        <EmbeddedResource Include="manifest.vrmanifest" />
     </ItemGroup>
 
     <ItemGroup>
