@@ -1,4 +1,5 @@
-﻿using Swan.Logging;
+﻿using System.Text.RegularExpressions;
+using Swan.Logging;
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace VRCVideoCacher.API;
@@ -6,7 +7,8 @@ namespace VRCVideoCacher.API;
 public class WebServerLogger : ILogger
 {
     public LogLevel LogLevel { get; } = LogLevel.Info;
-
+    private static readonly Regex RequestIdPrefix = new(@"^\[.*?\]\s*", RegexOptions.Compiled);
+    
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -14,18 +16,20 @@ public class WebServerLogger : ILogger
 
     public void Log(LogMessageReceivedEventArgs logEvent)
     {
+        var rawMessage = RequestIdPrefix.Replace(logEvent.Message, "");
         var trace = logEvent.Exception != null ? logEvent.Exception.ToString() : string.Empty;
-        var message = string.IsNullOrEmpty(trace) ? logEvent.Message : $"{logEvent.Message}\n{trace}";
+        var message = string.IsNullOrEmpty(trace) ? rawMessage : $"{rawMessage}\n{trace}";
+
         switch (logEvent.MessageType)
         {
             case LogLevel.Error:
-                WebServer.Log.Error("{WebServerLogEvent}", message);
+                WebServer.Log.Error("{WebServerLogEvent:l}", message);
                 break;
             case LogLevel.Warning:
-                WebServer.Log.Warning("{WebServerLogEvent}", message);
+                WebServer.Log.Warning("{WebServerLogEvent:l}", message);
                 break;
             case LogLevel.Info:
-                WebServer.Log.Information("{WebServerLogEvent}", message);
+                WebServer.Log.Information("{WebServerLogEvent:l}", message);
                 break;
         }
     }

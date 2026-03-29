@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
 using VRCVideoCacher.ViewModels;
@@ -7,21 +8,27 @@ namespace VRCVideoCacher.Database;
 
 public static class DatabaseManager
 {
-    public static readonly Database Database = new();
-
     public static event Action? OnPlayHistoryAdded;
     public static event Action? OnVideoInfoCacheUpdated;
+    
+    private static readonly PooledDbContextFactory<Database> _contextFactory;
 
     static DatabaseManager()
     {
-        Database.Database.EnsureCreated();
-    }
+        Directory.CreateDirectory(Database.CacheDir);
 
-    public static void Init()
-    {
-        Database.SaveChanges();
-    }
+        var options = new DbContextOptionsBuilder<Database>()
+            .UseSqlite($"Data Source={Database.DbPath}")
+            .EnableSensitiveDataLogging()
+            .Options;
 
+        _contextFactory = new PooledDbContextFactory<Database>(options);
+
+        using var db = _contextFactory.CreateDbContext();
+        db.Database.EnsureCreated();
+        db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+    }
+    
     public static void AddPlayHistory(VideoInfo videoInfo)
     {
         var history = new History
@@ -31,8 +38,9 @@ public static class DatabaseManager
             Id = videoInfo.VideoId,
             Type = videoInfo.UrlType
         };
-        Database.PlayHistory.Add(history);
-        Database.SaveChanges();
+        using var db = _contextFactory.CreateDbContext();
+        db.PlayHistory.Add(history);
+        db.SaveChanges();
         OnPlayHistoryAdded?.Invoke();
     }
 
@@ -41,7 +49,8 @@ public static class DatabaseManager
         if (string.IsNullOrEmpty(videoInfoCache.Id))
             return;
 
-        var existingCache = Database.VideoInfoCache.Find(videoInfoCache.Id);
+        using var db = _contextFactory.CreateDbContext();
+        var existingCache = db.VideoInfoCache.Find(videoInfoCache.Id);
         if (existingCache != null)
         {
             if (string.IsNullOrEmpty(existingCache.Title) &&
@@ -58,15 +67,16 @@ public static class DatabaseManager
         }
         else
         {
-            Database.VideoInfoCache.Add(videoInfoCache);
+            db.VideoInfoCache.Add(videoInfoCache);
         }
-        Database.SaveChanges();
+        db.SaveChanges();
         OnVideoInfoCacheUpdated?.Invoke();
     }
 
     public static List<History> GetPlayHistory(int limit = 50)
     {
-        return Database.PlayHistory
+        using var db = _contextFactory.CreateDbContext();
+        return db.PlayHistory
             .AsNoTracking()
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
@@ -75,15 +85,23 @@ public static class DatabaseManager
 
     public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50)
     {
-        return Database.PlayHistory
+        using var db = _contextFactory.CreateDbContext();
+        return db.PlayHistory
             .AsNoTracking()
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
-            .LeftJoin(Database.VideoInfoCache,
+            .LeftJoin(db.VideoInfoCache,
                 h => h.Id,
                 v => v.Id,
                 (h, v) => new HistoryItemViewModel(h, v))
             .ToList()
             .DistinctBy(h => h.Url);
     }
+
+    public static VideoInfoCache? GetVideoInfoCache(string videoId)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        return db.VideoInfoCache.Find(videoId);
+    }
+    
 }

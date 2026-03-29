@@ -5,11 +5,14 @@ namespace VRCVideoCacher.Database;
 
 public class Database : DbContext
 {
-    private static readonly string CacheDir = Path.Join(Program.DataPath, "MetadataCache");
-    private static readonly string DbPath = Path.Join(CacheDir, "database.db");
+    internal static readonly string CacheDir = Path.Join(Program.DataPath, "MetadataCache");
+    internal static readonly string DbPath = Path.Join(CacheDir, "database.db");
 
     public DbSet<History> PlayHistory { get; set; }
     public DbSet<VideoInfoCache> VideoInfoCache { get; set; }
+    
+    // Required for PooledDbContextFactory
+    public Database(DbContextOptions<Database> options) : base(options) { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

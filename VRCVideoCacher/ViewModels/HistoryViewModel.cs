@@ -121,17 +121,27 @@ public partial class HistoryViewModel : ViewModelBase
 
     public HistoryViewModel()
     {
-        DatabaseManager.OnPlayHistoryAdded += () => Refresh();
+        DatabaseManager.OnPlayHistoryAdded += () => Avalonia.Threading.Dispatcher.UIThread.Post(Refresh);
+
 
         // Causes infinite loop because we update cache inside LoadMetadataAsync, which triggers this event again.
-        // DatabaseManager.OnVideoInfoCacheUpdated += () => Refresh();
+        DatabaseManager.OnVideoInfoCacheUpdated += () => Refresh();
 
         Refresh();
     }
 
+    private bool _isRefreshing;
+
     [RelayCommand]
     private void Refresh()
     {
+        // Prevent infinite loop
+        if (_isRefreshing)
+        {
+            return;
+        }
+        _isRefreshing = true;
+        
         var historyCache = DatabaseManager.GetVideoHistoryAsCache();
 
         HistoryItems.Clear();
