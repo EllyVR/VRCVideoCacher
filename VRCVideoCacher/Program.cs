@@ -68,6 +68,8 @@ internal sealed class Program
     {
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
+        // test
+        OpenVRService.InitOvr();
 
 #if STEAMRELEASE
         if (SteamAPI.RestartAppIfNecessary(new AppId_t(4296960)))
@@ -82,7 +84,6 @@ internal sealed class Program
             Environment.Exit(1);
             return;
         }
-        OpenVRService.InitOVR()
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
         var processes = Process.GetProcessesByName("VRCVideoCacher");
@@ -355,8 +356,13 @@ internal sealed class Program
     {
         return GetEmbeddedResource("VRCVideoCacher.yt-dlp-stub.exe");
     }
+    
+    public static Stream GetVrManifest()
+    {
+        return GetEmbeddedResource("VRCVideoCacher.manifest.vrmanifest");
+    }
 
-    public static Stream GetEmbeddedResource(string resourceName)
+    private static Stream GetEmbeddedResource(string resourceName)
     {
         var assembly = Assembly.GetExecutingAssembly();
         var stream = assembly.GetManifestResourceStream(resourceName);
@@ -368,10 +374,9 @@ internal sealed class Program
 
     private static string GetOurYtdlpHash()
     {
-        var stream = GetYtDlpStub();
+        using var stream = GetYtDlpStub();
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
-        stream.Dispose();
         return ComputeBinaryContentHash(ms.ToArray());
     }
 
