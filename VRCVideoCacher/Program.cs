@@ -85,6 +85,12 @@ internal sealed class Program
 
         AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
 #endif
+        LaunchArgs.SetupArguments(args);
+        if (Updater.RunUpdateHandler())
+        {
+            Environment.Exit(0);
+            return;
+        }
         var processes = Process.GetProcessesByName("VRCVideoCacher");
         if (processes.Length > 1)
         {
@@ -94,7 +100,6 @@ internal sealed class Program
         foreach (var process in processes)
             process.Dispose();
 
-        LaunchArgs.SetupArguments(args);
         if (LaunchArgs.ErrorReporting)
         {
             SentrySdk.Init(GetSentryOptions());

@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Semver;
 using Serilog;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher;
 
@@ -18,7 +19,7 @@ public class Updater
     private static readonly string FileName = OperatingSystem.IsWindows() ? "VRCVideoCacher.exe" : "VRCVideoCacher";
     private static readonly string FilePath = Path.Join(Program.CurrentProcessPath, FileName);
     private static readonly string BackupFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.bkp");
-    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, "VRCVideoCacher.Temp");
+    private static readonly string TempFilePath = Path.Join(Program.CurrentProcessPath, OperatingSystem.IsWindows() ? "VRCVideoCacher.Temp.exe" : "VRCVideoCacher.Temp");
 
     public static async Task CheckForUpdates()
     {
@@ -45,7 +46,7 @@ public class Updater
         var latestRelease = JsonConvert.DeserializeObject<GitHubRelease>(data);
         if (latestRelease == null)
         {
-            Log.Error("Failed to parse update response.");
+            Console.Error.WriteLine("Failed to parse update response.");
             return;
         }
         var latestVersion = SemVersion.Parse(latestRelease.tag_name);
@@ -70,6 +71,7 @@ public class Updater
     {
         if (File.Exists(BackupFilePath))
         {
+            Log.Information("Leftover temp file found, deleting.");
             File.Delete(BackupFilePath);
         }
     }
@@ -96,31 +98,30 @@ public class Updater
 
                 if (!await HashCheck(asset.digest))
                 {
-                    Log.Information("Hash check failed, Reverting update.");
+                    Log.Information("Hash check failed, aborting update.");
                     File.Delete(TempFilePath);
                     return;
                 }
 
-                Log.Information("Hash check passed, Replacing binary.");
+                Log.Information("Hash check passed, launching updater.");
 
                 if (!OperatingSystem.IsWindows())
                     FileTools.MarkFileExecutable(TempFilePath);
 
-                File.Move(FilePath, BackupFilePath);
-                if (!OperatingSystem.IsWindows())
-                    await Task.Delay(1000); // Might fix Linux updater? `The file '/home/user/Applications/VRCVideoCacher' already exists.`
+                var pid = Environment.ProcessId;
+                var args = LaunchArgs.BuildArgs();
+                args.Add($"--old-pid={pid}");
+                var argsString = string.Join(' ', args.Select(x => x));
+                Log.Information("Launching new Version: {Version} with Args: {Args}", release.tag_name, argsString);
 
-                File.Move(TempFilePath, FilePath);
-
-                Log.Information("Updated to version {Version}", release.tag_name);
-
-                var process = new Process()
+                var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = FilePath,
+                        FileName = TempFilePath,
                         UseShellExecute = true,
-                        WorkingDirectory = Program.CurrentProcessPath
+                        WorkingDirectory = Program.CurrentProcessPath,
+                        Arguments = argsString
                     }
                 };
                 process.Start();
@@ -128,9 +129,9 @@ public class Updater
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to update: {Message}", ex.ToString());
-                File.Move(BackupFilePath, FilePath);
-                Console.ReadKey();
+                Console.Error.WriteLine("Failed to update: {Message}", ex.ToString());
+                if (File.Exists(TempFilePath))
+                    File.Delete(TempFilePath);
             }
         }
     }
@@ -145,5 +146,89 @@ public class Updater
         var hashMatches = string.Equals(githubHash, hashString, StringComparison.OrdinalIgnoreCase);
         Log.Information("FileHash: {FileHash} GitHubHash: {GitHubHash} HashMatch: {HashMatches}", hashString, githubHash, hashMatches);
         return hashMatches;
+    }
+
+    private static bool FilesHashMatch(string pathA, string pathB)
+    {
+        using var sha = SHA256.Create();
+        using var a = File.OpenRead(pathA);
+        using var b = File.OpenRead(pathB);
+        var hashA = Convert.ToHexString(sha.ComputeHash(a));
+        sha.Initialize();
+        var hashB = Convert.ToHexString(sha.ComputeHash(b));
+        var match = string.Equals(hashA, hashB, StringComparison.OrdinalIgnoreCase);
+        Log.Information($"[Updater] Hash self={hashA} copy={hashB} match={match}");
+        return match;
+    }
+
+    public static bool RunUpdateHandler()
+    {
+        if (LaunchArgs.OldPid == null)
+        {
+            // clean up
+            if (Environment.ProcessPath != TempFilePath && File.Exists(TempFilePath))
+            {
+                Console.WriteLine("Update temp file exists. Deleting temp file.");
+                File.Delete(TempFilePath);
+            }
+            return false;
+        }
+
+        if (Environment.ProcessPath == null)
+        {
+            Console.Error.WriteLine("Process path is null. Aborting update to prevent potential issues.");
+            return false;
+        }
+        if (Environment.ProcessPath == FilePath)
+        {
+            Console.Error.WriteLine("Process path is the same as the target file path. Aborting update to prevent self-deletion.");
+            return false;
+        }
+
+        try
+        {
+            using var oldProcess = Process.GetProcessById(LaunchArgs.OldPid.Value);
+            if (!oldProcess.WaitForExit(10_000))
+            {
+                Console.Error.WriteLine("Old process did not exit within the timeout period. Aborting update to prevent potential issues.");
+                return false;
+            }
+        }
+        catch
+        {
+            // Process already gone — that's fine
+        }
+
+        try
+        {
+            File.Copy(Environment.ProcessPath, FilePath, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("Failed to copy new version to target path: {Message}", ex.ToString());
+            return false;
+        }
+
+        // Verify the copy matches self
+        if (!FilesHashMatch(Environment.ProcessPath, FilePath))
+        {
+            Console.Error.WriteLine("Hash check failed after copying new version. Aborting update to prevent potential corruption.");
+            return false;
+        }
+
+        var args = LaunchArgs.BuildArgs();
+        var argsString = string.Join(' ', args.Select(x => x));
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = FilePath,
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(FilePath),
+                Arguments = argsString
+            }
+        };
+        process.Start();
+        return true;
     }
 }
