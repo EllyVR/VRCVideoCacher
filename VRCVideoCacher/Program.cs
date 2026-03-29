@@ -172,6 +172,8 @@ internal sealed class Program
                 Log.Error(ex, "Backend error");
             }
         });
+        
+        OpenVRService.Start(DataPath);
 
         // Start the UI
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
