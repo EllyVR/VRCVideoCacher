@@ -155,8 +155,10 @@ public class VideoId
         var args = handler?.GetYtdlpArguments(uri!, avPro) ?? [];
         args.Add("--get-url");
         
+        var logArgs = string.Join(" ", args.Select(a => a.Trim()));
+        Log.Information("Starting yt-dlp with args: {args:l} {url:l}", logArgs, url);
         var (output, error, exitCode) = await RunYtdlpAsync(args, url);
-        Log.Information("Started yt-dlp with args: {args}", args);
+        Log.Information("Finished yt-dlp");
         
         if (exitCode != 0)
         {

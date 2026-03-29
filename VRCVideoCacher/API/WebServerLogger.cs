@@ -19,13 +19,13 @@ public class WebServerLogger : ILogger
         switch (logEvent.MessageType)
         {
             case LogLevel.Error:
-                WebServer.Log.Error("{WebServerLogEvent}", message);
+                WebServer.Log.Error("{WebServerLogEvent:l}", message);
                 break;
             case LogLevel.Warning:
-                WebServer.Log.Warning("{WebServerLogEvent}", message);
+                WebServer.Log.Warning("{WebServerLogEvent:l}", message);
                 break;
             case LogLevel.Info:
-                WebServer.Log.Information("{WebServerLogEvent}", message);
+                WebServer.Log.Information("{WebServerLogEvent:l}", message);
                 break;
         }
     }
