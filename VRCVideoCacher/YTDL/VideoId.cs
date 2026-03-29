@@ -52,10 +52,12 @@ public class VideoId
     {
         var ytdlpProcess = GetYtdlpProcess();
         ytdlpProcess.StartInfo.Arguments = YtdlManager.GenerateYtdlArgs(args, $"\"{url}\"");
+        Log.Information("Starting yt-dlp with args: {args:l}", ytdlpProcess.StartInfo.Arguments);
         ytdlpProcess.Start();
         var output = await ytdlpProcess.StandardOutput.ReadToEndAsync();
         var error = await ytdlpProcess.StandardError.ReadToEndAsync();
         await ytdlpProcess.WaitForExitAsync();
+        Log.Information("Finished yt-dlp");
         return (output.Trim(), error.Trim(), ytdlpProcess.ExitCode);
     }
 
@@ -155,10 +157,7 @@ public class VideoId
         var args = handler?.GetYtdlpArguments(uri!, avPro) ?? [];
         args.Add("--get-url");
         
-        var logArgs = string.Join(" ", args.Select(a => a.Trim()));
-        Log.Information("Starting yt-dlp with args: {args:l} {url:l}", logArgs, url);
         var (output, error, exitCode) = await RunYtdlpAsync(args, url);
-        Log.Information("Finished yt-dlp");
         
         if (exitCode != 0)
         {
