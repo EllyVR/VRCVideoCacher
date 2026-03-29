@@ -43,5 +43,4 @@ public class ThirdPartyYTResolver : ISiteHandler
     }
 
     public List<string> GetYtdlpArguments(Uri uri, bool avPro) => [];
-
 }
