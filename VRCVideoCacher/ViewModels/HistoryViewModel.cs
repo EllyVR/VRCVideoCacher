@@ -141,7 +141,7 @@ public partial class HistoryViewModel : ViewModelBase
             return;
         }
         _isRefreshing = true;
-        
+
         var historyCache = DatabaseManager.GetVideoHistoryAsCache();
 
         HistoryItems.Clear();
@@ -157,6 +157,7 @@ public partial class HistoryViewModel : ViewModelBase
             {
                 await item.LoadMetadataAsync();
             }
+            _isRefreshing = false;
         });
     }
 }
