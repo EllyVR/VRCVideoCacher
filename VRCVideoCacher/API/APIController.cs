@@ -82,6 +82,32 @@ public class ApiController : WebApiController
             requestUrl = ConfigManager.Config.BlockRedirect;
         }
 
+        if (requestUrl.StartsWith("https://mightygymcdn.nyc3.cdn.digitaloceanspaces.com"))
+        {
+            Log.Information("URL Is Mighty Gym: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
+        // pls no villager
+        if (requestUrl.StartsWith("https://anime.illumination.media"))
+            avPro = true;
+        else if (requestUrl.Contains(".imvrcdn.com") ||
+                 (requestUrl.Contains(".illumination.media") && !requestUrl.StartsWith("https://yt.illumination.media")))
+        {
+            Log.Information("URL Is Illumination media: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
+        // bypass vfi - cinema
+        if (requestUrl.StartsWith("https://virtualfilm.institute"))
+        {
+            Log.Information("URL Is VFI - Cinema: Bypassing.");
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
         var videoInfo = await VideoId.GetVideoId(requestUrl, avPro);
         if (videoInfo == null)
         {
@@ -117,32 +143,6 @@ public class ApiController : WebApiController
         if (ConfigManager.Config.CacheOnly)
         {
             Log.Information("Cache Only Mode Enabled: Bypassing.");
-            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        if (requestUrl.StartsWith("https://mightygymcdn.nyc3.cdn.digitaloceanspaces.com"))
-        {
-            Log.Information("URL Is Mighty Gym: Bypassing.");
-            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        // pls no villager
-        if (requestUrl.StartsWith("https://anime.illumination.media"))
-            avPro = true;
-        else if (requestUrl.Contains(".imvrcdn.com") ||
-                 (requestUrl.Contains(".illumination.media") && !requestUrl.StartsWith("https://yt.illumination.media")))
-        {
-            Log.Information("URL Is Illumination media: Bypassing.");
-            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        // bypass vfi - cinema 
-        if (requestUrl.StartsWith("https://virtualfilm.institute"))
-        {
-            Log.Information("URL Is VFI - Cinema: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
