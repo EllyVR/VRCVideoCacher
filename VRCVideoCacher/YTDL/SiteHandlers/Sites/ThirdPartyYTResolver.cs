@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using VRCVideoCacher.Models;
 using VRCVideoCacher.Utils;
 
@@ -7,39 +7,63 @@ namespace VRCVideoCacher.YTDL.SiteHandlers.Sites;
 public class ThirdPartyYTResolver : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<ThirdPartyYTResolver>();
-    
-    private static readonly string[] Hosts = 
-    [
-        "dmn.moe",
-        "u2b.cx",
-        "t-ne.x0.to",
-        "nextnex.com",
-        "r.0cm.org"
-    ];
-    
+
+    // AllowAutoRedirect=false so we can check each hop and stop as soon as
+    // the destination is a URL a specific handler recognises
+    private static readonly HttpClient NoAutoRedirectClient = new(new HttpClientHandler { AllowAutoRedirect = false })
+    {
+        DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
+    };
+
     public bool CanHandle(Uri uri) => false; // rewrite only
 
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro) => Task.FromResult<VideoInfo?>(null);
-    
+
     public async Task<string> RewriteUrl(string url, Uri uri)
     {
-        if (!Hosts.Contains(uri.Host))
+        if (SiteHandlerRegistry.HasSpecificHandler(uri))
             return url;
 
-        using var req = new HttpRequestMessage(HttpMethod.Head, url);
-        using var res = await HttpUtil.HttpClient.SendAsync(req);
-        if (!res.IsSuccessStatusCode)
-            return url;
+        const int maxHops = 5;
+        var current = url;
 
-        var resolved = res.RequestMessage?.RequestUri?.ToString() ?? url;
-        if (resolved != url)
+        for (var i = 0; i < maxHops; i++)
         {
-            Log.Information("YouTube resolver URL resolved to URL: {URL}", resolved);
-            return resolved;
+            using var req = new HttpRequestMessage(HttpMethod.Head, current);
+            using var res = await NoAutoRedirectClient.SendAsync(req);
+
+            var location = res.Headers.Location;
+            if (location == null)
+                break;
+
+            // Resolve relative redirects against the current URL
+            var next = location.IsAbsoluteUri ? location.ToString() : new Uri(new Uri(current), location).ToString();
+
+            if (!Uri.TryCreate(next, UriKind.Absolute, out var nextUri))
+                break;
+
+            // Stop as soon as the redirect target has a specific handler
+            if (SiteHandlerRegistry.HasSpecificHandler(nextUri))
+            {
+                Log.Information("Resolved redirect: {URL} -> {Resolved}", url, next);
+                return next;
+            }
+
+            current = next;
+
+            var status = (int)res.StatusCode;
+            if (status is < 300 or >= 400)
+                break;
         }
 
-        Log.Error("Failed to resolve YouTube resolver URL: {URL}", url);
-        return url;
+        if (current != url)
+        {
+            Log.Information("Resolved redirect: {URL} -> {Resolved}", url, current);
+            if (Uri.TryCreate(current, UriKind.Absolute, out var finalUri) && !SiteHandlerRegistry.HasSpecificHandler(finalUri))
+                Log.Warning("Resolved URL has no specific handler, will use generic: {URL}", current);
+        }
+
+        return current;
     }
 
     public List<string> GetYtdlpArguments(Uri uri, bool avPro) => [];

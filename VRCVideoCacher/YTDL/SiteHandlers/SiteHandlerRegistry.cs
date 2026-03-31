@@ -23,12 +23,17 @@ public static class SiteHandlerRegistry
     
     public static async Task<string> ApplyRewrites(string url)
     {
-        var uri = VideoId.ToUri(url);
-        if (uri == null) return url;
         foreach (var rewriter in Rewriters)
+        {
+            var uri = VideoId.ToUri(url);
+            if (uri == null) return url;
             url = await rewriter.RewriteUrl(url, uri);
+        }
         return url;
     }
 
     public static ISiteHandler? Resolve(Uri uri) => Handlers.FirstOrDefault(h => h.CanHandle(uri));
+
+    public static bool HasSpecificHandler(Uri uri) =>
+        Handlers.Any(h => h is not GenericHandler && h.CanHandle(uri));
 }
