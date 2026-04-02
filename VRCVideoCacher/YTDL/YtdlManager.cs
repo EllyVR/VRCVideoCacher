@@ -27,7 +27,10 @@ public class YtdlManager
     private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
     private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
     private const string DenoApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest";
-
+    private const string DenoFallBackVersionURL = "https://dl.deno.land/release-latest.txt";
+    private const string DenoFallBackDownloadURL = "https://dl.deno.land/release/";
+    
+    
     static YtdlManager()
     {
         CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
@@ -209,6 +212,12 @@ public class YtdlManager
         var url = assets.First().browser_download_url;
 
         using var response = await HttpClient.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Information("Failed to download deno from github attempting fallback download.");
+            await TryDownloadDenoFallback(assetName);
+            return;
+        }
         await using var responseStream = await response.Content.ReadAsStreamAsync();
         using var reader = ReaderFactory.Open(responseStream);
         while (await reader.MoveToNextEntryAsync())
@@ -231,6 +240,46 @@ public class YtdlManager
         Log.Error("Failed to extract Deno files.");
     }
 
+    private static async Task TryDownloadDenoFallback(string assetName)
+    {
+        Log.Warning("Falling back to Deno version check via text file.");
+        using var response = await HttpClient.GetAsync(DenoFallBackVersionURL);
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Warning("Failed to get latest Deno version: {ResponseStatusCode}", response.StatusCode);
+            return;
+        }
+        var latestVersion = (await response.Content.ReadAsStringAsync()).Trim();
+        var url = $"{DenoFallBackDownloadURL}{latestVersion}/{assetName}";
+        using var downloadResponse = await HttpClient.GetAsync(url);
+        if (!downloadResponse.IsSuccessStatusCode)
+        {
+            Log.Error("Failed to download Deno from fallback URL: {ResponseStatusCode}", downloadResponse.StatusCode);
+            return;
+        }
+
+        await using var responseStream = await downloadResponse.Content.ReadAsStreamAsync();
+        using var reader = ReaderFactory.Open(responseStream);
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                continue;
+
+            Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
+            var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
+            await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            await using var entryStream = await reader.OpenEntryStreamAsync();
+            await entryStream.CopyToAsync(outputStream);
+            FileTools.MarkFileExecutable(path);
+            Versions.CurrentVersion.Deno = latestVersion;
+            Versions.Save();
+            Log.Information("Deno downloaded and extracted.");
+            return;
+        }
+
+        Log.Error("Failed to extract Deno files from fallback download.");
+    }
+    
     public static async Task TryDownloadFfmpeg()
     {
         if (!Directory.Exists(Program.UtilsPath))
