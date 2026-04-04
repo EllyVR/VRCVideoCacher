@@ -122,6 +122,7 @@
                         <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{loc:Tr CachePyPyDanceVideos}"/>
                         <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{loc:Tr CacheVRDancingVideos}"/>
                         <CheckBox IsChecked="{Binding CacheOnly}" Content="{loc:Tr OnlyServeCachedVideos}"/>
+                        <CheckBox IsChecked="{Binding RedirectVRDancing}" Content="{loc:Tr RedirectVRDancing}"/>
                     </StackPanel>
                 </Border>
 

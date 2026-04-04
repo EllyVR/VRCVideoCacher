@@ -63,6 +63,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _patchVRC;
 
+    [ObservableProperty] 
+    private bool _redirectVRDancing;
+    
     // Updates
     [ObservableProperty]
     private bool _autoUpdate;
@@ -137,7 +140,7 @@ public partial class SettingsViewModel : ViewModelBase
         AutoUpdate = config.AutoUpdateVrcVideoCacher;
         CloseToTray = config.CloseToTray;
         StartMinimized = config.StartMinimized;
-
+        RedirectVRDancing = config.RedirectVRDancing;
         BlockedUrls.Clear();
         foreach (var url in config.BlockedUrls)
         {
@@ -207,7 +210,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.StartMinimized = StartMinimized;
         config.BlockedUrls = BlockedUrls.ToArray();
         config.BlockRedirect = BlockRedirect;
-
+        config.RedirectVRDancing = RedirectVRDancing;
         ConfigManager.TrySaveConfig();
         HasChanges = false;
         StatusMessage = Loc.Tr("SettingsSaved");

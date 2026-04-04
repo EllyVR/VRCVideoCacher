@@ -76,6 +76,12 @@ public class ApiController : WebApiController
 
         Log.Information("Request URL: {URL}", requestUrl);
 
+        if (requestUrl.StartsWith("https://eu2.vrdancing.club/weekend/") && ConfigManager.Config.RedirectVRDancing)
+        {
+            await HttpContext.SendStringAsync(requestUrl.Replace("eu2", "na2"), "text/plain", Encoding.UTF8);
+            return;
+        }
+        
         if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
         {
             Log.Warning("URL Is Blocked: {URL}", requestUrl);
