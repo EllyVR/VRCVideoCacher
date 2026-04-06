@@ -8,7 +8,7 @@ public class VRDancingHandler : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<VRDancingHandler>();
     
-    private static readonly string[] Prefixes = ["https://na2.vrdancing.club", "https://eu2.vrdancing.club"];
+    private static readonly string[] Prefixes = ["https://na2.vrdancing.club", "https://eu2.vrdancing.club", "mpegts-beta.vrdancing.club"];
 
     public bool CanHandle(Uri uri) => Prefixes.Any(p => uri.ToString().StartsWith(p));
     
