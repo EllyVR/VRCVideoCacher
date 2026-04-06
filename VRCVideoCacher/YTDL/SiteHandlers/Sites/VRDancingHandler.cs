@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using VRCVideoCacher.Models;
 using VRCVideoCacher.Services;
 
