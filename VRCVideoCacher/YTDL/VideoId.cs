@@ -18,6 +18,43 @@ public class VideoId
     private static readonly string[] YouTubeHosts = ["youtube.com", "youtu.be", "www.youtube.com"];
     private static readonly Regex YoutubeRegex = new(@"(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|live\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})");
 
+    // Shell metacharacters that could break argument parsing even without UseShellExecute
+    private static readonly Regex UnsafeArgChars = new(@"[;&|`$(){}<>\n\r]");
+
+    /// <summary>
+    /// Validates that a URL is well-formed (http/https) and contains no characters
+    /// that could inject extra arguments into a process argument string.
+    /// </summary>
+    private static string ValidateUrl(string url)
+    {
+        if (!url.StartsWith("http://", StringComparison.Ordinal) &&
+            !url.StartsWith("https://", StringComparison.Ordinal))
+            throw new ArgumentException($"URL must begin with http:// or https://: {url}");
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+            throw new ArgumentException($"URL is not well-formed: {url}");
+
+        if (UnsafeArgChars.IsMatch(url) || url.Contains(' '))
+            throw new ArgumentException($"URL contains disallowed characters: {url}");
+
+        return url;
+    }
+
+    /// <summary>
+    /// Validates that an additional-args string contains no shell metacharacters
+    /// that could inject unintended commands or arguments.
+    /// </summary>
+    private static string ValidateAdditionalArgs(string args)
+    {
+        if (string.IsNullOrEmpty(args))
+            return args;
+
+        if (UnsafeArgChars.IsMatch(args))
+            throw new ArgumentException($"additionalArgs contains disallowed characters: {args}");
+
+        return args;
+    }
+
     private static bool IsYouTubeUrl(string url)
     {
         try
@@ -185,9 +222,9 @@ public class VideoId
         if (!string.IsNullOrEmpty(poToken))
             poToken = $"po_token=web.player+{poToken}";
         
-        var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
+        var additionalArgs = ValidateAdditionalArgs(ConfigManager.Config.ytdlAdditionalArgs ?? string.Empty);
         var isYouTube = IsYouTubeUrl(url);
-        // TODO: safety check for escaping strings
+        url = ValidateUrl(url);
         if (avPro)
         {
             if (isYouTube)
