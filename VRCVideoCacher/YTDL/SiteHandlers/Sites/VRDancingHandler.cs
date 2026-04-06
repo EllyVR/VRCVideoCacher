@@ -8,13 +8,13 @@ public class VRDancingHandler : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<VRDancingHandler>();
     
-    private static readonly string[] Prefixes = ["https://na2.vrdancing.club", "https://eu2.vrdancing.club", "mpegts-beta.vrdancing.club"];
+    private static readonly string[] Prefixes = ["https://na2.vrdancing.club", "https://eu2.vrdancing.club", "https://mpegts-beta.vrdancing.club"];
 
     public bool CanHandle(Uri uri) => Prefixes.Any(p => uri.ToString().StartsWith(p));
     
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro)
     {
-        var code = Path.GetFileNameWithoutExtension(uri.LocalPath);
+        var code = url.TrimEnd('/').Split('/').Last();
         var videoId = VideoId.HashUrl(url);
 
         _ = Task.Run(async () =>
