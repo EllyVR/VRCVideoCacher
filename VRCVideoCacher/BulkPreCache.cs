@@ -98,9 +98,8 @@ public class BulkPreCache
             Log.Information("Failed to download {Url}: {ResponseStatusCode}", fileInfo.Url, response.StatusCode);
             return;
         }
-        var fileStream = new FileStream(fileInfo.FilePath, FileMode.Create, FileAccess.Write);
+        await using var fileStream = new FileStream(fileInfo.FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
         await response.Content.CopyToAsync(fileStream);
-        fileStream.Close();
         if (fileInfo.LastModified > 0)
         {
             await Task.Delay(10);

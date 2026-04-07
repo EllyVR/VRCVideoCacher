@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Serilog;
 using VRCVideoCacher.Models;
 
@@ -11,13 +12,13 @@ public class VideoDownloader
     {
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
-    private static readonly Queue<VideoInfo> DownloadQueue = new();
+    private static readonly ConcurrentQueue<VideoInfo> DownloadQueue = new();
     private static readonly string TempDownloadPath;
-    
+
     static VideoDownloader()
     {
         TempDownloadPath = Path.Combine(ConfigManager.Config.CachedAssetPath, "_tempVideo.mp4");
-        var downloadThread = new Thread(DownloadThread);
+        var downloadThread = new Thread(DownloadThread) { IsBackground = true };
         downloadThread.Start();
     }
 
@@ -25,37 +26,42 @@ public class VideoDownloader
     {
         while (true)
         {
-            if (DownloadQueue.Count == 0)
+            if (!DownloadQueue.TryDequeue(out var queueItem))
             {
                 Thread.Sleep(100);
                 continue;
             }
 
-            var queueItem = DownloadQueue.Peek();
-            switch (queueItem.UrlType)
+            try
             {
-                case UrlType.YouTube:
-                    if (ConfigManager.Config.CacheYouTube)
-                        DownloadYouTubeVideo(queueItem.VideoUrl).Wait();
-                    break;
-                case UrlType.PyPyDance:
-                    if (ConfigManager.Config.CachePyPyDance)
-                        DownloadVideoWithId(queueItem).Wait();
-                    break;
-                case UrlType.VRDancing:
-                    if (ConfigManager.Config.CacheVRDancing)
-                        DownloadVideoWithId(queueItem).Wait();
-                    break;
-                case UrlType.Other:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (queueItem.UrlType)
+                {
+                    case UrlType.YouTube:
+                        if (ConfigManager.Config.CacheYouTube)
+                            DownloadYouTubeVideo(queueItem.VideoUrl).GetAwaiter().GetResult();
+                        break;
+                    case UrlType.PyPyDance:
+                        if (ConfigManager.Config.CachePyPyDance)
+                            DownloadVideoWithId(queueItem).GetAwaiter().GetResult();
+                        break;
+                    case UrlType.VRDancing:
+                        if (ConfigManager.Config.CacheVRDancing)
+                            DownloadVideoWithId(queueItem).GetAwaiter().GetResult();
+                        break;
+                    case UrlType.Other:
+                        break;
+                    default:
+                        Log.Warning("Unknown UrlType {UrlType} for {Url}", queueItem.UrlType, queueItem.VideoUrl);
+                        break;
+                }
             }
-
-            DownloadQueue.Dequeue();
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Unhandled error processing download queue item {Url}", queueItem.VideoUrl);
+            }
         }
     }
-    
+
     public static void QueueDownload(VideoInfo videoInfo)
     {
         if (DownloadQueue.Any(x => x.VideoUrl == videoInfo.VideoUrl))
@@ -93,7 +99,7 @@ public class VideoDownloader
             poToken = $"po_token=web.player+{poToken}";
         
         var additionalArgs = ConfigManager.Config.ytdlAdditionalArgs;
-        var p = new Process
+        using var p = new Process
         {
             StartInfo =
             {
@@ -103,13 +109,15 @@ public class VideoDownloader
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 Arguments =
-                    $"-q -o {TempDownloadPath} -f bv*[height<=1080][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<=1080][vcodec!=av01][vcodec!=vp9.2][protocol^=http] --extractor-args=\"youtube:{poToken}\" --no-playlist --remux-video mp4 --no-progress {additionalArgs} -- {videoId}"
+                    $"-q -o {TempDownloadPath} -f bv*[height<=1080][vcodec~=’^(avc|h264)’]+ba[ext=m4a]/bv*[height<=1080][vcodec!=av01][vcodec!=vp9.2][protocol^=http] --extractor-args=\"youtube:{poToken}\" --no-playlist --remux-video mp4 --no-progress {additionalArgs} -- {videoId}"
                     // $@"-f best/bestvideo[height<=?720]+bestaudio --no-playlist --no-warnings {url} " %(id)s.%(ext)s
             }
         };
         p.Start();
+        var outputTask = p.StandardOutput.ReadToEndAsync();
+        var errorTask = p.StandardError.ReadToEndAsync();
         await p.WaitForExitAsync();
-        var output = await p.StandardOutput.ReadToEndAsync();
+        var output = await outputTask;
         if (output.StartsWith("WARNING: ") ||
             output.StartsWith("ERROR: "))
         {
@@ -124,7 +132,7 @@ public class VideoDownloader
                 return;
             }
         }
-        var error = await p.StandardError.ReadToEndAsync();
+        var error = await errorTask;
         if (!string.IsNullOrEmpty(error))
         {
             Log.Error("Failed to download YouTube Video: {URL} {output}", url, error);
@@ -158,10 +166,9 @@ public class VideoDownloader
             Log.Error("Failed to download video: {URL}", url);
             return;
         }
-        var stream = await response.Content.ReadAsStreamAsync();
+        await using var stream = await response.Content.ReadAsStreamAsync();
         await using var fileStream = new FileStream(TempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.None);
         await stream.CopyToAsync(fileStream);
-        fileStream.Close();
         await Task.Delay(10);
         var fileName = $"{videoInfo.VideoId}.mp4";
         var filePath = Path.Combine(ConfigManager.Config.CachedAssetPath, fileName);

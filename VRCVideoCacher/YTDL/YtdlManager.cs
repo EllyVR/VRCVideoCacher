@@ -38,7 +38,7 @@ public class YtdlManager
         if (string.IsNullOrEmpty(currentYtdlVersion))
             currentYtdlVersion = "Not Installed";
         
-        Log.Information($"YT-DLP latest version is {json.tag_name} Current Installed version is {currentYtdlVersion}");
+        Log.Information("YT-DLP latest version is {LatestVersion}. Current installed version is {InstalledVersion}", json.tag_name, currentYtdlVersion);
         if (!File.Exists(ConfigManager.Config.ytdlPath))
         {
             Log.Information("YT-DLP is not installed. Downloading...");
@@ -72,9 +72,8 @@ public class YtdlManager
         }
         
         var filePath = Path.Combine(Program.CurrentProcessPath, Path.GetFileName(FfmpegUrl));
-        var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
         await response.Content.CopyToAsync(fileStream);
-        fileStream.Close();
         
         Log.Information("Extracting FFmpeg zip.");
         ZipFile.ExtractToDirectory(filePath, Program.CurrentProcessPath);

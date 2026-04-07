@@ -14,8 +14,8 @@ public class PoTokenGenerator
     private static readonly string WorkingDirectory = Path.Combine(Environment.CurrentDirectory, "Utils", "python");
     private static readonly string YtdlPoTokenPath = Path.Combine(Program.CurrentProcessPath, "PoToken.txt");
     private static string _lastPoToken = string.Empty;
-    private static bool _setupInProgress;
-    private static bool _tokenGenerationInProgress;
+    private static int _setupInProgress;
+    private static int _tokenGenerationInProgress;
     private static readonly HttpClient HttpClient = new()
     {
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
@@ -92,65 +92,72 @@ public class PoTokenGenerator
 
     public static async Task GeneratePoToken()
     {
-        if (_setupInProgress || _tokenGenerationInProgress)
+        if (Interlocked.CompareExchange(ref _setupInProgress, 1, 0) != 0 ||
+            Interlocked.CompareExchange(ref _tokenGenerationInProgress, 1, 0) != 0)
             return;
-        
+
         try
         {
-            _setupInProgress = true;
-            await TrySetupEnvironment();
-            _setupInProgress = false;
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to setup Python environment: {Message}", ex.Message);
             try
             {
-                Directory.Delete(WorkingDirectory, true);
+                await TrySetupEnvironment();
             }
-            catch (Exception deleteEx)
+            catch (Exception ex)
             {
-                Log.Error("Failed to delete Python environment: {Message}", deleteEx.Message);
+                Log.Error(ex, "Failed to setup Python environment: {Message}", ex.Message);
+                try
+                {
+                    Directory.Delete(WorkingDirectory, true);
+                }
+                catch (Exception deleteEx)
+                {
+                    Log.Error(deleteEx, "Failed to delete Python environment: {Message}", deleteEx.Message);
+                }
+                return;
             }
-            return;
-        }
-        
-        _tokenGenerationInProgress = true;
-        Log.Information("Generating new PoToken...");
-        var poTokenGenerator = Path.Combine(WorkingDirectory, "youtube-trusted-session-generator-master", "potoken-generator.py");
-        string output;
-        try
-        {
-            output = await RunPythonScript(poTokenGenerator, "--oneshot");
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to generate PoToken: {Message}", ex.Message);
-            _tokenGenerationInProgress = false;
-            return;
-        }
-        var lines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-        var poToken = string.Empty;
-        foreach (var line in lines)
-        {
-            var index = line.IndexOf("po_token: ", StringComparison.Ordinal);
-            if (index < 0)
-                continue;
+            finally
+            {
+                Interlocked.Exchange(ref _setupInProgress, 0);
+            }
 
-            poToken = line.Substring(index + 10).Trim();
-            break;
+            Log.Information("Generating new PoToken...");
+            var poTokenGenerator = Path.Combine(WorkingDirectory, "youtube-trusted-session-generator-master", "potoken-generator.py");
+            string output;
+            try
+            {
+                output = await RunPythonScript(poTokenGenerator, "--oneshot");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to generate PoToken: {Message}", ex.Message);
+                return;
+            }
+
+            var lines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var poToken = string.Empty;
+            foreach (var line in lines)
+            {
+                var index = line.IndexOf("po_token: ", StringComparison.Ordinal);
+                if (index < 0)
+                    continue;
+
+                poToken = line.Substring(index + 10).Trim();
+                break;
+            }
+            if (string.IsNullOrEmpty(poToken))
+            {
+                Log.Error("Failed to generate PoToken.");
+                return;
+            }
+
+            _lastPoToken = poToken;
+            await File.WriteAllTextAsync(YtdlPoTokenPath, poToken);
+            Log.Information("Generated new PoToken.");
         }
-        if (string.IsNullOrEmpty(poToken))
+        finally
         {
-            Log.Error("Failed to generate PoToken.");
-            _tokenGenerationInProgress = false;
-            return;
+            Interlocked.Exchange(ref _tokenGenerationInProgress, 0);
         }
-        
-        _lastPoToken = poToken;
-        await File.WriteAllTextAsync(YtdlPoTokenPath, poToken);
-        Log.Information("Generated new PoToken.");
-        _tokenGenerationInProgress = false;
     }
 
     private static async Task<string> DownloadFile(string url)

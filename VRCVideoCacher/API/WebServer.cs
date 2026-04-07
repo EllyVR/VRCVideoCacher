@@ -45,13 +45,13 @@ public class WebServer
 
     private static Task OnHttpException(IHttpContext context, IHttpException httpException)
     {
-        Log.Information(httpException.Message!);
+        Log.Warning("HTTP {StatusCode}: {Message}", httpException.StatusCode, httpException.Message);
         return Task.CompletedTask;
     }
 
     private static Task OnUnhandledException(IHttpContext context, Exception exception)
     {
-        Log.Information(exception.Message);
+        Log.Error(exception, "Unhandled exception processing request {Path}", context.Request.Url?.AbsolutePath);
         return Task.CompletedTask;
     }
 }

@@ -62,7 +62,7 @@ public class VideoId
             var uri = new Uri(url.Trim());
             return YouTubeHosts.Contains(uri.Host);
         }
-        catch
+        catch (UriFormatException)
         {
             return false;
         }
@@ -105,9 +105,9 @@ public class VideoId
                     UrlType = UrlType.PyPyDance
                 };
             }
-            catch
+            catch (Exception ex)
             {
-                Log.Error("Failed to get video ID from PypyDance URL: {URL}", url);
+                Log.Error(ex, "Failed to get video ID from PypyDance URL: {URL}", url);
                 return null;
             }
         }
@@ -163,7 +163,7 @@ public class VideoId
 
     public static async Task<string> TryGetYouTubeVideoId(string url)
     {
-        var process = new Process
+        using var process = new Process
         {
             StartInfo =
             {
@@ -176,9 +176,11 @@ public class VideoId
             }
         };
         process.Start();
-        var rawData = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        var rawDataTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
+        var rawData = await rawDataTask;
+        var error = await errorTask;
         if (process.ExitCode != 0)
             throw new Exception($"Failed to get video ID: {error.Trim()}");
         if (string.IsNullOrEmpty(rawData))
@@ -190,7 +192,7 @@ public class VideoId
             throw new Exception("Failed to get video ID: Video is a stream");
         if (data.duration is null || data.duration > 3600)
             throw new Exception("Failed to get video ID: Video is too long ");
-        
+
         return data.id;
     }
 
@@ -203,7 +205,7 @@ public class VideoId
             return string.Empty;
         }
 
-        var process = new Process
+        using var process = new Process
         {
             StartInfo =
             {
@@ -241,11 +243,11 @@ public class VideoId
         }
         
         process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync();
-        output = output.Trim();
-        var error = await process.StandardError.ReadToEndAsync();
-        error = error.Trim();
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
+        var output = (await outputTask).Trim();
+        var error = (await errorTask).Trim();
         
         if (output.StartsWith("WARNING: ") ||
             output.StartsWith("ERROR: "))
