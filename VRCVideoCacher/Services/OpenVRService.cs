@@ -14,8 +14,11 @@ public class OpenVRService
         // doesn't activate theater mode, even if vrserver starts after us.
         Task.Run(async () =>
         {
-            while (true)
+            bool retry = true;
+
+            while (retry)
             {
+                retry = false;
                 var initError = EVRInitError.None;
                 try
                 {
@@ -40,15 +43,26 @@ public class OpenVRService
                             Logger.Warning("Failed to register manifest: {Error}", manifestError);
                         else
                             Logger.Information("Registered as background app");
-                        return;
+                        break;
                     }
                     // Only retry if vrserver just isn't running yet
                     case EVRInitError.Init_HmdNotFound or EVRInitError.Init_HmdNotFoundPresenceFailed or EVRInitError.Init_NoServerForBackgroundApp:
                         await Task.Delay(TimeSpan.FromSeconds(5));
-                        continue;
+                        retry = true;
+                        break;
                     default:
                         Logger.Information("Not available: {Error}", initError);
-                        return;
+                        break;
+                }
+
+                try
+                {
+                    OpenVR.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("Exception during shutdown: {Msg}", ex.Message);
+                    return;
                 }
             }
         });
