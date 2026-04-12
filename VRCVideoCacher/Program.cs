@@ -203,13 +203,13 @@ internal sealed class Program
 
         Log.Logger = loggerConfiguration.CreateLogger();
         Logger = Log.ForContext("SourceContext", "Core");
+
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
     }
 
     private static async Task InitVrcVideoCacher()
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
-
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
 
         if (AdminCheck.ShouldShowAdminWarning())
         {
