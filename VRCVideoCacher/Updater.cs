@@ -157,7 +157,7 @@ public class Updater
         sha.Initialize();
         var hashB = Convert.ToHexString(sha.ComputeHash(b));
         var match = string.Equals(hashA, hashB, StringComparison.OrdinalIgnoreCase);
-        Log.Information($"[Updater] Hash self={hashA} copy={hashB} match={match}");
+        Log.Information("[Updater] Hash self={HashA} copy={HashB} match={Match}", hashA, hashB, match);
         return match;
     }
 
