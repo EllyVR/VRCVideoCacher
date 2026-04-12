@@ -217,7 +217,9 @@ internal sealed class Program
         }
 
         Directory.CreateDirectory(UtilsPath);
+#if !STEAMRELEASE
         await Updater.CheckForUpdates();
+#endif
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
         {

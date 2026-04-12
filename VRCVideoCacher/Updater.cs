@@ -23,9 +23,6 @@ public class Updater
 
     public static async Task CheckForUpdates()
     {
-#if STEAMRELEASE
-        return;
-#endif
         Log.Information("Checking for updates...");
         var isDebug = false;
 #if DEBUG
