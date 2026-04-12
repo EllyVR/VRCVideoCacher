@@ -104,6 +104,7 @@
   "CookieSetupStep2Header": "2. Lépés: Telepítsd a bővítményt",
   "CookieSetupStep2Desc": "Kattints az alábbi gombra a bővítménybolt megnyitásához. Telepítse a \"VRCVideoCacher Cookies Exporter\" bővítményt.",
   "CookieSetupStep2AfterInstall": "Telepítés után kattints a \"Tovább\" gombra a folytatáshoz.",
+  "CookieSetupStep2AccountWarning": "Javasolt egy álfiók használata.",
   "CookieSetupStep3Header": "3. Lépés: Menj a YouTube-ra.",
   "CookieSetupStep3Desc": "Nyisd meg a YouTube-ot a böngésződben, és győződjön meg arról, hogy be vagy jelentkezve. A bővítmény automatikusan elküldi a sütiket a VRCVideoCachernek.",
   "OpenYouTube": "YouTube Megnyitása",

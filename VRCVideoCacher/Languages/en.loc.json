@@ -104,6 +104,7 @@
   "CookieSetupStep2Header": "Step 2: Install the extension",
   "CookieSetupStep2Desc": "Click the button below to open the extension store. Install the \"VRCVideoCacher Cookies Exporter\" extension.",
   "CookieSetupStep2AfterInstall": "After installing, click \"Next\" to continue.",
+  "CookieSetupStep2AccountWarning": "It is recommended to use a burner account.",
   "CookieSetupStep3Header": "Step 3: Visit YouTube",
   "CookieSetupStep3Desc": "Open YouTube in your browser and make sure you're signed in. The extension will automatically send your cookies to VRCVideoCacher.",
   "OpenYouTube": "Open YouTube",

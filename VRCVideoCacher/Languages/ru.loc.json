@@ -103,6 +103,7 @@
   "CookieSetupStep2Header": "Шаг 2-ой: Установите расширение",
   "CookieSetupStep2Desc": "Нажмите кнопку ниже, чтобы открыть магазин расширений. Установите расширение (VRCVideoCacher Cookies Exporter)",
   "CookieSetupStep2AfterInstall": "После установки нажмите \"Далее\", чтобы продолжить.",
+  "CookieSetupStep2AccountWarning": "Рекомендуется использовать другой аккаунт.",
   "CookieSetupStep3Header": "Шаг 3-ий: Посетите YouTube",
   "CookieSetupStep3Desc": "Откройте YouTube в браузере и убедитесь, что вы вошли в аккаунт. Расширение автоматически отправит ваши cookie в VRCVideoCacher.",
   "OpenYouTube": "Открыть YouTube",

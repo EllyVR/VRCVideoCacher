@@ -103,6 +103,7 @@
   "CookieSetupStep2Header": "第 2 步：安装扩展",
   "CookieSetupStep2Desc": "点击下方按钮打开扩展商店，安装「VRCVideoCacher Cookies Exporter」扩展。",
   "CookieSetupStep2AfterInstall": "安装完成后，点击「下一步」继续。",
+  "CookieSetupStep2AccountWarning": "建议使用另一个账户。",
   "CookieSetupStep3Header": "第 3 步：访问 YouTube",
   "CookieSetupStep3Desc": "在浏览器中打开 YouTube 并确保已登录。扩展将自动把您的 Cookie 发送到 VRCVideoCacher。",
   "OpenYouTube": "打开 YouTube",
