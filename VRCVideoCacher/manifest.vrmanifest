@@ -1,13 +1,14 @@
 ﻿{
     "source" : "builtin",
-    "application" : [{
+    "applications" : [{
         "app_key" : "com.github.ellyvr.vrcvideocacher",
         "launch_type" : "url",
         "url" : "steam://launch/4296960",
         "is_dashboard_overlay" : true,
         "strings": {
-            "en": {
-                "name": "VRCVideoCacher"
+            "en_us": {
+                "name": "VRCVideoCacher",
+                "description": "Video Player utility for VRC"
             }
         }
     }]
