@@ -1,6 +1,6 @@
 namespace VRCVideoCacher.Services;
 
-public class ThumbnailManager
+public static class ThumbnailManager
 {
     public static readonly string CacheDir = Path.Join(Program.DataPath, "MetadataCache");
     public static readonly string ThumbnailCacheDir = Path.Join(CacheDir, "thumbnails");
@@ -11,7 +11,7 @@ public class ThumbnailManager
         Timeout = TimeSpan.FromSeconds(10)
     };
 
-    public ThumbnailManager()
+    static ThumbnailManager()
     {
         Directory.CreateDirectory(CacheDir);
         Directory.CreateDirectory(ThumbnailCacheDir);
