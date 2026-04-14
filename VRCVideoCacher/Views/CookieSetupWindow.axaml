@@ -70,7 +70,7 @@
 
         <!-- Content - Step 3: Visit YouTube -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20"
-                IsVisible="false">
+                IsVisible="{Binding IsStep3}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="10">
                     <TextBlock Text="{loc:Tr CookieSetupStep3Header}" FontSize="16" FontWeight="SemiBold"/>
