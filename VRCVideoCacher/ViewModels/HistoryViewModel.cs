@@ -59,30 +59,46 @@ public partial class HistoryItemViewModel : ViewModelBase
         Author = meta?.Author;
     }
 
-    public async Task LoadMetadataAsync()
+    public void SetMetadata(string? title, string? thumbnailUrl)
     {
-        if (Id == null)
-            return;
-
-        // Load from DB
-        var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(Id);
-
-        if (!string.IsNullOrEmpty(videoInfo?.Title))
+        if (!string.IsNullOrEmpty(title))
         {
-            _title = videoInfo.Title;
+            _title = title;
             OnPropertyChanged(nameof(DisplayTitle));
         }
-
-        // Load thumbnail
-        var thumbnailPath = ThumbnailManager.GetThumbnail(Id);
-        if (Id.Length == 11 && string.IsNullOrEmpty(thumbnailPath))
-            thumbnailPath = await YouTubeMetadataService.GetThumbnail(Id);
-
-        if (!string.IsNullOrEmpty(thumbnailPath))
+        if (!string.IsNullOrEmpty(thumbnailUrl))
         {
-            _thumbnailUrl = thumbnailPath;
+            _thumbnailUrl = thumbnailUrl;
             OnPropertyChanged(nameof(ThumbnailUrl));
         }
+    }
+
+    public async Task<(string? DisplayTitle, string? ThumbnailUrl)> LoadMetadataAsync()
+    {
+        if (Id != null)
+        {
+            // Load from DB
+            var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(Id);
+
+            if (!string.IsNullOrEmpty(videoInfo?.Title))
+            {
+                _title = videoInfo.Title;
+                OnPropertyChanged(nameof(DisplayTitle));
+            }
+
+            // Load thumbnail
+            var thumbnailPath = ThumbnailManager.GetThumbnail(Id);
+            if (Id.Length == 11 && string.IsNullOrEmpty(thumbnailPath))
+                thumbnailPath = await YouTubeMetadataService.GetThumbnail(Id);
+
+            if (!string.IsNullOrEmpty(thumbnailPath))
+            {
+                _thumbnailUrl = thumbnailPath;
+                OnPropertyChanged(nameof(ThumbnailUrl));
+            }
+        }
+
+        return (DisplayTitle, ThumbnailUrl);
     }
 
     [RelayCommand]
@@ -142,7 +158,7 @@ public partial class HistoryViewModel : ViewModelBase
         }
         _isRefreshing = true;
 
-        var historyCache = DatabaseManager.GetVideoHistoryAsCache();
+        var historyCache = DatabaseManager.GetVideoHistoryAsCache(distinctOnly: true);
 
         HistoryItems.Clear();
         foreach (var item in historyCache.OrderByDescending(h => h.Timestamp))
@@ -153,9 +169,21 @@ public partial class HistoryViewModel : ViewModelBase
 
         _ = Task.Run(async () =>
         {
-            foreach (var item in historyCache)
+            foreach (var groupedItems in historyCache.GroupBy(h => h.Id))
             {
-                await item.LoadMetadataAsync();
+                (string? DisplayTitle, string? ThumbnailUrl)? metadata = null;
+                foreach (var item in groupedItems)
+                {
+                    if (metadata == null)
+                    {
+                        metadata = await item.LoadMetadataAsync();
+                    }
+                    else
+                    {
+                        item.SetMetadata(metadata.Value.DisplayTitle, metadata.Value.ThumbnailUrl);
+                    }
+                }
+
             }
             _isRefreshing = false;
         });

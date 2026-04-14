@@ -83,19 +83,35 @@ public static class DatabaseManager
             .ToList();
     }
 
-    public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50)
+    public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50, bool distinctOnly = false)
     {
         using var db = _contextFactory.CreateDbContext();
-        return db.PlayHistory
+        var query = db.PlayHistory
             .AsNoTracking()
-            .OrderByDescending(h => h.Timestamp)
-            .Take(limit)
-            .LeftJoin(db.VideoInfoCache,
-                h => h.Id,
-                v => v.Id,
-                (h, v) => new HistoryItemViewModel(h, v))
-            .ToList()
-            .DistinctBy(h => h.Url);
+            .OrderByDescending(h => h.Timestamp);
+
+        var historyItems = distinctOnly
+            ? query.GroupBy(h => h.Id)
+                   .Select(g => g.First())
+                   .Take(limit)
+            : query.Take(limit);
+
+        // Materialize the database query first
+        var histories = historyItems.ToList();
+
+        // Fetch matching VideoInfoCache entries
+        var ids = histories.Select(h => h.Id).Where(id => id != null).Distinct().ToList();
+        var cacheDict = db.VideoInfoCache
+            .AsNoTracking()
+            .Where(v => ids.Contains(v.Id))
+            .ToDictionary(v => v.Id);
+
+        // Project to ViewModel in-memory
+        return histories.Select(h => 
+        {
+            cacheDict.TryGetValue(h.Id ?? string.Empty, out var meta);
+            return new HistoryItemViewModel(h, meta);
+        }).ToList();
     }
 
     public static VideoInfoCache? GetVideoInfoCache(string videoId)
