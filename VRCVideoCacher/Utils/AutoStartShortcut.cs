@@ -188,7 +188,7 @@ public class AutoStartShortcut
 
             if (!_doesVrcxSupportSteamShortcut.HasValue)
             {
-                _doesVrcxSupportSteamShortcut = false;
+                _doesVrcxSupportSteamShortcut = true;
             }
         }
 
