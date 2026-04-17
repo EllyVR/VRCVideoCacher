@@ -174,6 +174,7 @@ public class AutoStartShortcut
         {
             if (TryGetVrcxVersion(out var version))
             {
+                Log.Information("Detected VRCX version: {Version}", version);
                 if (TryParseVrcxVersion(version, out var year, out var month, out var day))
                 {
                     // Only don't use the steam shortcut if we know for certain that the VRCX version is older than 2026.3.14, which is when the url method was completed.
