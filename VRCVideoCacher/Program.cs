@@ -173,7 +173,7 @@ internal sealed class Program
             }
         });
         
-        OpenVRService.Start(DataPath);
+        OpenVRService.Start(CurrentProcessPath);
 
         // Start the UI
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
