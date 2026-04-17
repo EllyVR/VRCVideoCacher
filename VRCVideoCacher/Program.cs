@@ -103,7 +103,7 @@ internal sealed class Program
                         try
                         {
                             process.Kill();
-                            Logger.Information("Killed existing instance with PID {Pid} due to --force-new-instance argument.", process.Id);
+                            Logger.Information("Killed existing instance with PID {Pid} due to kill existing instance argument.", process.Id);
                         }
                         catch (Exception ex)
                         {
