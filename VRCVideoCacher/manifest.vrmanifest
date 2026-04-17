@@ -5,6 +5,7 @@
         "launch_type" : "binary",
         "binary_path_windows": "VRCVideoCacher.exe",
         "binary_path_linux": "VRCVideoCacher",
+        "arguments": "--kill-existing-instance",
         "is_dashboard_overlay" : true,
         "strings": {
             "en_us": {
