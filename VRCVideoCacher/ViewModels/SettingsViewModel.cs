@@ -213,7 +213,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.AutoUpdateVrcVideoCacher = AutoUpdate;
         config.CloseToTray = CloseToTray;
         config.StartMinimized = StartMinimized;
-        config.StartWithSteamVr = StartMinimized;
+        config.StartWithSteamVr = StartWithSteamVr;
         config.BlockedUrls = BlockedUrls.ToArray();
         config.BlockRedirect = BlockRedirect;
         config.RedirectVRDancing = RedirectVRDancing;
