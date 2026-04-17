@@ -55,6 +55,8 @@
                         <CheckBox IsChecked="{Binding CloseToTray}" Content="{loc:Tr CloseToTray}"/>
 
                         <CheckBox IsChecked="{Binding StartMinimized}" Content="{loc:Tr StartMinimized}"/>
+
+                        <CheckBox IsChecked="{Binding StartWithSteamVr}" Content="{loc:Tr StartWithSteamVr}"/>
                     </StackPanel>
                 </Border>
 

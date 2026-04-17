@@ -7,12 +7,14 @@ public class LaunchArgs
     private const string DisableErrorReportingArg = "--disable-error-reporting";
     private const string GlobalPathArg = "--global-path";
     private const string OldPidArg = "--old-pid";
+    private const string KillExistingInstanceArg = "--kill-existing-instance";
 
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
     public static bool ErrorReporting = true;
     public static bool UseGlobalPath;
     public static int? OldPid;
+    public static bool KillExistingInstance = false;
 
     public static void SetupArguments(params string[] args)
     {
@@ -38,6 +40,9 @@ public class LaunchArgs
                 if (int.TryParse(pidStr, out var pid))
                     OldPid = pid;
             }
+
+            if (arg.Equals(KillExistingInstanceArg, StringComparison.OrdinalIgnoreCase))
+                KillExistingInstance = true;
         }
     }
 

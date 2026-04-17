@@ -33,18 +33,30 @@ public class OpenVRService
                 switch (initError)
                 {
                     case EVRInitError.None:
-                    {
                         var manifestPath = Path.Combine(dataPath, "manifest.vrmanifest");
                         await using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("VRCVideoCacher.manifest.vrmanifest")!)
                         await using (var file = File.Create(manifestPath))
                             await stream.CopyToAsync(file);
                         var manifestError = OpenVR.Applications.AddApplicationManifest(manifestPath, false);
                         if (manifestError != EVRApplicationError.None)
-                            Logger.Warning("Failed to register manifest: {Error}", manifestError);
+                        {
+                            Logger.Warning("Failed to register startup manifest: {Error}", manifestError);
+                        }
                         else
-                            Logger.Information("Registered as background app");
+                        {
+                            if (OpenVR.Applications.IsApplicationInstalled("com.github.ellyvr.vrcvideocacher"))
+                            {
+                                Logger.Information("Startup manifest registered successfully");
+
+                                Logger.Information("{AutoLaunchState} steamvr auto-launch", ConfigManager.Config.StartWithSteamVr ? "Enabling" : "Disabling");
+                                OpenVR.Applications.SetApplicationAutoLaunch("com.github.ellyvr.vrcvideocacher", ConfigManager.Config.StartWithSteamVr);
+                            }
+                            else
+                            {
+                                Logger.Warning("Failed to register startup manifest");
+                            }
+                        }
                         break;
-                    }
                     // Only retry if vrserver just isn't running yet
                     case EVRInitError.Init_HmdNotFound or EVRInitError.Init_HmdNotFoundPresenceFailed or EVRInitError.Init_NoServerForBackgroundApp:
                         await Task.Delay(TimeSpan.FromSeconds(5));

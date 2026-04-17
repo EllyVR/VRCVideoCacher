@@ -94,8 +94,29 @@ internal sealed class Program
         var processes = Process.GetProcessesByName("VRCVideoCacher");
         if (processes.Length > 1)
         {
-            Console.WriteLine("Application is already running, Exiting...");
-            Environment.Exit(0);
+            if (LaunchArgs.KillExistingInstance)
+            {
+                foreach (var process in processes)
+                {
+                    if (process.Id != Environment.ProcessId)
+                    {
+                        try
+                        {
+                            process.Kill();
+                            Logger.Information("Killed existing instance with PID {Pid} due to kill existing instance argument.", process.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning(ex, "Failed to kill existing instance with PID {Pid}. It may still be running.", process.Id);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Application is already running, Exiting...");
+                Environment.Exit(0);
+            }
         }
         foreach (var process in processes)
             process.Dispose();
@@ -173,7 +194,7 @@ internal sealed class Program
             }
         });
         
-        OpenVRService.Start(DataPath);
+        OpenVRService.Start(CurrentProcessPath);
 
         // Start the UI
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

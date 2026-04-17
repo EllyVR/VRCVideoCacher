@@ -160,6 +160,7 @@ public class ConfigModel
     public bool AutoUpdateVrcVideoCacher = true;
     public bool CloseToTray = true;
     public bool StartMinimized = false;
+    public bool StartWithSteamVr = true;
     public bool CookieSetupCompleted = false;
     public bool RedirectVRDancing = false;
     
