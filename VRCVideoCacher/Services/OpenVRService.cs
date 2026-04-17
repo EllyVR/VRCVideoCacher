@@ -47,6 +47,9 @@ public class OpenVRService
                             if (OpenVR.Applications.IsApplicationInstalled("com.github.ellyvr.vrcvideocacher"))
                             {
                                 Logger.Information("Startup manifest registered successfully");
+
+                                Logger.Information("{AutoLaunchState} steamvr auto-launch", ConfigManager.Config.StartWithSteamVr ? "Enabling" : "Disabling");
+                                OpenVR.Applications.SetApplicationAutoLaunch("com.github.ellyvr.vrcvideocacher", ConfigManager.Config.StartWithSteamVr);
                             }
                             else
                             {

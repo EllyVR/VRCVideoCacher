@@ -60,6 +60,7 @@
   "AutoUpdateVRCVideoCacher": "Автообновления VRCVideoCacher",
   "CloseToTray": "Закрыть в Трей",
   "StartMinimized": "Запускать Свёрнутым",
+  "StartWithSteamVr": "Запустить приложение с помощью SteamVR",
   "BlockedUrls": "Заблокированный URL",
   "BlockedUrlRedirect": "Перенаправление Заблокированного URL",
   "SettingsSaved": "Настройки Сохранены!",

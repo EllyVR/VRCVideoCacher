@@ -60,6 +60,7 @@
   "AutoUpdateVRCVideoCacher": "自动更新 VRCVideoCacher",
   "CloseToTray": "关闭到系统托盘",
   "StartMinimized": "启动时最小化",
+  "StartWithSteamVr": "通过 SteamVR 启动应用",
   "BlockedUrls": "屏蔽的 URL",
   "BlockedUrlRedirect": "屏蔽 URL 重定向地址",
   "SettingsSaved": "设置已保存！",
