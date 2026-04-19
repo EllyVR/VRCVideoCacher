@@ -86,18 +86,32 @@ public static class DatabaseManager
     public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50, bool distinctOnly = false)
     {
         using var db = _contextFactory.CreateDbContext();
-        var query = db.PlayHistory
-            .AsNoTracking()
-            .OrderByDescending(h => h.Timestamp);
 
-        var historyItems = distinctOnly
-            ? query.GroupBy(h => h.Id)
-                   .Select(g => g.First())
-                   .Take(limit)
-            : query.Take(limit);
+        List<History> histories;
 
-        // Materialize the database query first
-        var histories = historyItems.ToList();
+        if (distinctOnly)
+        {
+            histories = db.PlayHistory
+                .FromSqlRaw($@"
+                    SELECT ph.* FROM {nameof(Database.PlayHistory)} ph
+                    INNER JOIN (
+                        SELECT {nameof(History.Id)}, MAX({nameof(History.Timestamp)}) as MaxTimestamp
+                        FROM {nameof(Database.PlayHistory)}
+                        GROUP BY {nameof(History.Id)}
+                    ) latest ON ph.{nameof(History.Id)} = latest.{nameof(History.Id)} AND ph.{nameof(History.Timestamp)} = latest.MaxTimestamp
+                    ORDER BY ph.{nameof(History.Timestamp)} DESC
+                    LIMIT {{0}}", limit)
+                .AsNoTracking()
+                .ToList();
+        }
+        else
+        {
+            histories = db.PlayHistory
+                .AsNoTracking()
+                .OrderByDescending(h => h.Timestamp)
+                .Take(limit)
+                .ToList();
+        }
 
         // Fetch matching VideoInfoCache entries
         var ids = histories.Select(h => h.Id).Where(id => id != null).Distinct().ToList();
