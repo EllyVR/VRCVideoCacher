@@ -12,6 +12,11 @@
 
 **Language:** [English](./README.md) | **日本語** | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md)
 
+### Wiki
+- [起動のオプション](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
+- [Cli 構成のオプション](https://github.com/EllyVR/VRCVideoCacher/wiki/Config-Options)
+- [Linux](https://github.com/EllyVR/VRCVideoCacher/wiki/Linux)
+
 ### VRCVideoCacher とは何でしょうか？
 
 VRCVideoCacher は、VRChat での動画をローカルディスクにキャッシュしたり、YouTube の動画の読み込み失敗を修正などを行うためのツールです。
