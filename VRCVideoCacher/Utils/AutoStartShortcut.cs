@@ -170,6 +170,7 @@ public class AutoStartShortcut
     [SupportedOSPlatform("windows")]
     private static bool ShouldUseSteamShortcut()
     {
+#if STEAMRELEASE
         if(!_doesVrcxSupportSteamShortcut.HasValue)
         {
             if (TryGetVrcxVersion(out var version))
@@ -191,9 +192,13 @@ public class AutoStartShortcut
                 _doesVrcxSupportSteamShortcut = true;
             }
         }
-
+#else
+        if (!_doesVrcxSupportSteamShortcut.HasValue)
+        {
+            _doesVrcxSupportSteamShortcut = false;
+        }
+#endif
         return _doesVrcxSupportSteamShortcut.Value;
-
     }
 
     private static bool TryParseVrcxVersion(string? version, out int year, out int month, out int day)
