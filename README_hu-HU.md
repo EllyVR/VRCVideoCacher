@@ -12,6 +12,11 @@
 
 **Language:** [English](./README.md) | [日本語](./README_ja-JP.md) | **Magyar** | [한국어](./README_ko-KR.md)
 
+### Wiki
+- [Indítási beállítások](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
+- [Cli beállítási lehetőségek](https://github.com/EllyVR/VRCVideoCacher/wiki/Config-Options)
+- [Linux](https://github.com/EllyVR/VRCVideoCacher/wiki/Linux)
+
 ### Micsoda a VRCVideoCacher?
 
 VRCVideoCacher egy segédprogram, amely a VRChat videókat a helyi merevlemezre menti, és kijavítja a YouTube videók betöltési hibáit.
