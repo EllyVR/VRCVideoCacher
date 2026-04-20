@@ -48,12 +48,13 @@ public class YouTubeHandler : ISiteHandler
 
         var args = new List<string>
         {
-            "--impersonate=\"safari\"",
-            "--extractor-args=\"youtube:player_client=web\""
+            "--impersonate=\"safari\""
         };
         
         if (avPro)
         {
+            args.Add("--extractor-args=\"youtube:player_client=web\"");
+
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
             // If dub language is set, attempt to fetch, else use defaults.
