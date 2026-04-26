@@ -164,7 +164,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="*, Auto" Margin="0,5">
-                                        <TextBox Grid.Column="0" Text="{Binding Mode=TwoWay}"/>
+                                        <TextBox Grid.Column="0" Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                         <Button Grid.Column="1" Margin="5,0,0,0"
                                                 Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).RemoveBlockedUrlCommand}"
                                                 CommandParameter="{Binding}">
