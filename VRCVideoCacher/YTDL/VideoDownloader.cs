@@ -61,7 +61,7 @@ public class VideoDownloader
                         break;
                     case UrlType.PyPyDance:
                     case UrlType.VRDancing:
-                        success = await DownloadVideoWithId(queueItem);
+                        success = await DownloadVRDancingVideoWithId(queueItem);
                         break;
                     case UrlType.Other:
                         break;
@@ -234,6 +234,87 @@ public class VideoDownloader
         return true;
     }
 
+    private static async Task<bool> DownloadVRDancingVideoWithId(VideoInfo videoInfo)
+    {
+        if (File.Exists(TempDownloadMp4Path))
+        {
+            Log.Warning("Temp file already exists, deleting...");
+            File.Delete(TempDownloadMp4Path);
+        }
+        if (File.Exists(TempDownloadWebmPath))
+        {
+            Log.Warning("Temp file already exists, deleting...");
+            File.Delete(TempDownloadWebmPath);
+        }
+
+        Log.Information("Downloading Video: {URL}", videoInfo.VideoUrl);
+        var url = videoInfo.VideoUrl;
+        var process = new Process
+        {
+            StartInfo =
+            {
+                FileName = YtdlManager.YtdlPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
+            }
+        };
+        process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" --remux-video mp4 {url}";
+        Log.Information("Downloading VRDancing Video: {URL}", process.StartInfo.Arguments);
+        process.Start();
+        await process.WaitForExitAsync();
+        var error = await process.StandardError.ReadToEndAsync();
+        error = error.Trim();
+        if (process.ExitCode != 0)
+        {
+            Log.Error("Failed to download YouTube Video: {exitCode} {URL} {error}", process.ExitCode, url, error);
+            if (error.Contains("Sign in to confirm you’re not a bot"))
+                Log.Error("Fix this error by following these instructions: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
+
+            return false;
+        }
+        Thread.Sleep(100);
+
+        var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
+        if (File.Exists(filePath))
+        {
+            Log.Error("File already exists, canceling...");
+            try
+            {
+                if (File.Exists(TempDownloadMp4Path))
+                    File.Delete(TempDownloadMp4Path);
+                if (File.Exists(TempDownloadWebmPath))
+                    File.Delete(TempDownloadWebmPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to delete temp file: {ex}", ex.ToString());
+            }
+
+            return false;
+        }
+        if (File.Exists(TempDownloadMp4Path))
+        {
+            File.Move(TempDownloadMp4Path, filePath);
+        }
+        else if (File.Exists(TempDownloadWebmPath))
+        {
+            File.Move(TempDownloadWebmPath, filePath);
+        }
+        else
+        {
+            Log.Error("Failed to download YouTube Video: {URL}", url);
+            return false;
+        }
+
+        CacheManager.AddToCache(fileName);
+        return true;
+    }
+    
     private static async Task<bool> DownloadVideoWithId(VideoInfo videoInfo)
     {
         if (File.Exists(TempDownloadMp4Path))
