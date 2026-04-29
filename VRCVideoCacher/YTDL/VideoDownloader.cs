@@ -60,6 +60,8 @@ public class VideoDownloader
                         success = await DownloadYouTubeVideo(queueItem);
                         break;
                     case UrlType.PyPyDance:
+                        success = await DownloadVideoWithId(queueItem);
+                        break;
                     case UrlType.VRDancing:
                         success = await DownloadVRDancingVideoWithId(queueItem);
                         break;
