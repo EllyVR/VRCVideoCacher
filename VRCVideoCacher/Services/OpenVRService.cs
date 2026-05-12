@@ -1,4 +1,8 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using Serilog;
 using Valve.VR;
 
@@ -56,6 +60,7 @@ public class OpenVRService
                                 Logger.Warning("Failed to register startup manifest");
                             }
                         }
+                        await PollEventsUntilQuit();
                         break;
                     // Only retry if vrserver just isn't running yet
                     case EVRInitError.Init_HmdNotFound or EVRInitError.Init_HmdNotFoundPresenceFailed or EVRInitError.Init_NoServerForBackgroundApp:
@@ -77,6 +82,46 @@ public class OpenVRService
                     return;
                 }
             }
+        });
+    }
+
+    private static async Task PollEventsUntilQuit()
+    {
+        var vrEvent = new VREvent_t();
+        var eventSize = (uint)Marshal.SizeOf<VREvent_t>();
+
+        while (true)
+        {
+            await Task.Delay(500);
+
+            if (OpenVR.System == null)
+            {
+                Logger.Warning("OpenVR system became unavailable, assuming SteamVR closed");
+                break;
+            }
+
+            while (OpenVR.System.PollNextEvent(ref vrEvent, eventSize))
+            {
+                if ((EVREventType)vrEvent.eventType != EVREventType.VREvent_Quit)
+                    continue;
+
+                Logger.Information("SteamVR is shutting down, closing VRCVideoCacher");
+                OpenVR.System.AcknowledgeQuit_Exiting();
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+                        lifetime.Shutdown();
+                });
+                return;
+            }
+        }
+
+        // SteamVR became unavailable without a clean VREvent_Quit (e.g. crash)
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+                lifetime.Shutdown();
         });
     }
 }
