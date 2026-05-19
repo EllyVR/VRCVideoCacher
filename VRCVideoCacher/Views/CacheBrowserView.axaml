@@ -3,7 +3,7 @@
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
              xmlns:asyncImageLoader="using:AsyncImageLoader"
-             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             xmlns:l="using:Jeek.Avalonia.Localization"
              x:Class="VRCVideoCacher.Views.CacheBrowserView"
              x:DataType="vm:CacheBrowserViewModel"
              x:CompileBindings="True">
@@ -11,15 +11,15 @@
     <Grid RowDefinitions="Auto, Auto, *, Auto">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="10">
-            <TextBlock Text="{loc:Tr CacheBrowser}" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{l:Localize CacheBrowser}" FontSize="24" FontWeight="Bold"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Command="{Binding RefreshCacheCommand}" ToolTip.Tip="{loc:Tr Refresh}">
+                <Button Command="{Binding RefreshCacheCommand}" ToolTip.Tip="{l:Localize Refresh}">
                     <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding OpenInExplorerCommand}" ToolTip.Tip="{loc:Tr OpenFolder}">
+                <Button Command="{Binding OpenInExplorerCommand}" ToolTip.Tip="{l:Localize OpenFolder}">
                     <mi:MaterialIcon Kind="FolderOpen" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding DeleteAllCommand}" ToolTip.Tip="{loc:Tr DeleteAllCache}" Background="#CF6679">
+                <Button Command="{Binding DeleteAllCommand}" ToolTip.Tip="{l:Localize DeleteAllCache}" Background="#CF6679">
                     <mi:MaterialIcon Kind="DeleteSweep" Width="20" Height="20"/>
                 </Button>
             </StackPanel>
@@ -27,7 +27,7 @@
 
         <!-- Search -->
         <Grid Grid.Row="1" Margin="10,0,10,10">
-            <TextBox Text="{Binding SearchFilter}" PlaceholderText="{loc:Tr SearchVideosWatermark}">
+            <TextBox Text="{Binding SearchFilter}" PlaceholderText="{l:Localize SearchVideosWatermark}">
                 <TextBox.InnerLeftContent>
                     <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
                 </TextBox.InnerLeftContent>

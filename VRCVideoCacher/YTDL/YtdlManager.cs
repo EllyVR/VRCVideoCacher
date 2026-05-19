@@ -29,8 +29,8 @@ public class YtdlManager
     private const string DenoApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest";
     private const string DenoFallBackVersionURL = "https://dl.deno.land/release-latest.txt";
     private const string DenoFallBackDownloadURL = "https://dl.deno.land/release/";
-    
-    
+
+
     static YtdlManager()
     {
         CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
@@ -293,7 +293,7 @@ public class YtdlManager
 
         Log.Error("Failed to extract Deno files from fallback download.");
     }
-    
+
     public static async Task TryDownloadFfmpeg()
     {
         if (!Directory.Exists(Program.UtilsPath))

@@ -2,20 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
-             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             xmlns:l="using:Jeek.Avalonia.Localization"
              x:Class="VRCVideoCacher.Views.DownloadQueueView"
              x:DataType="vm:DownloadQueueViewModel">
 
     <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="10">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
-            <TextBlock Text="{loc:Tr DownloadQueue}" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{l:Localize DownloadQueue}" FontSize="24" FontWeight="Bold"/>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Command="{Binding RefreshQueueCommand}" ToolTip.Tip="{loc:Tr Refresh}">
+                <Button Command="{Binding RefreshQueueCommand}" ToolTip.Tip="{l:Localize Refresh}">
                     <mi:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
                 </Button>
-                <Button Command="{Binding ClearQueueCommand}" ToolTip.Tip="{loc:Tr ClearQueue}" Background="#CF6679">
+                <Button Command="{Binding ClearQueueCommand}" ToolTip.Tip="{l:Localize ClearQueue}" Background="#CF6679">
                     <mi:MaterialIcon Kind="DeleteSweep" Width="20" Height="20"/>
                 </Button>
             </StackPanel>
@@ -24,7 +24,7 @@
         <!-- Current Download -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,0,20">
             <StackPanel Spacing="10">
-                <TextBlock Text="{loc:Tr CurrentDownload}" FontWeight="SemiBold" FontSize="16"/>
+                <TextBlock Text="{l:Localize CurrentDownload}" FontWeight="SemiBold" FontSize="16"/>
 
                 <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding CurrentDownload, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <mi:MaterialIcon Grid.Column="0" Kind="Download" Width="24" Height="24" Foreground="#64B5F6"/>
@@ -35,7 +35,7 @@
                     <TextBlock Grid.Column="2" Text="{Binding CurrentStatus}" VerticalAlignment="Center"/>
                 </Grid>
 
-                <TextBlock Text="{loc:Tr NoActiveDownload}"
+                <TextBlock Text="{l:Localize NoActiveDownload}"
                            IsVisible="{Binding CurrentDownload, Converter={x:Static ObjectConverters.IsNull}}"
                            Foreground="#888888"/>
             </StackPanel>
@@ -44,14 +44,14 @@
         <!-- Manual Download -->
         <Border Grid.Row="2" Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,0,20">
             <StackPanel Spacing="10">
-                <TextBlock Text="{loc:Tr AddManualDownload}" FontWeight="SemiBold" FontSize="16"/>
+                <TextBlock Text="{l:Localize AddManualDownload}" FontWeight="SemiBold" FontSize="16"/>
 
                 <Grid ColumnDefinitions="*, Auto">
-                    <TextBox Grid.Column="0" Text="{Binding ManualUrl}" PlaceholderText="{loc:Tr EnterVideoUrl}"/>
+                    <TextBox Grid.Column="0" Text="{Binding ManualUrl}" PlaceholderText="{l:Localize EnterVideoUrl}"/>
                     <Button Grid.Column="1" Command="{Binding AddManualDownloadCommand}" Margin="10,0,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                            <TextBlock Text="{loc:Tr Add}"/>
+                            <TextBlock Text="{l:Localize Add}"/>
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -65,7 +65,7 @@
         <!-- Queue List -->
         <Border Grid.Row="3" Background="#2d2d2d" CornerRadius="8" Padding="20">
             <Grid RowDefinitions="Auto, *">
-                <TextBlock Grid.Row="0" Text="{loc:Tr QueuedDownloads}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,15"/>
+                <TextBlock Grid.Row="0" Text="{l:Localize QueuedDownloads}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,15"/>
 
                 <ListBox Grid.Row="1"
                          ItemsSource="{Binding QueuedDownloads}"
@@ -88,7 +88,7 @@
                 </ListBox>
 
                 <TextBlock Grid.Row="1"
-                           Text="{loc:Tr QueueIsEmpty}"
+                           Text="{l:Localize QueueIsEmpty}"
                            Foreground="#888888"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"

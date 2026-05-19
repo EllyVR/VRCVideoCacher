@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
-using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher.ViewModels;
@@ -140,7 +140,7 @@ public partial class CacheBrowserViewModel : ViewModelBase
             }
         }
 
-        StatusText = string.Format(Loc.Tr("VideosCountFormat"), FilteredVideos.Count, CachedVideos.Count);
+        StatusText = string.Format(Localizer.Get("VideosCountFormat"), FilteredVideos.Count, CachedVideos.Count);
     }
 
     [RelayCommand]
@@ -195,7 +195,7 @@ public partial class CacheBrowserViewModel : ViewModelBase
         {
             CachedVideos.Remove(item);
             FilteredVideos.Remove(item);
-            StatusText = string.Format(Loc.Tr("VideosCountFormat"), FilteredVideos.Count, CachedVideos.Count);
+            StatusText = string.Format(Localizer.Get("VideosCountFormat"), FilteredVideos.Count, CachedVideos.Count);
         });
     }
 

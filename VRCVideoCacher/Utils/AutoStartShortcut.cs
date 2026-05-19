@@ -369,7 +369,7 @@ public class AutoStartShortcut
             if (File.Exists(filePath))
             {
                 var versionText = File.ReadAllText(filePath).Trim();
-                if(!string.IsNullOrWhiteSpace(versionText))
+                if (!string.IsNullOrWhiteSpace(versionText))
                 {
                     version = versionText;
                     return true;

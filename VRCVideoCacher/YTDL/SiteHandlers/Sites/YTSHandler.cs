@@ -6,7 +6,7 @@ namespace VRCVideoCacher.YTDL.SiteHandlers.Sites;
 public class YTSHandler : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<YTSHandler>();
-    
+
     public bool CanHandle(Uri uri) => false; // rewrite only
 
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro) => Task.FromResult<VideoInfo?>(null);

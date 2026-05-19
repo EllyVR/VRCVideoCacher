@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
-using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Database;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
@@ -166,7 +166,7 @@ public partial class HistoryViewModel : ViewModelBase
         {
             HistoryItems.Add(item);
         }
-        StatusText = string.Format(Loc.Tr("EntriesCountFormat"), HistoryItems.Count);
+        StatusText = string.Format(Localizer.Get("EntriesCountFormat"), HistoryItems.Count);
 
         _ = Task.Run(async () =>
         {

@@ -1,6 +1,5 @@
 using Serilog;
 using VRCVideoCacher.Models;
-using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.YTDL.SiteHandlers.Sites;
 

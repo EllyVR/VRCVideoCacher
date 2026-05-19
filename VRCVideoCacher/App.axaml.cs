@@ -1,15 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using CodingSeb.Localization;
-using CodingSeb.Localization.Loaders;
-using Newtonsoft.Json.Linq;
+using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.ViewModels;
 using VRCVideoCacher.Views;
@@ -76,7 +72,7 @@ public partial class App : Application
                 e.Cancel = true;
                 MainWindow.Hide();
             };
- 
+
             // Minimize at startup if needed
             MainWindow.Opened += OnMainWindowOpened;
 
@@ -101,46 +97,12 @@ public partial class App : Application
 
     private void InitializeLocalization()
     {
-        LoadEmbeddedLanguageFiles();
+        var localizer = new EmbeddedJsonLocalizer();
+        Localizer.SetLocalizer(localizer);
 
         var configLang = ConfigManager.Config.Language;
         var lang = string.IsNullOrEmpty(configLang) ? "en" : configLang;
-        Loc.Instance.CurrentLanguage = lang;
-    }
-
-    /// <summary>
-    /// Loads all embedded *.loc.json language files from the Languages/ folder baked into the assembly.
-    /// Each resource is named VRCVideoCacher.Languages.{langId}.loc.json and contains a flat
-    /// JSON object {"Key": "Translated value"} for that language.
-    /// </summary>
-    private static void LoadEmbeddedLanguageFiles()
-    {
-        const string prefix = "VRCVideoCacher.Languages.";
-        const string suffix = ".loc.json";
-
-        var assembly = Assembly.GetExecutingAssembly();
-        var resources = assembly.GetManifestResourceNames()
-            .Where(r => r.StartsWith(prefix) && r.EndsWith(suffix));
-
-        foreach (var resourceName in resources)
-        {
-            var langId = resourceName[prefix.Length..^suffix.Length];
-
-            try
-            {
-                using var stream = assembly.GetManifestResourceStream(resourceName)!;
-                using var reader = new StreamReader(stream);
-                var json = JObject.Parse(reader.ReadToEnd());
-                foreach (var prop in json.Properties())
-                {
-                    LocalizationLoader.Instance.AddTranslation(prop.Name, langId, prop.Value?.ToString() ?? prop.Name);
-                }
-            }
-            catch
-            {
-                // Skip malformed resources — non-fatal.
-            }
-        }
+        Localizer.Language = lang;
     }
 
     private bool _isExiting;
@@ -208,13 +170,13 @@ public partial class App : Application
                     _desktop?.Shutdown();
                 });
             });
-            
+
             //Pressing X on window does not remove the tray nor stop the console process
             MainWindow!.Closing += (_, _) =>
             {
                 if (ConfigManager.Config.CloseToTray || _isExiting)
                     return;
-                
+
                 _isExiting = true;
                 _trayIcon?.Dispose();
                 _trayIcon = null;
@@ -222,24 +184,24 @@ public partial class App : Application
             };
         }
 
-        _showItem = new NativeMenuItem(Loc.Tr("TrayShow"));
+        _showItem = new NativeMenuItem(Localizer.Get("TrayShow"));
         _showItem.Click += (_, _) => ShowMainWindow();
 
-        _openCacheItem = new NativeMenuItem(Loc.Tr("TrayOpenCacheFolder"));
+        _openCacheItem = new NativeMenuItem(Localizer.Get("TrayOpenCacheFolder"));
         _openCacheItem.Click += (_, _) => OpenCacheFolder();
 
-        _exitItem = new NativeMenuItem(Loc.Tr("TrayExit"));
+        _exitItem = new NativeMenuItem(Localizer.Get("TrayExit"));
         _exitItem.Click += (_, _) =>
         {
             _isExiting = true;
             desktop.Shutdown();
         };
 
-        Loc.Instance.CurrentLanguageChanged += (_, _) =>
+        Localizer.LanguageChanged += (_, _) =>
         {
-            if (_showItem != null) _showItem.Header = Loc.Tr("TrayShow");
-            if (_openCacheItem != null) _openCacheItem.Header = Loc.Tr("TrayOpenCacheFolder");
-            if (_exitItem != null) _exitItem.Header = Loc.Tr("TrayExit");
+            if (_showItem != null) _showItem.Header = Localizer.Get("TrayShow");
+            if (_openCacheItem != null) _openCacheItem.Header = Localizer.Get("TrayOpenCacheFolder");
+            if (_exitItem != null) _exitItem.Header = Localizer.Get("TrayExit");
         };
 
         var menu = new NativeMenu

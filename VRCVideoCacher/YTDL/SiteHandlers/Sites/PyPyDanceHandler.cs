@@ -10,9 +10,9 @@ public class PyPyDanceHandler : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<PyPyDanceHandler>();
     private static readonly string[] Prefixes = ["http://api.pypy.dance/video", "https://api.pypy.dance/video"];
-    
+
     public bool CanHandle(Uri uri) => Prefixes.Any(p => uri.ToString().StartsWith(p));
-    
+
     public async Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro)
     {
         try
@@ -54,5 +54,5 @@ public class PyPyDanceHandler : ISiteHandler
             return null;
         }
     }
-    
+
 }

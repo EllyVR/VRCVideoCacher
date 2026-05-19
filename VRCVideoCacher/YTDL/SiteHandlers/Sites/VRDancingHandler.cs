@@ -7,11 +7,11 @@ namespace VRCVideoCacher.YTDL.SiteHandlers.Sites;
 public class VRDancingHandler : ISiteHandler
 {
     private static readonly ILogger Log = Program.Logger.ForContext<VRDancingHandler>();
-    
+
     private static readonly string[] Prefixes = ["https://na2.vrdancing.club", "https://eu2.vrdancing.club", "https://mpegts-beta.vrdancing.club"];
 
     public bool CanHandle(Uri uri) => Prefixes.Any(p => uri.ToString().StartsWith(p));
-    
+
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro)
     {
         var code = url.TrimEnd('/').Split('/').Last();
@@ -34,5 +34,5 @@ public class VRDancingHandler : ISiteHandler
     public List<string> GetYtdlpArguments(Uri uri, bool avPro) => [];
 
     public Task<string> RewriteUrl(string url, Uri uri) => Task.FromResult(url);
-    
+
 }

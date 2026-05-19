@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
-             xmlns:loc="using:CodingSeb.Localization.Avalonia"
+             xmlns:l="using:Jeek.Avalonia.Localization"
              x:Class="VRCVideoCacher.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
     <Grid RowDefinitions="Auto, *, Auto">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="10">
-            <TextBlock Text="{loc:Tr Settings}" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="{l:Localize Settings}" FontSize="24" FontWeight="Bold"/>
             
             <!-- Status Message -->
             <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Margin="15,0" VerticalAlignment="Center"
@@ -19,14 +19,14 @@
             <Button Grid.Column="2" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,10,0">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <mi:MaterialIcon Kind="Undo" Width="16" Height="16"/>
-                    <TextBlock Text="{loc:Tr Reset}"/>
+                    <TextBlock Text="{l:Localize Reset}"/>
                 </StackPanel>
             </Button>
             
             <Button Grid.Column="3" Command="{Binding SaveSettingsCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <mi:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
-                    <TextBlock Text="{loc:Tr Save}"/>
+                    <TextBlock Text="{l:Localize Save}"/>
                 </StackPanel>
             </Button>
 
@@ -38,10 +38,10 @@
                 <!-- General Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr General}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize General}" FontWeight="SemiBold" FontSize="16"/>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr Language}"/>
+                            <TextBlock Text="{l:Localize Language}"/>
                             <ComboBox ItemsSource="{Binding AvailableLanguageOptions}"
                                       SelectedItem="{Binding SelectedLanguageOption}">
                                 <ComboBox.ItemTemplate>
@@ -52,21 +52,21 @@
                             </ComboBox>
                         </StackPanel>
                         
-                        <CheckBox IsChecked="{Binding CloseToTray}" Content="{loc:Tr CloseToTray}"/>
+                        <CheckBox IsChecked="{Binding CloseToTray}" Content="{l:Localize CloseToTray}"/>
 
-                        <CheckBox IsChecked="{Binding StartMinimized}" Content="{loc:Tr StartMinimized}"/>
+                        <CheckBox IsChecked="{Binding StartMinimized}" Content="{l:Localize StartMinimized}"/>
 
-                        <CheckBox IsChecked="{Binding StartWithSteamVr}" Content="{loc:Tr StartWithSteamVr}"/>
+                        <CheckBox IsChecked="{Binding StartWithSteamVr}" Content="{l:Localize StartWithSteamVr}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Server Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr ServerSettings}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize ServerSettings}" FontWeight="SemiBold" FontSize="16"/>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr WebServerUrl}"/>
+                            <TextBlock Text="{l:Localize WebServerUrl}"/>
                             <TextBox Text="{Binding WebServerUrl}" PlaceholderText="http://localhost:9696"/>
                         </StackPanel>
                     </StackPanel>
@@ -75,18 +75,18 @@
                 <!-- Download Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr DownloadSettings}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize DownloadSettings}" FontWeight="SemiBold" FontSize="16"/>
 
-                        <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="{loc:Tr UseYouTubeCookies}"/>
-                        <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="{loc:Tr AutoUpdateUtils}"/>
+                        <CheckBox IsChecked="{Binding YtdlUseCookies}" Content="{l:Localize UseYouTubeCookies}"/>
+                        <CheckBox IsChecked="{Binding YtdlAutoUpdate}" Content="{l:Localize AutoUpdateUtils}"/>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr AdditionalYtdlpArgs}"/>
+                            <TextBlock Text="{l:Localize AdditionalYtdlpArgs}"/>
                             <TextBox Text="{Binding YtdlAdditionalArgs}" PlaceholderText="Optional arguments"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr PreferredDubLanguage}"/>
+                            <TextBlock Text="{l:Localize PreferredDubLanguage}"/>
                             <TextBox Text="{Binding YtdlDubLanguage}" PlaceholderText="Leave empty for original"/>
                         </StackPanel>
                     </StackPanel>
@@ -95,55 +95,55 @@
                 <!-- Cache Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr CacheSettings}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize CacheSettings}" FontWeight="SemiBold" FontSize="16"/>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr CachePathLabel}"/>
+                            <TextBlock Text="{l:Localize CachePathLabel}"/>
                             <TextBox Text="{Binding CachedAssetPath}" PlaceholderText="CachedAssets"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{loc:Tr MaxCacheSizeLabel}"/>
+                            <TextBlock Text="{l:Localize MaxCacheSizeLabel}"/>
                             <NumericUpDown Value="{Binding CacheMaxSizeInGb}" Minimum="0" Maximum="10000" Increment="1" FormatString="0.#"/>
                         </StackPanel>
 
-                        <CheckBox IsChecked="{Binding CacheYouTube}" Content="{loc:Tr CacheYouTubeVideos}"/>
+                        <CheckBox IsChecked="{Binding CacheYouTube}" Content="{l:Localize CacheYouTubeVideos}"/>
 
                         <StackPanel Spacing="5" Margin="30,0,0,0" IsVisible="{Binding CacheYouTube}">
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{loc:Tr MaxYouTubeResolution}"/>
+                                <TextBlock Text="{l:Localize MaxYouTubeResolution}"/>
                                 <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding CacheYouTubeMaxResolution}"/>
                             </StackPanel>
 
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{loc:Tr MaxVideoLength}"/>
+                                <TextBlock Text="{l:Localize MaxVideoLength}"/>
                                 <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Increment="10"/>
                             </StackPanel>
                         </StackPanel>
 
-                        <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{loc:Tr CachePyPyDanceVideos}"/>
-                        <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{loc:Tr CacheVRDancingVideos}"/>
-                        <CheckBox IsChecked="{Binding CacheOnly}" Content="{loc:Tr OnlyServeCachedVideos}"/>
-                        <CheckBox IsChecked="{Binding RedirectVRDancing}" Content="{loc:Tr RedirectVRDancing}"/>
+                        <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{l:Localize CachePyPyDanceVideos}"/>
+                        <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{l:Localize CacheVRDancingVideos}"/>
+                        <CheckBox IsChecked="{Binding CacheOnly}" Content="{l:Localize OnlyServeCachedVideos}"/>
+                        <CheckBox IsChecked="{Binding RedirectVRDancing}" Content="{l:Localize RedirectVRDancing}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Game Patching -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr GamePatching}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize GamePatching}" FontWeight="SemiBold" FontSize="16"/>
 
-                        <CheckBox IsChecked="{Binding PatchVRC}" Content="{loc:Tr PatchVRChat}"/>
-                        <CheckBox IsChecked="{Binding PatchResonite}" Content="{loc:Tr PatchResonite}"/>
+                        <CheckBox IsChecked="{Binding PatchVRC}" Content="{l:Localize PatchVRChat}"/>
+                        <CheckBox IsChecked="{Binding PatchResonite}" Content="{l:Localize PatchResonite}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Updates -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="{loc:Tr Updates}" FontWeight="SemiBold" FontSize="16"/>
+                        <TextBlock Text="{l:Localize Updates}" FontWeight="SemiBold" FontSize="16"/>
 
-                        <CheckBox IsChecked="{Binding AutoUpdate}" Content="{loc:Tr AutoUpdateVRCVideoCacher}"/>
+                        <CheckBox IsChecked="{Binding AutoUpdate}" Content="{l:Localize AutoUpdateVRCVideoCacher}"/>
                     </StackPanel>
                 </Border>
 
@@ -151,11 +151,11 @@
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
                         <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock Text="{loc:Tr BlockedUrls}" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{l:Localize BlockedUrls}" FontWeight="SemiBold" FontSize="16"/>
                             <Button Grid.Column="1" Command="{Binding AddBlockedUrlCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                                    <TextBlock Text="{loc:Tr Add}"/>
+                                    <TextBlock Text="{l:Localize Add}"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -175,7 +175,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <StackPanel Spacing="5" Margin="0,20,0,0">
-                            <TextBlock Text="{loc:Tr BlockedUrlRedirect}" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{l:Localize BlockedUrlRedirect}" FontWeight="SemiBold" FontSize="16"/>
                             <TextBox Text="{Binding BlockRedirect}" PlaceholderText="Redirect URL"/>
                         </StackPanel>
                     </StackPanel>

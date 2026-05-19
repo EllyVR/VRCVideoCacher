@@ -3,7 +3,7 @@
         xmlns:vm="using:VRCVideoCacher.ViewModels"
         xmlns:views="using:VRCVideoCacher.Views"
         xmlns:mi="using:Material.Icons.Avalonia"
-        xmlns:loc="using:CodingSeb.Localization.Avalonia"
+        xmlns:l="using:Jeek.Avalonia.Localization"
         xmlns:viewModels="clr-namespace:VRCVideoCacher.ViewModels"
         x:Class="VRCVideoCacher.Views.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
@@ -29,7 +29,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="ViewDashboard" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr Dashboard}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize Dashboard}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -39,7 +39,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="History" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr History}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize History}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -49,7 +49,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="FolderVideo" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr CacheBrowser}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize CacheBrowser}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -59,7 +59,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="Download" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr Downloads}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize Downloads}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -69,7 +69,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="Cog" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr Settings}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize Settings}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -79,7 +79,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="TextBox" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr Logs}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize Logs}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -89,7 +89,7 @@
                             Classes="nav-button">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <mi:MaterialIcon Kind="Information" Width="20" Height="20"/>
-                            <TextBlock Text="{loc:Tr About}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{l:Localize About}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

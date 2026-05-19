@@ -10,7 +10,7 @@ public class Database : DbContext
 
     public DbSet<History> PlayHistory { get; set; }
     public DbSet<VideoInfoCache> VideoInfoCache { get; set; }
-    
+
     // Required for PooledDbContextFactory
     public Database(DbContextOptions<Database> options) : base(options) { }
 

@@ -8,7 +8,6 @@ using Serilog;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
-using VRCVideoCacher.Database;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
@@ -193,7 +192,7 @@ internal sealed class Program
                 Log.Error(ex, "Backend error");
             }
         });
-        
+
         OpenVRService.Start(CurrentProcessPath);
 
         // Start the UI
