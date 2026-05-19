@@ -67,24 +67,28 @@ internal sealed class Program
     {
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
+        LaunchArgs.SetupArguments(args);
 
 #if STEAMRELEASE
-        if (SteamAPI.RestartAppIfNecessary(new AppId_t(4296960)))
+        if (LaunchArgs.SteamSdk)
         {
-            Environment.Exit(0);
-            return;
-        }
+            if (SteamAPI.RestartAppIfNecessary(new AppId_t(4296960)))
+            {
+                Environment.Exit(0);
+                return;
+            }
 
-        if (!SteamAPI.Init())
-        {
-            Console.Error.WriteLine("SteamAPI.Init() failed. Make sure Steam is running.");
-            Environment.Exit(1);
-            return;
-        }
+            if (!SteamAPI.Init())
+            {
+                Console.Error.WriteLine("SteamAPI.Init() failed. Make sure Steam is running.");
+                Environment.Exit(1);
+                return;
+            }
 
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => SteamAPI.Shutdown();
+        }
 #endif
-        LaunchArgs.SetupArguments(args);
+
         if (Updater.RunUpdateHandler())
         {
             Environment.Exit(0);

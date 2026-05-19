@@ -8,6 +8,7 @@ public class LaunchArgs
     private const string GlobalPathArg = "--global-path";
     private const string OldPidArg = "--old-pid";
     private const string KillExistingInstanceArg = "--kill-existing-instance";
+    private const string NoSteamArg = "--no-steam";
 
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
@@ -15,6 +16,7 @@ public class LaunchArgs
     public static bool UseGlobalPath;
     public static int? OldPid;
     public static bool KillExistingInstance = false;
+    public static bool SteamSdk = true;
 
     public static void SetupArguments(params string[] args)
     {
@@ -43,6 +45,9 @@ public class LaunchArgs
 
             if (arg.Equals(KillExistingInstanceArg, StringComparison.OrdinalIgnoreCase))
                 KillExistingInstance = true;
+            
+            if (arg.Equals(NoSteamArg, StringComparison.OrdinalIgnoreCase))
+                SteamSdk = false;
         }
     }
 
