@@ -27,7 +27,7 @@
 
         <!-- Search -->
         <Grid Grid.Row="1" Margin="10,0,10,10">
-            <TextBox Text="{Binding SearchFilter}" Watermark="{loc:Tr SearchVideosWatermark}">
+            <TextBox Text="{Binding SearchFilter}" PlaceholderText="{loc:Tr SearchVideosWatermark}">
                 <TextBox.InnerLeftContent>
                     <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
                 </TextBox.InnerLeftContent>

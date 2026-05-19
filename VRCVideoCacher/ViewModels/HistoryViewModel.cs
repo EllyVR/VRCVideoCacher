@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Avalonia.Input.Platform;
 using Avalonia.Media;
 using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;

@@ -67,7 +67,7 @@
 
                         <StackPanel Spacing="5">
                             <TextBlock Text="{loc:Tr WebServerUrl}"/>
-                            <TextBox Text="{Binding WebServerUrl}" Watermark="http://localhost:9696"/>
+                            <TextBox Text="{Binding WebServerUrl}" PlaceholderText="http://localhost:9696"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -82,12 +82,12 @@
 
                         <StackPanel Spacing="5">
                             <TextBlock Text="{loc:Tr AdditionalYtdlpArgs}"/>
-                            <TextBox Text="{Binding YtdlAdditionalArgs}" Watermark="Optional arguments"/>
+                            <TextBox Text="{Binding YtdlAdditionalArgs}" PlaceholderText="Optional arguments"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
                             <TextBlock Text="{loc:Tr PreferredDubLanguage}"/>
-                            <TextBox Text="{Binding YtdlDubLanguage}" Watermark="Leave empty for original"/>
+                            <TextBox Text="{Binding YtdlDubLanguage}" PlaceholderText="Leave empty for original"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -99,7 +99,7 @@
 
                         <StackPanel Spacing="5">
                             <TextBlock Text="{loc:Tr CachePathLabel}"/>
-                            <TextBox Text="{Binding CachedAssetPath}" Watermark="CachedAssets"/>
+                            <TextBox Text="{Binding CachedAssetPath}" PlaceholderText="CachedAssets"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
@@ -176,7 +176,7 @@
                         </ItemsControl>
                         <StackPanel Spacing="5" Margin="0,20,0,0">
                             <TextBlock Text="{loc:Tr BlockedUrlRedirect}" FontWeight="SemiBold" FontSize="16"/>
-                            <TextBox Text="{Binding BlockRedirect}" Watermark="Redirect URL"/>
+                            <TextBox Text="{Binding BlockRedirect}" PlaceholderText="Redirect URL"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

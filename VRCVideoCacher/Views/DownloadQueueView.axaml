@@ -47,7 +47,7 @@
                 <TextBlock Text="{loc:Tr AddManualDownload}" FontWeight="SemiBold" FontSize="16"/>
 
                 <Grid ColumnDefinitions="*, Auto">
-                    <TextBox Grid.Column="0" Text="{Binding ManualUrl}" Watermark="{loc:Tr EnterVideoUrl}"/>
+                    <TextBox Grid.Column="0" Text="{Binding ManualUrl}" PlaceholderText="{loc:Tr EnterVideoUrl}"/>
                     <Button Grid.Column="1" Command="{Binding AddManualDownloadCommand}" Margin="10,0,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>

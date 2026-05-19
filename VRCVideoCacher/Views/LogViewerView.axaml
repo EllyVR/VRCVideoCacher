@@ -24,7 +24,7 @@
         <!-- Filters -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <Grid ColumnDefinitions="*, Auto">
-                <TextBox Grid.Column="0" Text="{Binding FilterText}" Watermark="{loc:Tr FilterLogsWatermark}" Margin="0,0,15,0">
+                <TextBox Grid.Column="0" Text="{Binding FilterText}" PlaceholderText="{loc:Tr FilterLogsWatermark}" Margin="0,0,15,0">
                     <TextBox.InnerLeftContent>
                         <mi:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="5,0"/>
                     </TextBox.InnerLeftContent>

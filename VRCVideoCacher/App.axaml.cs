@@ -56,9 +56,6 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit
-            BindingPlugins.DataValidators.RemoveAt(0);
-
             MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel()
