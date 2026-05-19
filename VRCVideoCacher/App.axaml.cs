@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Jeek.Avalonia.Localization;
+using VRCVideoCacher.Languages;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.ViewModels;
 using VRCVideoCacher.Views;
