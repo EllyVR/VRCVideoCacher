@@ -9,6 +9,7 @@ public class LaunchArgs
     private const string OldPidArg = "--old-pid";
     private const string KillExistingInstanceArg = "--kill-existing-instance";
     private const string NoSteamArg = "--no-steam";
+    private const string NoOvrArg = "--no-ovr";
 
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
@@ -17,6 +18,7 @@ public class LaunchArgs
     public static int? OldPid;
     public static bool KillExistingInstance = false;
     public static bool SteamSdk = true;
+    public static bool OVR = true;
 
     public static void SetupArguments(params string[] args)
     {
@@ -48,6 +50,9 @@ public class LaunchArgs
             
             if (arg.Equals(NoSteamArg, StringComparison.OrdinalIgnoreCase))
                 SteamSdk = false;
+            
+            if (arg.Equals(NoOvrArg, StringComparison.OrdinalIgnoreCase))
+                OVR = false;
         }
     }
 
