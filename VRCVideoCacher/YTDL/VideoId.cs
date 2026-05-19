@@ -77,8 +77,10 @@ public class VideoId
 
         var (rawData, error, exitCode) = await RunYtdlpAsync(args, url);
         if (exitCode != 0)
-            throw new Exception($"Failed to get video ID: {error.Trim()}");
-
+        {
+            Log.Warning("Failed to get video ID: {Error}", error.Trim());
+            return string.Empty;
+        }
         if (string.IsNullOrEmpty(rawData))
         {
             Log.Warning("Failed to get video ID");
