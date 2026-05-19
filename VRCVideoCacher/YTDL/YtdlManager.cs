@@ -29,8 +29,8 @@ public class YtdlManager
     private const string DenoApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest";
     private const string DenoFallBackVersionURL = "https://dl.deno.land/release-latest.txt";
     private const string DenoFallBackDownloadURL = "https://dl.deno.land/release/";
-    
-    
+
+
     static YtdlManager()
     {
         CookiesPath = Path.Join(Program.DataPath, "youtube_cookies.txt");
@@ -219,22 +219,29 @@ public class YtdlManager
             return;
         }
         await using var responseStream = await response.Content.ReadAsStreamAsync();
-        using var reader = ReaderFactory.Open(responseStream);
-        while (await reader.MoveToNextEntryAsync())
+        var reader = await ReaderFactory.OpenAsyncReader(responseStream);
+        try
         {
-            if (reader.Entry.Key == null || reader.Entry.IsDirectory)
-                continue;
+            while (await reader.MoveToNextEntryAsync())
+            {
+                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                    continue;
 
-            Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
-            var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
-            await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await using var entryStream = await reader.OpenEntryStreamAsync();
-            await entryStream.CopyToAsync(outputStream);
-            FileTools.MarkFileExecutable(path);
-            Versions.CurrentVersion.Deno = json.tag_name;
-            Versions.Save();
-            Log.Information("Deno downloaded and extracted.");
-            return;
+                Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
+                var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
+                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+                await entryStream.CopyToAsync(outputStream);
+                FileTools.MarkFileExecutable(path);
+                Versions.CurrentVersion.Deno = json.tag_name;
+                Versions.Save();
+                Log.Information("Deno downloaded and extracted.");
+                return;
+            }
+        }
+        finally
+        {
+            await reader.DisposeAsync();
         }
 
         Log.Error("Failed to extract Deno files.");
@@ -259,27 +266,34 @@ public class YtdlManager
         }
 
         await using var responseStream = await downloadResponse.Content.ReadAsStreamAsync();
-        using var reader = ReaderFactory.Open(responseStream);
-        while (await reader.MoveToNextEntryAsync())
+        var reader = await ReaderFactory.OpenAsyncReader(responseStream);
+        try
         {
-            if (reader.Entry.Key == null || reader.Entry.IsDirectory)
-                continue;
+            while (await reader.MoveToNextEntryAsync())
+            {
+                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                    continue;
 
-            Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
-            var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
-            await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await using var entryStream = await reader.OpenEntryStreamAsync();
-            await entryStream.CopyToAsync(outputStream);
-            FileTools.MarkFileExecutable(path);
-            Versions.CurrentVersion.Deno = latestVersion;
-            Versions.Save();
-            Log.Information("Deno downloaded and extracted.");
-            return;
+                Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
+                var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
+                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+                await entryStream.CopyToAsync(outputStream);
+                FileTools.MarkFileExecutable(path);
+                Versions.CurrentVersion.Deno = latestVersion;
+                Versions.Save();
+                Log.Information("Deno downloaded and extracted.");
+                return;
+            }
+        }
+        finally
+        {
+            await reader.DisposeAsync();
         }
 
         Log.Error("Failed to extract Deno files from fallback download.");
     }
-    
+
     public static async Task TryDownloadFfmpeg()
     {
         if (!Directory.Exists(Program.UtilsPath))
@@ -357,24 +371,31 @@ public class YtdlManager
 
         using var response = await HttpClient.GetAsync(url);
         await using var responseStream = await response.Content.ReadAsStreamAsync();
-        using var reader = ReaderFactory.Open(responseStream);
+        var reader = await ReaderFactory.OpenAsyncReader(responseStream);
         var success = false;
-        while (await reader.MoveToNextEntryAsync())
+        try
         {
-            if (reader.Entry.Key == null || reader.Entry.IsDirectory)
-                continue;
+            while (await reader.MoveToNextEntryAsync())
+            {
+                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                    continue;
 
-            if (!reader.Entry.Key.Contains("/bin/"))
-                continue;
+                if (!reader.Entry.Key.Contains("/bin/"))
+                    continue;
 
-            var fileName = Path.GetFileName(reader.Entry.Key);
-            Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
-            var path = Path.Join(Program.UtilsPath, fileName);
-            await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await using var entryStream = await reader.OpenEntryStreamAsync();
-            await entryStream.CopyToAsync(outputStream);
-            FileTools.MarkFileExecutable(path);
-            success = true;
+                var fileName = Path.GetFileName(reader.Entry.Key);
+                Log.Debug("Extracting file {Name} ({Size} bytes)", fileName, reader.Entry.Size);
+                var path = Path.Join(Program.UtilsPath, fileName);
+                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+                await entryStream.CopyToAsync(outputStream);
+                FileTools.MarkFileExecutable(path);
+                success = true;
+            }
+        }
+        finally
+        {
+            await reader.DisposeAsync();
         }
 
         if (!success)

@@ -6,7 +6,7 @@ namespace VRCVideoCacher.YTDL.SiteHandlers.Sites;
 
 public class NicoVideoHandler : ISiteHandler
 {
-    
+
     private static readonly ILogger Log = Program.Logger.ForContext<NicoVideoHandler>();
 
     // Matches full nicovideo/niconico URLs
@@ -19,7 +19,7 @@ public class NicoVideoHandler : ISiteHandler
     public bool CanHandle(Uri uri) => false; // rewrite only, GenericHandler picks up after
 
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro) => Task.FromResult<VideoInfo?>(null);
-    
+
     public Task<string> RewriteUrl(string url, Uri uri)
     {
         if (!uri.Host.EndsWith("nicovideo.jp") && !uri.Host.EndsWith("nico.ms"))
@@ -39,5 +39,5 @@ public class NicoVideoHandler : ISiteHandler
         Log.Information("Incompatible URL, passing to external resolver: {URL}", newUrl);
         return Task.FromResult(newUrl);
     }
-    
+
 }

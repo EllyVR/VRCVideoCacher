@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Avalonia.Media;
 using Avalonia.Threading;
-using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.ViewModels;
@@ -56,15 +56,15 @@ public partial class CookieSetupViewModel : ViewModelBase
         _ => false
     };
 
-    public string NextButtonText => CurrentStep == 5 ? Loc.Tr("Done") : Loc.Tr("Next");
+    public string NextButtonText => CurrentStep == 5 ? Localizer.Get("Done") : Localizer.Get("Next");
 
     public string ExtensionStoreButtonText => IsChrome
-        ? Loc.Tr("OpenChromeWebStore")
-        : Loc.Tr("OpenFirefoxAddons");
+        ? Localizer.Get("OpenChromeWebStore")
+        : Localizer.Get("OpenFirefoxAddons");
 
     public string CookieStatusText => CookiesReceived
-        ? Loc.Tr("CookiesReceived")
-        : Loc.Tr("WaitingForCookies");
+        ? Localizer.Get("CookiesReceived")
+        : Localizer.Get("WaitingForCookies");
 
     public string CookieStatusIcon => CookiesReceived
         ? "CheckCircle"
@@ -75,8 +75,8 @@ public partial class CookieSetupViewModel : ViewModelBase
         : new SolidColorBrush(Color.Parse("#FFB74D"));
 
     public string HostStatusText => HostState
-        ? Loc.Tr("HostsActive")
-        : Loc.Tr("NotConfigured");
+        ? Localizer.Get("HostsActive")
+        : Localizer.Get("NotConfigured");
 
     public string HostStatusIcon => HostState ? "CheckCircle" : "AlertCircleOutline";
 
@@ -84,7 +84,7 @@ public partial class CookieSetupViewModel : ViewModelBase
         ? new SolidColorBrush(Color.Parse("#81C784"))
         : new SolidColorBrush(Color.Parse("#FFB74D"));
 
-    public string HostButtonText => HostState ? Loc.Tr("RemoveEntry") : Loc.Tr("AddHostsEntry");
+    public string HostButtonText => HostState ? Localizer.Get("RemoveEntry") : Localizer.Get("AddHostsEntry");
 
     public CookieSetupViewModel()
     {
@@ -92,7 +92,7 @@ public partial class CookieSetupViewModel : ViewModelBase
         CookiesReceived = Program.IsCookiesEnabledAndValid();
         _hostState = ElevatorManager.HasHostsLine;
 
-        Loc.Instance.CurrentLanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedComputedProperties);
+        Localizer.LanguageChanged += (_, _) => Dispatcher.UIThread.InvokeAsync(RefreshLocalizedComputedProperties);
         DontShowAgainChecked = false;
     }
 

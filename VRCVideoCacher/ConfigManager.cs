@@ -1,5 +1,5 @@
 using System.Globalization;
-using CodingSeb.Localization;
+using Jeek.Avalonia.Localization;
 using Newtonsoft.Json;
 using Serilog;
 using VRCVideoCacher.Utils;
@@ -122,7 +122,7 @@ public class ConfigManager
     private static string GetSystemLanguage()
     {
         var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        return Loc.Instance.AvailableLanguages.Contains(culture) ? culture : "en";
+        return Localizer.Languages.Contains(culture) ? culture : "en";
     }
 }
 
@@ -163,7 +163,7 @@ public class ConfigModel
     public bool StartWithSteamVr = true;
     public bool CookieSetupCompleted = false;
     public bool RedirectVRDancing = false;
-    
+
     // Localization
     public string Language = "en";
 }

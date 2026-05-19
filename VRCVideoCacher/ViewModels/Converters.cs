@@ -1,6 +1,6 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
-using CodingSeb.Localization;
+using Jeek.Avalonia.Localization;
 
 namespace VRCVideoCacher.ViewModels;
 
@@ -10,7 +10,7 @@ public class BoolToStatusConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is true ? Loc.Tr("Running") : Loc.Tr("Stopped");
+        return value is true ? Localizer.Get("Running") : Localizer.Get("Stopped");
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -10,7 +10,7 @@ public static class DatabaseManager
 {
     public static event Action? OnPlayHistoryAdded;
     public static event Action? OnVideoInfoCacheUpdated;
-    
+
     private static readonly PooledDbContextFactory<Database> _contextFactory;
 
     static DatabaseManager()
@@ -28,7 +28,7 @@ public static class DatabaseManager
         db.Database.EnsureCreated();
         db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
     }
-    
+
     public static void AddPlayHistory(VideoInfo videoInfo)
     {
         var history = new History
@@ -121,7 +121,7 @@ public static class DatabaseManager
             .ToDictionary(v => v.Id);
 
         // Project to ViewModel in-memory
-        return histories.Select(h => 
+        return histories.Select(h =>
         {
             cacheDict.TryGetValue(h.Id ?? string.Empty, out var meta);
             return new HistoryItemViewModel(h, meta);
@@ -133,5 +133,5 @@ public static class DatabaseManager
         using var db = _contextFactory.CreateDbContext();
         return db.VideoInfoCache.Find(videoId);
     }
-    
+
 }

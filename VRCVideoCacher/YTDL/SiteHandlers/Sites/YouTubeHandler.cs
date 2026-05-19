@@ -13,7 +13,7 @@ public class YouTubeHandler : ISiteHandler
     private const string UnityPlayerFormat = "(mp4/best)[vcodec!=av01][vcodec!=vp9.2][height<=?1080][height>=?64][width>=?64][protocol^=http]";
 
     public bool CanHandle(Uri uri) => Hosts.Contains(uri.Host);
-    
+
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro)
     {
         string? videoId = null;
@@ -40,13 +40,13 @@ public class YouTubeHandler : ISiteHandler
             DownloadFormat = avPro ? DownloadFormat.Webm : DownloadFormat.MP4
         });
     }
-    
+
     public List<string> GetYtdlpArguments(Uri uri, bool avPro)
     {
         var args = new List<string>
         {
         };
-        
+
         if (avPro)
         {
             // Using the Safari impersonation with the web client gets us the muxed m3u8's that aren't normally available otherwise.
@@ -69,5 +69,5 @@ public class YouTubeHandler : ISiteHandler
 
         return args;
     }
-    
+
 }

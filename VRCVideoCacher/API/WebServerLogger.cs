@@ -8,7 +8,7 @@ public class WebServerLogger : ILogger
 {
     public LogLevel LogLevel { get; } = LogLevel.Info;
     private static readonly Regex RequestIdPrefix = new(@"^\[.*?\]\s*", RegexOptions.Compiled);
-    
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

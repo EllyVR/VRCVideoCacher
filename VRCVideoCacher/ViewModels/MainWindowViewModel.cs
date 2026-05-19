@@ -1,6 +1,6 @@
-using CodingSeb.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.ViewModels;
@@ -11,7 +11,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private ViewModelBase _currentView;
 
     [ObservableProperty]
-    private string _statusText = Loc.Tr("ServerRunning");
+    private string _statusText = Localizer.Get("ServerRunning");
 
     [ObservableProperty]
     private string _cacheStatusText = "Cache: 0 B";
@@ -46,7 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateCacheStatus();
 
         // Refresh localized strings when language changes
-        Loc.Instance.CurrentLanguageChanged += (_, _) => StatusText = Loc.Tr("ServerRunning");
+        Localizer.LanguageChanged += (_, _) => StatusText = Localizer.Get("ServerRunning");
     }
 
     private void UpdateCacheStatus()

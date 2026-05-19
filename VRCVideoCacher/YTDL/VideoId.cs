@@ -1,13 +1,10 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using Serilog;
 using VRCVideoCacher.Database;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
-using VRCVideoCacher.Services;
-using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL.SiteHandlers;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -16,7 +13,7 @@ namespace VRCVideoCacher.YTDL;
 public class VideoId
 {
     private static readonly ILogger Log = Program.Logger.ForContext<VideoId>();
-    
+
     internal static Uri? ToUri(string url) => Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri : null;
 
     internal static string HashUrl(string url)
@@ -44,10 +41,10 @@ public class VideoId
                 StandardErrorEncoding = Encoding.UTF8,
             }
         };
-        
+
         return process;
     }
-    
+
     private static async Task<(string Output, string Error, int ExitCode)> RunYtdlpAsync(List<string> args, string url)
     {
         var ytdlpProcess = GetYtdlpProcess();
@@ -80,8 +77,8 @@ public class VideoId
 
         var (rawData, error, exitCode) = await RunYtdlpAsync(args, url);
         if (exitCode != 0)
-            throw new Exception($"Failed to get video ID: {error.Trim()}");        
-        
+            throw new Exception($"Failed to get video ID: {error.Trim()}");
+
         if (string.IsNullOrEmpty(rawData))
         {
             Log.Warning("Failed to get video ID");
@@ -128,8 +125,8 @@ public class VideoId
         args.Add("-s");
         args.Add("--impersonate=\"safari\"");
         args.Add("--extractor-args=\"youtube:player_client=web\"");
-        
-        
+
+
         var (output, error, exitCode) = await RunYtdlpAsync(args, url);
         if (exitCode != 0)
         {
@@ -150,15 +147,15 @@ public class VideoId
             const string message = "URL is a search query, cannot get video URL.";
             return new Tuple<string, bool>(message, false);
         }
-        
+
         var url = videoInfo.VideoUrl;
         var uri = ToUri(url);
         var handler = uri != null ? SiteHandlerRegistry.Resolve(uri) : null;
         var args = handler?.GetYtdlpArguments(uri!, avPro) ?? [];
         args.Add("--get-url");
-        
+
         var (output, error, exitCode) = await RunYtdlpAsync(args, url);
-        
+
         if (exitCode != 0)
         {
             if (error.Contains("Sign in to confirm you’re not a bot")) // Exact Text, do not modify.
@@ -169,5 +166,5 @@ public class VideoId
 
         return new Tuple<string, bool>(output, true);
     }
-    
+
 }
