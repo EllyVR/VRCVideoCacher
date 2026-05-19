@@ -14,7 +14,7 @@
             <!-- Status Message -->
             <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Margin="15,0" VerticalAlignment="Center"
                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                       Foreground="#81C784"/>
+                       Foreground="{Binding StatusMessageColor}"/>
             
             <Button Grid.Column="2" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,10,0">
                 <StackPanel Orientation="Horizontal" Spacing="8">

@@ -100,6 +100,9 @@ public partial class SettingsViewModel : ViewModelBase
     // Status
     [ObservableProperty]
     private string _statusMessage = string.Empty;
+    
+    [ObservableProperty]
+    private string _statusMessageColor = string.Empty;
 
     [ObservableProperty]
     private bool _startWithSteamVr;
@@ -174,6 +177,7 @@ public partial class SettingsViewModel : ViewModelBase
 
         HasChanges = false;
         StatusMessage = string.Empty;
+        StatusMessageColor = "#81C784";
         _isLoadingConfig = false;
     }
 
@@ -186,6 +190,7 @@ public partial class SettingsViewModel : ViewModelBase
 
         HasChanges = true;
         StatusMessage = Localizer.Get("SettingsUnsavedChanges");
+        StatusMessageColor = "#FFB74D";
     }
 
     private void OnBlockedUrlsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -275,6 +280,7 @@ public partial class SettingsViewModel : ViewModelBase
         ConfigManager.TrySaveConfig();
         HasChanges = false;
         StatusMessage = Localizer.Get("SettingsSaved");
+        StatusMessageColor = "#81C784";
     }
 
     [RelayCommand]
@@ -282,6 +288,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         LoadFromConfig();
         StatusMessage = Localizer.Get("SettingsReset");
+        StatusMessageColor = "#81C784";
     }
 
     [RelayCommand]
