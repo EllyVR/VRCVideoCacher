@@ -10,7 +10,7 @@
 <hr>
 </div>
 
-**Language:** **English** | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | [Português do Brasil](./README_pt-BR.md)
+**Language:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | **Português do Brasil**
 
 ### Wiki
 - [Opções de inicialização](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
