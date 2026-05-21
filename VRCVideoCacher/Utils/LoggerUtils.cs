@@ -54,9 +54,9 @@ public static class LoggerUtils
         {
         }
 
-        if (LaunchArgs.ErrorReporting)
+        try
         {
-            try
+            if (LaunchArgs.ErrorReporting)
             {
                 SentrySdk.ConfigureScope(scope =>
                 {
@@ -66,9 +66,9 @@ public static class LoggerUtils
                 });
                 SentrySdk.CaptureException(ex);
             }
-            catch
-            {
-            }
+        }
+        catch
+        {
         }
 
         try
