@@ -116,8 +116,6 @@ internal sealed class Program
         };
 #endif
 
-        throw new Exception("Unhandled");
-
         if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
