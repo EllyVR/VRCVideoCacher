@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using VRCVideoCacher.Utils;
 using VRCVideoCacher.ViewModels;
 
 namespace VRCVideoCacher.Views;
@@ -17,7 +18,7 @@ public partial class MainWindow : Window
     {
         if (e.Exception != null && e.Exception is Exception ex)
         {
-            Program.LogException(ex, "Unhandled UI thread exception");
+            LoggerUtils.LogUnhandledException(ex, "Unhandled UI thread exception");
         }
     }
 

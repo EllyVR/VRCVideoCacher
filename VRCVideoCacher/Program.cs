@@ -3,10 +3,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
-using Sentry.Serilog;
 using Serilog;
-using Serilog.Templates;
-using Serilog.Templates.Themes;
 using VRCVideoCacher.API;
 using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
@@ -29,38 +26,11 @@ internal sealed class Program
     public const string Creator_Haxy = "Haxy";
     public const string Creator_Hauskaz = "Hauskaz";
     public const string Creator_DubyaDude = "DubyaDude";
-    private const string SentryDsn = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
     public static ILogger Logger = Log.ForContext("SourceContext", "Core");
     public static readonly string CurrentProcessPath = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
     public static readonly string DataPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCVideoCacher");
     public static readonly string UtilsPath = Path.Join(DataPath, "Utils");
-    private static readonly string LogsPath = Path.Join(DataPath, "Logs");
     public static event Action? OnCookiesUpdated;
-
-    private static void ConfigureSentryOptions(SentrySerilogOptions o)
-    {
-        SentrySdk.SetTag("admin", AdminCheck.IsRunningAsAdmin().ToString());
-        SentrySdk.SetTag("noGui", LaunchArgs.HasGui.ToString());
-        SentrySdk.SetTag("globalPath", LaunchArgs.UseGlobalPath.ToString());
-        o.Dsn = SentryDsn;
-        o.AutoSessionTracking = true;
-        o.IsGlobalModeEnabled = true;
-        o.Release = Version;
-        var platform = OperatingSystem.IsLinux() ? "linux" : "windows";
-#if STEAMRELEASE
-        o.Environment = $"steam-{platform}";
-#else
-        o.Environment = platform;
-#endif
-        o.EnableLogs = true;
-    }
-
-    public static SentrySerilogOptions GetSentryOptions()
-    {
-        var options = new SentrySerilogOptions();
-        ConfigureSentryOptions(options);
-        return options;
-    }
 
     [STAThread]
     public static void Main(string[] args)
@@ -124,18 +94,16 @@ internal sealed class Program
         foreach (var process in processes)
             process.Dispose();
 
-        if (LaunchArgs.ErrorReporting)
-        {
-            SentrySdk.Init(GetSentryOptions());
-        }
+        LoggerUtils.InitializeLogger();
+        Logger = Log.ForContext("SourceContext", "Core");
 
-        InitializeLogger();
+        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
 
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             if (e.Exception != null && e.Exception is Exception ex)
             {
-                LogException(ex, "Unobserved task exception");
+                LoggerUtils.LogUnhandledException(ex, "Unobserved task exception");
             }
         };
 #if !DEBUG
@@ -143,10 +111,12 @@ internal sealed class Program
         {
             if (e.ExceptionObject != null && e.ExceptionObject is Exception ex)
             {
-                LogException(ex, "Unhandled exception");
+                LoggerUtils.LogUnhandledException(ex, "Unhandled exception");
             }
         };
 #endif
+
+        throw new Exception("Unhandled");
 
         if (!LaunchArgs.HasGui)
         {
@@ -173,35 +143,6 @@ internal sealed class Program
                 Log.Error(ex, "Backend error");
             }
         });
-    }
-
-
-    private static void InitializeLogger()
-    {
-        var loggerConfiguration = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console(new ExpressionTemplate(
-                "[{@t:HH:mm:ss} {@l:u3} {Coalesce(Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1),'<none>')}] {@m}" + Environment.NewLine + "{@x}",
-                theme: TemplateTheme.Literate))
-            .WriteTo.File(
-                path: Path.Combine(LogsPath, "VRCVideoCacher.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 5);
-
-        if (LaunchArgs.ErrorReporting)
-        {
-            loggerConfiguration = loggerConfiguration.WriteTo.Sentry(ConfigureSentryOptions);
-        }
-
-        if (LaunchArgs.HasGui)
-        {
-            loggerConfiguration = loggerConfiguration.WriteTo.Sink(new UiLogSink());
-        }
-
-        Log.Logger = loggerConfiguration.CreateLogger();
-        Logger = Log.ForContext("SourceContext", "Core");
-
-        Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
     }
 
     private static async Task InitVrcVideoCacher()
@@ -265,42 +206,6 @@ internal sealed class Program
             _ = WinGet.TryInstallPackages();
 
         await Task.Delay(-1);
-    }
-
-    public static void LogException(Exception ex, string message)
-    {
-        if (LaunchArgs.ErrorReporting)
-        {
-            try
-            {
-                SentrySdk.ConfigureScope(scope =>
-                {
-                    var configPath = Path.Join(DataPath, "Config.json");
-                    if (File.Exists(configPath))
-                        scope.AddAttachment(configPath);
-                });
-                SentrySdk.CaptureException(ex);
-            }
-            catch
-            {
-            }
-        }
-
-        try
-        {
-            Logger.Error(ex, "{Message}", message);
-        }
-        catch
-        {
-        }
-
-        try
-        {
-            Console.WriteLine($"{message}: " + ex);
-        }
-        catch
-        {
-        }
     }
 
     private static AppBuilder BuildAvaloniaApp()
