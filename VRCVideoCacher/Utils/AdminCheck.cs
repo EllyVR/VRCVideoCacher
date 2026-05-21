@@ -8,7 +8,7 @@ public static class AdminCheck
         "⚠ WARNING: You are running VRCVideoCacher as an administrator. " +
         "This is not recommended for security reasons. " +
         "Please run the application with standard user privileges. " +
-        "\r\n\r\nIf you really need it, please use --bypass-admin-warning to stop this warning.";
+        "\r\n\r\nIf you really need it, please use --bypass-admin-warning to stop this error message.";
 
     public static bool ShouldShowAdminWarning()
     {

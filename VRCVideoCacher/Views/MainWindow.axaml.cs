@@ -17,6 +17,13 @@ public partial class MainWindow : Window
         // Only run once
         Opened -= OnWindowOpened;
 
+        // Delay slightly to let the main window fully render
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await Task.Delay(500);
+            Program.InitializeUIBackend();
+        });
+
         // Check if we should show the cookie setup wizard
         // Show if: cookies are enabled, setup not completed, and cookies not already valid
         if (ConfigManager.Config.YtdlpUseCookies &&

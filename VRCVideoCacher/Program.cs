@@ -65,9 +65,9 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        LaunchArgs.SetupArguments(args);
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
-        LaunchArgs.SetupArguments(args);
 
 #if STEAMRELEASE
         if (LaunchArgs.SteamSdk)
@@ -179,11 +179,12 @@ internal sealed class Program
             return;
         }
 
-        if (AdminCheck.IsRunningAsAdmin())
-        {
-            Logger.Warning("Application is running with administrator privileges. This is not recommended for security reasons.");
-        }
+        // Start the UI
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
 
+    public static void InitializeUIBackend()
+    {
         // Start backend on background thread
         Task.Run(async () =>
         {
@@ -196,12 +197,8 @@ internal sealed class Program
                 Log.Error(ex, "Backend error");
             }
         });
-
-        OpenVRService.Start(CurrentProcessPath);
-
-        // Start the UI
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
+
 
     private static void InitializeLogger()
     {
@@ -235,10 +232,16 @@ internal sealed class Program
     {
         try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
 
+        if (AdminCheck.IsRunningAsAdmin())
+        {
+            Logger.Warning("Application is running with administrator privileges. This is not recommended for security reasons.");
+        }
         if (AdminCheck.ShouldShowAdminWarning())
         {
             Logger.Error(AdminCheck.AdminWarningMessage);
         }
+
+        OpenVRService.Start(CurrentProcessPath);
 
         Directory.CreateDirectory(UtilsPath);
 #if !STEAMRELEASE
