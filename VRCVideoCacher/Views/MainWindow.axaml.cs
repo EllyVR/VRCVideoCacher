@@ -10,6 +10,15 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Opened += OnWindowOpened;
+        Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+    }
+
+    private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (e.Exception != null && e.Exception is Exception ex)
+        {
+            Program.LogException(ex, "Unhandled UI thread exception");
+        }
     }
 
     private async void OnWindowOpened(object? sender, EventArgs e)

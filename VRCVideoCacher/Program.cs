@@ -131,45 +131,21 @@ internal sealed class Program
 
         InitializeLogger();
 
-#if !DEBUG
-        if (LaunchArgs.ErrorReporting)
+        TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            if (e.Exception != null && e.Exception is Exception ex)
             {
-                try
-                {
-                    SentrySdk.ConfigureScope(scope =>
-                    {
-                        var configPath = Path.Join(DataPath, "Config.json");
-                        if (File.Exists(configPath))
-                            scope.AddAttachment(configPath);
-                    });
-                    if (e.ExceptionObject is Exception ex0)
-                        SentrySdk.CaptureException(ex0);
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    var ex = e.ExceptionObject as Exception;
-                    Logger.Error(ex, "Unhandled Exception");
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    var ex = e.ExceptionObject as Exception;
-                    Console.WriteLine("Unhandled Exception: " + ex);
-                }
-                catch
-                {
-                }
-            };
-        }
+                LogException(ex, "Unobserved task exception");
+            }
+        };
+#if !DEBUG
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject != null && e.ExceptionObject is Exception ex)
+            {
+                LogException(ex, "Unhandled exception");
+            }
+        };
 #endif
 
         if (!LaunchArgs.HasGui)
@@ -289,6 +265,42 @@ internal sealed class Program
             _ = WinGet.TryInstallPackages();
 
         await Task.Delay(-1);
+    }
+
+    public static void LogException(Exception ex, string message)
+    {
+        if (LaunchArgs.ErrorReporting)
+        {
+            try
+            {
+                SentrySdk.ConfigureScope(scope =>
+                {
+                    var configPath = Path.Join(DataPath, "Config.json");
+                    if (File.Exists(configPath))
+                        scope.AddAttachment(configPath);
+                });
+                SentrySdk.CaptureException(ex);
+            }
+            catch
+            {
+            }
+        }
+
+        try
+        {
+            Logger.Error(ex, "{Message}", message);
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            Console.WriteLine($"{message}: " + ex);
+        }
+        catch
+        {
+        }
     }
 
     private static AppBuilder BuildAvaloniaApp()
