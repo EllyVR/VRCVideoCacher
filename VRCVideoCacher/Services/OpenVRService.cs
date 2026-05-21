@@ -63,7 +63,10 @@ public class OpenVRService
                                 Logger.Warning("Failed to register startup manifest");
                             }
                         }
-                        await PollEventsUntilQuit();
+                        if (LaunchArgs.CloseWithSteamVr || true)
+                        {
+                            await PollEventsUntilQuit();
+                        }
                         break;
                     // Only retry if vrserver just isn't running yet
                     case EVRInitError.Init_HmdNotFound or EVRInitError.Init_HmdNotFoundPresenceFailed or EVRInitError.Init_NoServerForBackgroundApp:
@@ -93,38 +96,39 @@ public class OpenVRService
         var vrEvent = new VREvent_t();
         var eventSize = (uint)Marshal.SizeOf<VREvent_t>();
 
-        while (true)
+        bool quitApp = false;
+        while (!quitApp)
         {
             await Task.Delay(500);
 
             if (OpenVR.System == null)
             {
                 Logger.Warning("OpenVR system became unavailable, assuming SteamVR closed");
-                break;
+                quitApp = true;
             }
-
-            while (OpenVR.System.PollNextEvent(ref vrEvent, eventSize))
+            else
             {
-                if ((EVREventType)vrEvent.eventType != EVREventType.VREvent_Quit)
-                    continue;
-
-                Logger.Information("SteamVR is shutting down, closing VRCVideoCacher");
-                OpenVR.System.AcknowledgeQuit_Exiting();
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                while (OpenVR.System.PollNextEvent(ref vrEvent, eventSize))
                 {
-                    if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
-                        lifetime.Shutdown();
-                });
-                return;
+                    if ((EVREventType)vrEvent.eventType == EVREventType.VREvent_Quit)
+                    {
+                        Logger.Information("Received VREvent_Quit, shutting down");
+                        quitApp = true;
+                    }
+                }
             }
         }
 
-        // SteamVR became unavailable without a clean VREvent_Quit (e.g. crash)
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        if (LaunchArgs.HasGui && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
                 lifetime.Shutdown();
-        });
+            });
+        }
+        else
+        {
+            Environment.Exit(0);
+        }
     }
 }

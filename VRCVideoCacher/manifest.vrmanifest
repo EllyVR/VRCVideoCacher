@@ -5,7 +5,7 @@
         "launch_type" : "binary",
         "binary_path_windows": "VRCVideoCacher.exe",
         "binary_path_linux": "VRCVideoCacher",
-        "arguments": "--kill-existing-instance",
+        "arguments": "--kill-existing-instance --close-with-steamvr",
         "is_dashboard_overlay" : true,
         "strings": {
             "en_us": {

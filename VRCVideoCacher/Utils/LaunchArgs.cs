@@ -10,6 +10,7 @@ public class LaunchArgs
     private const string KillExistingInstanceArg = "--kill-existing-instance";
     private const string NoSteamArg = "--no-steam";
     private const string NoOvrArg = "--no-ovr";
+    private const string CloseWithSteamVrArg = "--close-with-steamvr";
 
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
@@ -19,6 +20,7 @@ public class LaunchArgs
     public static bool KillExistingInstance = false;
     public static bool SteamSdk = true;
     public static bool OVR = true;
+    public static bool CloseWithSteamVr = false;
 
     public static void SetupArguments(params string[] args)
     {
@@ -53,6 +55,9 @@ public class LaunchArgs
             
             if (arg.Equals(NoOvrArg, StringComparison.OrdinalIgnoreCase))
                 OVR = false;
+
+            if (arg.Equals(CloseWithSteamVrArg, StringComparison.OrdinalIgnoreCase))
+                CloseWithSteamVr = true;
         }
     }
 
