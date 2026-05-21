@@ -113,6 +113,7 @@ internal sealed class Program
             {
                 LoggerUtils.LogUnhandledException(ex, "Unhandled exception");
             }
+            Log.CloseAndFlush();
         };
 #endif
 
