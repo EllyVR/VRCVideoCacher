@@ -49,10 +49,10 @@ public class LaunchArgs
 
             if (arg.Equals(KillExistingInstanceArg, StringComparison.OrdinalIgnoreCase))
                 KillExistingInstance = true;
-            
+
             if (arg.Equals(NoSteamArg, StringComparison.OrdinalIgnoreCase))
                 SteamSdk = false;
-            
+
             if (arg.Equals(NoOvrArg, StringComparison.OrdinalIgnoreCase))
                 OVR = false;
 

@@ -100,7 +100,7 @@ public partial class SettingsViewModel : ViewModelBase
     // Status
     [ObservableProperty]
     private string _statusMessage = string.Empty;
-    
+
     [ObservableProperty]
     private string _statusMessageColor = string.Empty;
 
