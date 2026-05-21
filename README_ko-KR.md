@@ -10,7 +10,7 @@
 <hr>
 </div>
 
-**Language:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | 한국어
+**Language:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | 한국어 | [Português do Brasil](./README_pt-BR.md)
 
 ### 위키 (영문)
 - [실행 옵션](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
