@@ -61,6 +61,7 @@
   "CloseToTray": "Close to Tray",
   "StartMinimized": "Start Minimized",
   "StartWithSteamVr": "Start with SteamVR",
+  "DisableErrorPopups": "Disable Error Popups",
   "BlockedUrls": "Blocked URLs",
   "BlockedUrlRedirect": "Blocked URL Redirect",
   "SettingsSaved": "Settings saved!",
