@@ -61,6 +61,7 @@
   "CloseToTray": "닫을 때 트레이로 최소화",
   "StartMinimized": "최소화된 상태로 시작",
   "StartWithSteamVr": "SteamVR로 앱 실행",
+  "DisableErrorPopups": "오류 팝업 창 비활성화",
   "BlockedUrls": "차단된 URL",
   "BlockedUrlRedirect": "차단된 URL 리디렉션",
   "SettingsSaved": "설정이 저장되었습니다!",
