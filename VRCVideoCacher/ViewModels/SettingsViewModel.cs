@@ -242,6 +242,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnStartMinimizedChanged(bool value) => SetHasChanges();
     partial void OnStartWithSteamVrChanged(bool value) => SetHasChanges();
     partial void OnBlockRedirectChanged(string value) => SetHasChanges();
+    partial void OnDisableErrorPopups(bool value) => SetHasChanges();
 
     [RelayCommand]
     private void SaveSettings()
