@@ -9,6 +9,7 @@ public static class SiteHandlerRegistry
         new YouTubeHandler(),
         new PyPyDanceHandler(),
         new VRDancingHandler(),
+        new FuralityHandler(),
         // fallthrough last
         new GenericHandler(),
     ];
@@ -18,6 +19,7 @@ public static class SiteHandlerRegistry
     [
         new NicoVideoHandler(),   // rewrites nico.ms → nicovideo.life
         new YTSHandler(),      // rewrites /sr/ → /yt/
+        new FuralityHandler(), // Its always dns...
         new ThirdPartyYTResolver(), // dmn.moe, u2b.cx etc → real YT url
     ];
 
