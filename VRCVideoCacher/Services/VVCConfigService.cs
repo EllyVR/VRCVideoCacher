@@ -7,6 +7,7 @@ public class VvcConfigService
 {
     public static VvcConfig CurrentConfig = new();
     private static readonly HttpClient httpClient;
+    public static event Action? OnApiConfigChanged;
 
     static VvcConfigService()
     {
@@ -20,7 +21,10 @@ public class VvcConfigService
         {
             var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
             if (deserialized != null)
+            {
                 CurrentConfig = deserialized;
+                OnApiConfigChanged?.Invoke();
+            }
         }
     }
 }

@@ -71,6 +71,7 @@ public partial class DashboardViewModel : ViewModelBase
         VideoDownloader.OnQueueChanged += OnQueueChanged;
         ConfigManager.OnConfigChanged += OnConfigChanged;
         Program.OnCookiesUpdated += OnCookiesUpdated;
+        VvcConfigService.OnApiConfigChanged += OnApiConfigChanged;
     }
 
     private void RefreshLocalizedStrings()
@@ -86,6 +87,11 @@ public partial class DashboardViewModel : ViewModelBase
     private void OnCookiesUpdated()
     {
         _ = ValidateCookiesAsync();
+    }
+
+    private void OnApiConfigChanged()
+    {
+        Motd = VvcConfigService.CurrentConfig.Motd;
     }
 
     private void OnCacheChanged(string fileName, CacheChangeType changeType)
