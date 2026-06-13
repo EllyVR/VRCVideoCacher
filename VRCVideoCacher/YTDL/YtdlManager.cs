@@ -122,6 +122,8 @@ public class YtdlManager
         var currentYtdlVersion = Versions.CurrentVersion.Ytdlp;
         if (!File.Exists(YtdlPath))
             currentYtdlVersion = "Not Installed";
+        else if (!await CheckIfProcessStarts(YtdlPath))
+            currentYtdlVersion = "Not Working";
 
         var latestVersion = json.tag_name;
         Log.Information("YT-DLP Current: {Installed} Latest: {Latest}", currentYtdlVersion, latestVersion);
@@ -161,43 +163,9 @@ public class YtdlManager
 
         var currentDenoVersion = Versions.CurrentVersion.Deno;
         if (!File.Exists(DenoPath))
-        {
             currentDenoVersion = "Not Installed";
-        }
-        else
-        {
-            // Try start Deno with --verison
-            try
-            {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = DenoPath,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8,
-                    }
-                };
-                process.Start();
-                await process.WaitForExitAsync();
-                if (process.ExitCode != 0)
-                {
-                    var output = await process.StandardOutput.ReadToEndAsync();
-                    var error = await process.StandardError.ReadToEndAsync();
-                    Log.Error("Error starting Deno: {Output} {Error}", output, error);
-                    currentDenoVersion = "Error starting Deno";
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Exception while checking Deno version: {Message}", ex.Message);
-                currentDenoVersion = "Error starting Deno";
-            }
-        }
+        else if (!await CheckIfProcessStarts(DenoPath))
+            currentDenoVersion = "Not Working";
 
         var latestVersion = json.tag_name;
         Log.Information("Deno Current: {Installed} Latest: {Latest}", currentDenoVersion, latestVersion);
@@ -357,6 +325,8 @@ public class YtdlManager
         var currentffmpegVersion = Versions.CurrentVersion.Ffmpeg;
         if (!File.Exists(FfmpegPath))
             currentffmpegVersion = "Not Installed";
+        else if (!await CheckIfProcessStarts(FfmpegPath, "-version"))
+            currentffmpegVersion = "Not Working";
 
         var latestVersion = OperatingSystem.IsWindows() ? json.tag_name : json.name;
         Log.Information("FFmpeg Current: {Installed} Latest: {Latest}", currentffmpegVersion, latestVersion);
@@ -497,5 +467,41 @@ public class YtdlManager
             return;
         }
         throw new Exception("Failed to download YT-DLP");
+    }
+
+    private static async Task<bool> CheckIfProcessStarts(string path, string arg = "--version")
+    {
+        var processName = Path.GetFileNameWithoutExtension(path);
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = path,
+                    Arguments = arg,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
+                }
+            };
+            process.Start();
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0)
+            {
+                var output = await process.StandardOutput.ReadToEndAsync();
+                var error = await process.StandardError.ReadToEndAsync();
+                Log.Error("Error starting {ProcessName}: {Output} {Error}", processName, output, error);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Exception while starting {ProcessName}: {Message}", processName, ex.Message);
+            return false;
+        }
+        return true;
     }
 }
