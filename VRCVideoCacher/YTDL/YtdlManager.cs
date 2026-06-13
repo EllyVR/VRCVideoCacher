@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Newtonsoft.Json;
 using Serilog;
 using SharpCompress.Readers;
@@ -159,7 +161,43 @@ public class YtdlManager
 
         var currentDenoVersion = Versions.CurrentVersion.Deno;
         if (!File.Exists(DenoPath))
+        {
             currentDenoVersion = "Not Installed";
+        }
+        else
+        {
+            // Try start Deno with --verison
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = DenoPath,
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        StandardOutputEncoding = Encoding.UTF8,
+                        StandardErrorEncoding = Encoding.UTF8,
+                    }
+                };
+                process.Start();
+                await process.WaitForExitAsync();
+                if (process.ExitCode != 0)
+                {
+                    var output = await process.StandardOutput.ReadToEndAsync();
+                    var error = await process.StandardError.ReadToEndAsync();
+                    Log.Error("Error starting Deno: {Output} {Error}", output, error);
+                    currentDenoVersion = "Error starting Deno";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Exception while checking Deno version: {Message}", ex.Message);
+                currentDenoVersion = "Error starting Deno";
+            }
+        }
 
         var latestVersion = json.tag_name;
         Log.Information("Deno Current: {Installed} Latest: {Latest}", currentDenoVersion, latestVersion);
