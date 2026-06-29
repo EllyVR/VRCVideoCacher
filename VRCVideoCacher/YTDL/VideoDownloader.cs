@@ -249,7 +249,6 @@ public class VideoDownloader
             File.Delete(TempDownloadWebmPath);
         }
 
-        Log.Information("Downloading Video: {URL}", videoInfo.VideoUrl);
         var url = videoInfo.VideoUrl;
         var process = new Process
         {
@@ -265,17 +264,14 @@ public class VideoDownloader
             }
         };
         process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" --remux-video mp4 {url}";
-        Log.Information("Downloading VRDancing Video: {URL}", process.StartInfo.Arguments);
+        Log.Information("Downloading VRDancing Video: {Args}", process.StartInfo.Arguments);
         process.Start();
         await process.WaitForExitAsync();
         var error = await process.StandardError.ReadToEndAsync();
         error = error.Trim();
         if (process.ExitCode != 0)
         {
-            Log.Error("Failed to download YouTube Video: {exitCode} {URL} {error}", process.ExitCode, url, error);
-            if (error.Contains("Sign in to confirm you’re not a bot"))
-                Log.Error("Fix this error by following these instructions: https://github.com/clienthax/VRCVideoCacherBrowserExtension");
-
+            Log.Error("Failed to download VRDancing Video: {exitCode} {URL} {error}", process.ExitCode, url, error);
             return false;
         }
         Thread.Sleep(100);
@@ -309,11 +305,12 @@ public class VideoDownloader
         }
         else
         {
-            Log.Error("Failed to download YouTube Video: {URL}", url);
+            Log.Error("Failed to download VRDancing Video: {URL}", url);
             return false;
         }
 
         CacheManager.AddToCache(fileName);
+        Log.Information("VRDancing Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
         return true;
     }
 
