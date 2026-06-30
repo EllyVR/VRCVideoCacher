@@ -3,28 +3,35 @@ using Newtonsoft.Json;
 
 namespace VRCVideoCacher.Services;
 
-public class VvcConfigService
+public static class VvcConfigService
 {
-    public static VvcConfig CurrentConfig = new();
-    private static readonly HttpClient httpClient;
+    private static readonly HttpClient HttpClient;
     public static event Action? OnApiConfigChanged;
+    public static VvcConfig CurrentConfig { get; private set; } = new();
 
     static VvcConfigService()
     {
-        httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Add("User-Agent", $"VRCVideoCacher v{Program.Version}");
+        HttpClient = new();
+        HttpClient.DefaultRequestHeaders.Add("User-Agent", $"VRCVideoCacher v{Program.Version}");
     }
     public static async Task GetConfig()
     {
-        var req = await httpClient.GetAsync("https://vvc.ellyvr.dev/api/v1/config");
-        if (req.IsSuccessStatusCode)
+        try
         {
-            var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
-            if (deserialized != null)
+            var req = await HttpClient.GetAsync("https://vvc.ellyvr.dev/api/v1/config");
+            if (req.IsSuccessStatusCode)
             {
-                CurrentConfig = deserialized;
-                OnApiConfigChanged?.Invoke();
+                var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
+                if (deserialized != null)
+                {
+                    CurrentConfig = deserialized;
+                    OnApiConfigChanged?.Invoke();
+                }
             }
+        }
+        catch (Exception exception)
+        {
+            Program.Logger.Warning(exception, "Failed to get config from API");
         }
     }
 }
