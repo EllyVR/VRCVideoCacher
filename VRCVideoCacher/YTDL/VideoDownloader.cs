@@ -4,11 +4,14 @@ using System.Net;
 using System.Text;
 using Serilog;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.YTDL;
 
 public class VideoDownloader
 {
+    private const string TempDownloadMp4Name = "_tempVideo.mp4";
+    private const string TempDownloadWebmName = "_tempVideo.webm";
     private static readonly ILogger Log = Program.Logger.ForContext<VideoDownloader>();
     private static readonly HttpClient HttpClient = new()
     {
@@ -28,8 +31,8 @@ public class VideoDownloader
 
     static VideoDownloader()
     {
-        TempDownloadMp4Path = Path.Join(CacheManager.CachePath, "_tempVideo.mp4");
-        TempDownloadWebmPath = Path.Join(CacheManager.CachePath, "_tempVideo.webm");
+        TempDownloadMp4Path = Path.Join(CacheManager.CachePath, TempDownloadMp4Name);
+        TempDownloadWebmPath = Path.Join(CacheManager.CachePath, TempDownloadWebmName);
         Task.Run(DownloadThread);
     }
 
@@ -238,16 +241,8 @@ public class VideoDownloader
 
     private static async Task<bool> DownloadVRDancingVideoWithId(VideoInfo videoInfo)
     {
-        if (File.Exists(TempDownloadMp4Path))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadMp4Path);
-        }
-        if (File.Exists(TempDownloadWebmPath))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadWebmPath);
-        }
+        using var tempDir = new TempDir();
+        var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
 
         var url = videoInfo.VideoUrl;
         var process = new Process
@@ -263,7 +258,7 @@ public class VideoDownloader
                 StandardErrorEncoding = Encoding.UTF8,
             }
         };
-        process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" --remux-video mp4 {url}";
+        process.StartInfo.Arguments = $"-q -o \"{tempDownloadMp4Path}\" --remux-video mp4 {url}";
         Log.Information("Downloading VRDancing Video: {Args}", process.StartInfo.Arguments);
         process.Start();
         await process.WaitForExitAsync();
@@ -283,10 +278,8 @@ public class VideoDownloader
             Log.Error("File already exists, canceling...");
             try
             {
-                if (File.Exists(TempDownloadMp4Path))
-                    File.Delete(TempDownloadMp4Path);
-                if (File.Exists(TempDownloadWebmPath))
-                    File.Delete(TempDownloadWebmPath);
+                if (File.Exists(tempDownloadMp4Path))
+                    File.Delete(tempDownloadMp4Path);
             }
             catch (Exception ex)
             {
@@ -295,13 +288,9 @@ public class VideoDownloader
 
             return false;
         }
-        if (File.Exists(TempDownloadMp4Path))
+        if (File.Exists(tempDownloadMp4Path))
         {
-            File.Move(TempDownloadMp4Path, filePath);
-        }
-        else if (File.Exists(TempDownloadWebmPath))
-        {
-            File.Move(TempDownloadWebmPath, filePath);
+            File.Move(tempDownloadMp4Path, filePath);
         }
         else
         {
