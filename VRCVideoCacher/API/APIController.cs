@@ -184,6 +184,11 @@ public class ApiController : WebApiController
 
         Log.Information("Responding with URL: {URL}", response);
         await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
+
+        // Don't attempt to cache if its a livestream
+        if (videoInfo.VideoId.Equals("live"))
+            return;
+
         // check if file is cached again to handle race condition
         (isCached, _, _) = GetCachedFile(videoInfo.VideoId, avPro);
         if (!isCached && (
