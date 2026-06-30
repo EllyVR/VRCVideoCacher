@@ -18,8 +18,6 @@ public class VideoDownloader
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
     private static readonly ConcurrentQueue<VideoInfo> DownloadQueue = new();
-    private static readonly string TempDownloadMp4Path;
-    private static readonly string TempDownloadWebmPath;
 
     // Events for UI
     public static event Action<VideoInfo>? OnDownloadStarted;
@@ -31,8 +29,6 @@ public class VideoDownloader
 
     static VideoDownloader()
     {
-        TempDownloadMp4Path = Path.Join(CacheManager.CachePath, TempDownloadMp4Name);
-        TempDownloadWebmPath = Path.Join(CacheManager.CachePath, TempDownloadWebmName);
         Task.Run(DownloadThread);
     }
 
@@ -136,16 +132,9 @@ public class VideoDownloader
             return false;
         }
 
-        if (File.Exists(TempDownloadMp4Path))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadMp4Path);
-        }
-        if (File.Exists(TempDownloadWebmPath))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadWebmPath);
-        }
+        using var tempDir = new TempDir();
+        var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
+        var tempDownloadWebmPath = Path.Join(tempDir.FullName, TempDownloadWebmName);
 
         var args = new List<string>();
         args.Add("-q");
@@ -170,7 +159,7 @@ public class VideoDownloader
             var audioArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
                 ? "+ba[acodec=opus][ext=webm]"
                 : $"+(ba[acodec=opus][ext=webm][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[acodec=opus][ext=webm])";
-            args.Add($"-o \"{TempDownloadWebmPath}\"");
+            args.Add($"-o \"{tempDownloadWebmPath}\"");
             args.Add($"-f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^av01'][ext=mp4][dynamic_range='SDR']{audioArg}/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='vp9'][ext=webm][dynamic_range='SDR']{audioArg}\"");
         }
         else
@@ -179,7 +168,7 @@ public class VideoDownloader
             var audioArgPotato = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
                 ? "+ba[ext=m4a]"
                 : $"+(ba[ext=m4a][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[ext=m4a])";
-            args.Add($"-o \"{TempDownloadMp4Path}\"");
+            args.Add($"-o \"{tempDownloadMp4Path}\"");
             args.Add($"-f \"bv*[height<=1080][vcodec~='^(avc|h264)']{audioArgPotato}/bv*[height<=1080][vcodec~='^av01'][dynamic_range='SDR']\"");
             args.Add("--remux-video mp4");
             // $@"-f best/bestvideo[height<=?720]+bestaudio {url} " %(id)s.%(ext)s
@@ -208,10 +197,10 @@ public class VideoDownloader
             Log.Error("File already exists, canceling...");
             try
             {
-                if (File.Exists(TempDownloadMp4Path))
-                    File.Delete(TempDownloadMp4Path);
-                if (File.Exists(TempDownloadWebmPath))
-                    File.Delete(TempDownloadWebmPath);
+                if (File.Exists(tempDownloadMp4Path))
+                    File.Delete(tempDownloadMp4Path);
+                if (File.Exists(tempDownloadWebmPath))
+                    File.Delete(tempDownloadWebmPath);
             }
             catch (Exception ex)
             {
@@ -220,13 +209,13 @@ public class VideoDownloader
             return false;
         }
 
-        if (File.Exists(TempDownloadMp4Path))
+        if (File.Exists(tempDownloadMp4Path))
         {
-            File.Move(TempDownloadMp4Path, filePath);
+            File.Move(tempDownloadMp4Path, filePath);
         }
-        else if (File.Exists(TempDownloadWebmPath))
+        else if (File.Exists(tempDownloadWebmPath))
         {
-            File.Move(TempDownloadWebmPath, filePath);
+            File.Move(tempDownloadWebmPath, filePath);
         }
         else
         {
@@ -305,16 +294,8 @@ public class VideoDownloader
 
     private static async Task<bool> DownloadVideoWithId(VideoInfo videoInfo)
     {
-        if (File.Exists(TempDownloadMp4Path))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadMp4Path);
-        }
-        if (File.Exists(TempDownloadWebmPath))
-        {
-            Log.Warning("Temp file already exists, deleting...");
-            File.Delete(TempDownloadWebmPath);
-        }
+        using var tempDir = new TempDir();
+        var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
 
         Log.Information("Downloading Video: {URL}", videoInfo.VideoUrl);
         var url = videoInfo.VideoUrl;
@@ -332,7 +313,7 @@ public class VideoDownloader
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync();
-        await using var fileStream = new FileStream(TempDownloadMp4Path, FileMode.Create, FileAccess.Write, FileShare.None);
+        await using var fileStream = new FileStream(tempDownloadMp4Path, FileMode.Create, FileAccess.Write, FileShare.None);
         await stream.CopyToAsync(fileStream);
         fileStream.Close();
         response.Dispose();
@@ -340,13 +321,9 @@ public class VideoDownloader
 
         var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
         var filePath = Path.Join(CacheManager.CachePath, fileName);
-        if (File.Exists(TempDownloadMp4Path))
+        if (File.Exists(tempDownloadMp4Path))
         {
-            File.Move(TempDownloadMp4Path, filePath);
-        }
-        else if (File.Exists(TempDownloadWebmPath))
-        {
-            File.Move(TempDownloadWebmPath, filePath);
+            File.Move(tempDownloadMp4Path, filePath);
         }
         else
         {
