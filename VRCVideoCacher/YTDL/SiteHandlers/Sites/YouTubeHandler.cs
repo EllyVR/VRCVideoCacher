@@ -51,8 +51,7 @@ public class YouTubeHandler : ISiteHandler
         {
             // Using the Safari impersonation with the web client gets us the muxed m3u8's that aren't normally available otherwise.
             // These are the only streams that are compatible with AVPro currently due to WMF being unmaintained garbage.
-            args.Add("--impersonate=\"safari\"");
-            args.Add("--extractor-args=\"youtube:player_client=web\"");
+            args.Add("--extractor-args=\"youtube:player_client=web_safari,tv_downgraded\"");
 
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
