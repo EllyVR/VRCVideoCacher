@@ -61,6 +61,7 @@
   "CloseToTray": "Fechar para bandeja",
   "StartMinimized": "Iniciar minimizado",
   "StartWithSteamVr": "Iniciar com o SteamVR",
+  "DisableErrorPopups": "Desativar janela pop-up de erro",
   "BlockedUrls": "URLs bloqueadas",
   "BlockedUrlRedirect": "Destino de redirecionamento de URLs bloqueadas",
   "SettingsSaved": "Preferências salvas!",

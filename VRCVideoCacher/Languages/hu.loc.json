@@ -62,6 +62,7 @@
   "CloseToTray": "Tálcára Csukás",
   "StartMinimized": "Indítás Minimalizálva",
   "StartWithSteamVr": "Indítsd el az alkalmazást a SteamVR segítségével",
+  "DisableErrorPopups": "A hiba felugró ablak letiltása",
   "BlockedUrls": "Letiltott Linkek",
   "BlockedUrlRedirect": "Blokkolt Link Átirányítás",
   "SettingsSaved": "Beállítások Mentve!",
