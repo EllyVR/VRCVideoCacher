@@ -191,7 +191,7 @@ public class FileTools
             string.IsNullOrEmpty(backupPath) ||
             !Directory.Exists(Path.GetDirectoryName(ytdlPath)))
         {
-            Log.Error("YT-DLP directory does not exist, Game may not be installed. {Path}", ytdlPath);
+            Log.Warning("YT-DLP directory does not exist, Game may not be installed. {Path}", ytdlPath);
             return;
         }
         if (File.Exists(ytdlPath))
