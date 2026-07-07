@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace VRCVideoCacher.Services;
 
@@ -8,7 +9,7 @@ public class VvcConfigService
     public static VvcConfig CurrentConfig = new();
     private static readonly HttpClient httpClient;
     public static event Action? OnApiConfigChanged;
-
+    public static ILogger Logger = Log.ForContext<VvcConfigService>();
     static VvcConfigService()
     {
         httpClient = new HttpClient();
@@ -16,16 +17,24 @@ public class VvcConfigService
     }
     public static async Task GetConfig()
     {
-        var req = await httpClient.GetAsync("https://vvc.ellyvr.dev/api/v1/config");
-        if (req.IsSuccessStatusCode)
+        try
         {
-            var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
-            if (deserialized != null)
+            var req = await httpClient.GetAsync("https://vvc.ellyvr.dev/api/v1/config");
+            if (req.IsSuccessStatusCode)
             {
-                CurrentConfig = deserialized;
-                OnApiConfigChanged?.Invoke();
+                var deserialized = JsonConvert.DeserializeObject<VvcConfig>(await req.Content.ReadAsStringAsync());
+                if (deserialized != null)
+                {
+                    CurrentConfig = deserialized;
+                    OnApiConfigChanged?.Invoke();
+                }
             }
         }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Failed to get config from Video Cacher API.");
+        }
+        
     }
 }
 
