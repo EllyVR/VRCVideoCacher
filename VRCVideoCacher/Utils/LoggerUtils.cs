@@ -99,7 +99,6 @@ public static class LoggerUtils
 
     private static void ConfigureSentryOptions(SentrySerilogOptions o)
     {
-        SentrySdk.SetTag("admin", AdminCheck.IsRunningAsAdmin().ToString());
         SentrySdk.SetTag("noGui", LaunchArgs.HasGui.ToString());
         SentrySdk.SetTag("globalPath", LaunchArgs.UseGlobalPath.ToString());
         o.Dsn = SentryDsn;

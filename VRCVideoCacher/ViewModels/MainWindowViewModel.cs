@@ -39,8 +39,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _currentView = Dashboard;
 
-        _title += AdminCheck.GetAdminTitleWarning();
-
         // Subscribe to cache changes for status bar
         CacheManager.OnCacheChanged += (_, _) => UpdateCacheStatus();
         UpdateCacheStatus();

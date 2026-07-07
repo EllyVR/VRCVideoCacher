@@ -146,16 +146,7 @@ internal sealed class Program
 
     private static async Task InitVrcVideoCacher()
     {
-        try { Console.Title = $"VRCVideoCacher v{Version}{AdminCheck.GetAdminTitleWarning()}"; } catch { /* GUI mode, no console */ }
-
-        if (AdminCheck.IsRunningAsAdmin())
-        {
-            Logger.Warning("Application is running with administrator privileges. This is not recommended for security reasons.");
-        }
-        if (AdminCheck.ShouldShowAdminWarning())
-        {
-            Logger.Error(AdminCheck.AdminWarningMessage);
-        }
+        try { Console.Title = $"VRCVideoCacher v{Version}"; } catch { /* GUI mode, no console */ }
 
         OpenVRService.Start(CurrentProcessPath);
 
