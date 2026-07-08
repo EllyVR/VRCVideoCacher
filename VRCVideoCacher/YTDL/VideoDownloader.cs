@@ -247,7 +247,7 @@ public class VideoDownloader
                 StandardErrorEncoding = Encoding.UTF8,
             }
         };
-        process.StartInfo.Arguments = $"-q -o \"{tempDownloadMp4Path}\" --remux-video mp4 {url}";
+        process.StartInfo.Arguments = $"-q -o \"{tempDownloadMp4Path}\" --remux-video mp4 \"{url}\"";
         Log.Information("Downloading VRDancing Video: {Args}", process.StartInfo.Arguments);
         process.Start();
         await process.WaitForExitAsync();

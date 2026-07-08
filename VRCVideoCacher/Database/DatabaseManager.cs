@@ -11,7 +11,7 @@ public static class DatabaseManager
     public static event Action? OnPlayHistoryAdded;
     public static event Action? OnVideoInfoCacheUpdated;
 
-    private static readonly PooledDbContextFactory<Database> _contextFactory;
+    private static readonly PooledDbContextFactory<Database> ContextFactory;
 
     static DatabaseManager()
     {
@@ -22,9 +22,9 @@ public static class DatabaseManager
             .EnableSensitiveDataLogging()
             .Options;
 
-        _contextFactory = new PooledDbContextFactory<Database>(options);
+        ContextFactory = new PooledDbContextFactory<Database>(options);
 
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
         db.Database.EnsureCreated();
         db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
     }
@@ -38,7 +38,7 @@ public static class DatabaseManager
             Id = videoInfo.VideoId,
             Type = videoInfo.UrlType
         };
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
         db.PlayHistory.Add(history);
         db.SaveChanges();
         OnPlayHistoryAdded?.Invoke();
@@ -49,7 +49,7 @@ public static class DatabaseManager
         if (string.IsNullOrEmpty(videoInfoCache.Id))
             return;
 
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
         var existingCache = db.VideoInfoCache.Find(videoInfoCache.Id);
         if (existingCache != null)
         {
@@ -75,7 +75,7 @@ public static class DatabaseManager
 
     public static List<History> GetPlayHistory(int limit = 50)
     {
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
         return db.PlayHistory
             .AsNoTracking()
             .OrderByDescending(h => h.Timestamp)
@@ -85,7 +85,7 @@ public static class DatabaseManager
 
     public static IEnumerable<HistoryItemViewModel> GetVideoHistoryAsCache(int limit = 50, bool distinctOnly = false)
     {
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
 
         List<History> histories;
 
@@ -130,7 +130,7 @@ public static class DatabaseManager
 
     public static VideoInfoCache? GetVideoInfoCache(string videoId)
     {
-        using var db = _contextFactory.CreateDbContext();
+        using var db = ContextFactory.CreateDbContext();
         return db.VideoInfoCache.Find(videoId);
     }
 

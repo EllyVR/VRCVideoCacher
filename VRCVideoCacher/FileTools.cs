@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
+using System.Runtime.Versioning;
 using Serilog;
 using ValveKeyValue;
 
@@ -102,7 +103,7 @@ public class FileTools
         return null;
     }
 
-    // Linux only
+    [SupportedOSPlatform("linux")]
     private static string? GetCompatPath(string appid)
     {
         if (!OperatingSystem.IsLinux())
@@ -174,9 +175,15 @@ public class FileTools
     public static void BackupAllYtdl()
     {
         if (ConfigManager.Config.PatchVrChat)
-            BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc);
+        {
+            if (!BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc))
+                Log.Error("Can't find VRC data, it may not be installed. {Path}", YtdlPathVrc);
+        }
         if (ConfigManager.Config.PatchResonite)
-            BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso);
+        {
+            if (!BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso))
+                Log.Warning("Can't find Resonite data, it may not be installed. {Path}", YtdlPathVrc);
+        }
     }
 
     public static void RestoreAllYtdl()
@@ -185,14 +192,13 @@ public class FileTools
         RestoreYtdl(YtdlPathReso, BackupPathReso);
     }
 
-    private static void BackupAndReplaceYtdl(string? ytdlPath, string? backupPath)
+    private static bool BackupAndReplaceYtdl(string? ytdlPath, string? backupPath)
     {
         if (string.IsNullOrEmpty(ytdlPath) ||
             string.IsNullOrEmpty(backupPath) ||
             !Directory.Exists(Path.GetDirectoryName(ytdlPath)))
         {
-            Log.Warning("YT-DLP directory does not exist, Game may not be installed. {Path}", ytdlPath);
-            return;
+            return false;
         }
         if (File.Exists(ytdlPath))
         {
@@ -200,7 +206,7 @@ public class FileTools
             if (hash == Program.YtdlpHash)
             {
                 Log.Information("YT-DLP is already patched.");
-                return;
+                return true;
             }
             if (File.Exists(backupPath))
             {
@@ -218,6 +224,7 @@ public class FileTools
         attr |= FileAttributes.ReadOnly;
         File.SetAttributes(ytdlPath, attr);
         Log.Information("Patched YT-DLP.");
+        return true;
     }
 
     private static void RestoreYtdl(string? ytdlPath, string? backupPath)

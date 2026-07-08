@@ -61,7 +61,7 @@
   "CloseToTray": "タスクトレイに収納する",
   "StartMinimized": "最小化して起動する",
   "StartWithSteamVr": "SteamVR と同時に起動する",
-  "DisableErrorPopups": "エラーポップアップウィンドウを無効にする",
+  "ErrorPopups": "エラーポップアップ",
   "BlockedUrls": "ブロックする URL",
   "BlockedUrlRedirect": "ブロックした URL のリダイレクト",
   "SettingsSaved": "設定を保存しました！",

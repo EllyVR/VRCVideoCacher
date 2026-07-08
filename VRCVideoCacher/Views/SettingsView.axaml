@@ -58,7 +58,7 @@
 
                         <CheckBox IsChecked="{Binding StartWithSteamVr}" Content="{l:Localize StartWithSteamVr}"/>
 
-                        <CheckBox IsChecked="{Binding DisableErrorPopups}" Content="{l:Localize DisableErrorPopups}"/>
+                        <CheckBox IsChecked="{Binding ErrorPopups}" Content="{l:Localize ErrorPopups}"/>
                     </StackPanel>
                 </Border>
 

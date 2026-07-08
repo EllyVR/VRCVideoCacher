@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Net.Http.Headers;
+using System.Net.Sockets;
 
 namespace yt_dlp;
 
@@ -64,6 +65,7 @@ internal static class Program
         try
         {
             using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("VRCVideoCacher", "1.0"));
             var inputUrl = Uri.EscapeDataString(url);
             var response = await httpClient.GetAsync($"{BaseUrl}/api/getvideo?url={inputUrl}&avpro={avPro}&source={source}");
             var output = await response.Content.ReadAsStringAsync();
