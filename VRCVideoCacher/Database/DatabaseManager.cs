@@ -133,5 +133,4 @@ public static class DatabaseManager
         using var db = ContextFactory.CreateDbContext();
         return db.VideoInfoCache.Find(videoId);
     }
-
 }

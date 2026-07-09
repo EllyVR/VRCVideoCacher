@@ -166,13 +166,13 @@ public partial class CookieSetupViewModel : ViewModelBase
     [RelayCommand]
     private void OpenExtensionStore()
     {
-        OpenUrl(IsChrome ? ChromeExtensionUrl : FirefoxExtensionUrl);
+        OpenUrl.Open(IsChrome ? ChromeExtensionUrl : FirefoxExtensionUrl);
     }
 
     [RelayCommand]
     private void OpenYouTube()
     {
-        OpenUrl("https://www.youtube.com");
+        OpenUrl.Open("https://www.youtube.com");
     }
 
     [RelayCommand]
@@ -222,14 +222,5 @@ public partial class CookieSetupViewModel : ViewModelBase
 
         Program.OnCookiesUpdated -= OnCookiesUpdated;
         RequestClose?.Invoke();
-    }
-
-    private static void OpenUrl(string url)
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-        }
-        catch { /* Ignore errors */ }
     }
 }
