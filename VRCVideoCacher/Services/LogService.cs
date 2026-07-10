@@ -36,12 +36,16 @@ public static class LogService
             source = lastDot >= 0 ? sourceStr[(lastDot + 1)..] : sourceStr;
         }
 
+        var message = logEvent.RenderMessage();
+        if (logEvent.Exception != null)
+            message += Environment.NewLine + logEvent.Exception;
+
         var entry = new LogEntry
         {
             Timestamp = logEvent.Timestamp.DateTime,
             Level = level,
             Source = source,
-            Message = logEvent.RenderMessage()
+            Message = message
         };
 
         // Add to buffer
@@ -74,6 +78,8 @@ public class UiLogSink : ILogEventSink
                     ? sourceContext.ToString()
                     : "Unknown";
                 var message = logEvent.RenderMessage();
+                if (logEvent.Exception != null)
+                    message += Environment.NewLine + logEvent.Exception;
                 _currentPopup = new PopupWindow(message)
                 {
                     Title = $"Error from {source}"
