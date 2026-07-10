@@ -49,26 +49,26 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:LogEntry}">
                         <Grid ColumnDefinitions="80, 40, 100, *" Margin="5,2">
-                            <TextBlock Grid.Column="0"
+                            <SelectableTextBlock Grid.Column="0"
                                        Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}"
                                        FontFamily="Consolas"
                                        Foreground="#888888"
                                        FontSize="12"/>
-                            <TextBlock Grid.Column="1"
+                            <SelectableTextBlock Grid.Column="1"
                                        Text="{Binding Level}"
                                        FontFamily="Consolas"
                                        FontWeight="Bold"
                                        FontSize="12">
-                                <TextBlock.Foreground>
+                                <SelectableTextBlock.Foreground>
                                     <SolidColorBrush Color="{Binding LevelColor}"/>
-                                </TextBlock.Foreground>
-                            </TextBlock>
-                            <TextBlock Grid.Column="2"
+                                </SelectableTextBlock.Foreground>
+                            </SelectableTextBlock>
+                            <SelectableTextBlock Grid.Column="2"
                                        Text="{Binding Source}"
                                        FontFamily="Consolas"
                                        Foreground="#CE93D8"
                                        FontSize="12"/>
-                            <TextBlock Grid.Column="3"
+                            <SelectableTextBlock Grid.Column="3"
                                        Text="{Binding Message}"
                                        FontFamily="Consolas"
                                        TextWrapping="Wrap"
