@@ -49,6 +49,11 @@ public class VideoId
     {
         var ytdlpProcess = GetYtdlpProcess();
         ytdlpProcess.StartInfo.Arguments = YtdlManager.GenerateYtdlArgs(args, $"\"{url}\"");
+
+        // yt-dlp rewrites the cookie jar on exit; overlapping it with the download queue corrupts the
+        // session and gets us bot-checked. See YtdlCookieJar.
+        using var cookieJar = await YtdlCookieJar.AcquireAsync();
+
         Log.Information("Starting yt-dlp with args: {args:l}", ytdlpProcess.StartInfo.Arguments);
         ytdlpProcess.Start();
         var output = await ytdlpProcess.StandardOutput.ReadToEndAsync();

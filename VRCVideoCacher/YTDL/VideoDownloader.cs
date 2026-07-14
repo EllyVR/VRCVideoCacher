@@ -176,10 +176,17 @@ public class VideoDownloader
 
         process.StartInfo.Arguments = YtdlManager.GenerateYtdlArgs(args, $"-- \"{videoId}\"");
         Log.Information("Downloading YouTube Video: {Args}", process.StartInfo.Arguments);
-        process.Start();
-        await process.WaitForExitAsync();
-        var error = await process.StandardError.ReadToEndAsync();
-        error = error.Trim();
+
+        // yt-dlp rewrites the cookie jar on exit; overlapping this download with a URL resolution
+        // corrupts the session and gets us bot-checked. See YtdlCookieJar.
+        string error;
+        using (await YtdlCookieJar.AcquireAsync())
+        {
+            process.Start();
+            await process.WaitForExitAsync();
+            error = (await process.StandardError.ReadToEndAsync()).Trim();
+        }
+
         if (process.ExitCode != 0)
         {
             Log.Error("Failed to download YouTube Video: {exitCode} {URL} {error}", process.ExitCode, url, error);

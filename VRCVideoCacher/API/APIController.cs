@@ -34,7 +34,13 @@ public class ApiController : WebApiController
             return;
         }
 
-        await File.WriteAllTextAsync(YtdlManager.CookiesPath, cookies);
+        // yt-dlp rewrites the cookie jar on exit, so writing it here while a yt-dlp is running would race
+        // it and lose one side's rotated session tokens — which is exactly what gets us bot-checked.
+        // See YtdlCookieJar.
+        using (await YtdlCookieJar.AcquireAsync())
+        {
+            await File.WriteAllTextAsync(YtdlManager.CookiesPath, cookies);
+        }
 
         HttpContext.Response.StatusCode = 200;
         await HttpContext.SendStringAsync("Cookies received.", "text/plain", Encoding.UTF8);
@@ -153,6 +159,24 @@ public class ApiController : WebApiController
             return;
         }
 
+        // Testing: force everything through the SABR restream path.
+        if (ConfigManager.Config.SabrRestreamForce && videoInfo.UrlType == UrlType.YouTube)
+        {
+            var forcedUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
+            if (!string.IsNullOrEmpty(forcedUrl))
+            {
+                Log.Information("Responding with forced SABR restream URL: {URL}", forcedUrl);
+                await HttpContext.SendStringAsync(forcedUrl, "text/plain", Encoding.UTF8);
+                // The SABR session fetches the whole video anyway; when it is streaming at the cache's
+                // resolution it writes the cached file itself, so downloading it again would fetch the
+                // same video twice. Only queue a separate download when the resolutions differ.
+                if (ConfigManager.Config.CacheYouTube && !SabrRestreamService.CacheConverges)
+                    VideoDownloader.QueueDownload(videoInfo);
+                return;
+            }
+            Log.Warning("Forced SABR restream failed; falling back to normal resolution.");
+        }
+
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
         if (!success)
         {
@@ -160,6 +184,17 @@ public class ApiController : WebApiController
             // only send the error back if it's for YouTube, otherwise let it play the request URL normally
             if (videoInfo.UrlType == UrlType.YouTube)
             {
+                // SABR-only videos have no playable direct URL; try to restream them live to AVPro.
+                var restreamUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
+                if (!string.IsNullOrEmpty(restreamUrl))
+                {
+                    Log.Information("Responding with SABR restream URL: {URL}", restreamUrl);
+                    await HttpContext.SendStringAsync(restreamUrl, "text/plain", Encoding.UTF8);
+                    // Still cache in the background so the next play is a direct cache hit.
+                    if (ConfigManager.Config.CacheYouTube)
+                        VideoDownloader.QueueDownload(videoInfo);
+                    return;
+                }
                 HttpContext.Response.StatusCode = 500;
                 await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
                 return;
