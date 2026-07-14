@@ -136,6 +136,16 @@ public class ConfigModel
     public string YtdlpAdditionalArgs = string.Empty;
     public string YtdlpDubLanguage = string.Empty;
 
+    // SABR restreaming: when an uncached YouTube video can't be direct-played, fetch it over SABR and
+    // serve it to AVPro as a seekable HLS VOD instead of returning an unplayable URL.
+    public bool SabrRestreamEnabled = true;
+    // Max resolution for SABR STREAMING. Deliberately separate from CacheYouTubeMaxResolution, which
+    // governs the cache download only.
+    public int SabrMaxResolution = 1080;
+    // Testing/eval: force ALL uncached YouTube videos through the SABR restream path (skip the
+    // normal direct-URL resolution), so the feature can be exercised before SABR-only is widespread.
+    public bool SabrRestreamForce = true;
+
     // Caching
     public string CachedAssetPath = "";
     public float CacheMaxSizeInGb = 10f;

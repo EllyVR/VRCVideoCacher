@@ -151,7 +151,10 @@ internal sealed class Program
         OpenVRService.Start(CurrentProcessPath);
 
         Directory.CreateDirectory(UtilsPath);
-#if !STEAMRELEASE
+        // SABRRELEASE: the version carries a "-sabr" suffix, which SemVer ranks BELOW the plain release —
+        // so the updater would consider mainline "newer" and overwrite the test build. Never self-update
+        // a feature-branch build.
+#if !STEAMRELEASE && !SABRRELEASE
         await Updater.CheckForUpdates();
 #endif
         Updater.Cleanup();

@@ -19,6 +19,8 @@ public class WebServer
         if (!File.Exists(indexPath))
             File.WriteAllText(indexPath, "VRCVideoCacher");
 
+        Directory.CreateDirectory(Services.SabrRestreamService.HlsRootPath);
+
         _server = CreateWebServer(ConfigManager.Config.YtdlpWebServerUrl);
         _server.RunAsync();
     }
@@ -43,6 +45,15 @@ public class WebServer
             // First, we will configure our web server by adding Modules.
             .WithWebApi("/api", m => m
                 .WithController<ApiController>())
+            // SABR HLS sessions. The module runs first and falls through to the static file module:
+            // it builds the requested segment on demand (fetching or seeking as needed) so the file
+            // exists by the time the static module sends it. It is also the session's only liveness
+            // signal — VRChat asks for the URL once and then pulls media directly, so without these
+            // requests the idle reaper would tear a playing session down.
+            // Not content-cached: segments appear as the fetch progresses.
+            .WithModule(new SabrHlsModule("/hls"))
+            .WithStaticFolder("/hls", Services.SabrRestreamService.HlsRootPath, false, m => m
+                .WithContentCaching(false))
             .WithStaticFolder("/", CacheManager.CachePath, true, m => m
                 .WithContentCaching(true));
 
@@ -64,4 +75,16 @@ public class WebServer
         Log.Information(exception, "OnUnhandledException Error Occured");
         return Task.CompletedTask;
     }
+}
+
+/// <summary>
+/// Materialises the requested SABR HLS file, then lets the static file module actually serve it
+/// (<see cref="IsFinalHandler"/> is false, so routing continues).
+/// </summary>
+internal sealed class SabrHlsModule(string baseRoute) : WebModuleBase(baseRoute)
+{
+    public override bool IsFinalHandler => false;
+
+    protected override Task OnRequestAsync(IHttpContext context) =>
+        Services.SabrRestreamService.EnsureAsync(context.RequestedPath);
 }

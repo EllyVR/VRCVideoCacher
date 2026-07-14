@@ -25,7 +25,14 @@ public class YtdlManager
         Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
     public static readonly string FfmpegPath =
         Path.Join(Program.UtilsPath, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
-    private const string YtdlpApiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest";
+    // The SABR-capable yt-dlp build, used as the ONLY yt-dlp. It is a superset of mainline: everything
+    // that worked before still works, and SABR-only videos now extract and download too — which mainline
+    // cannot do at all.
+    //
+    // Note this is a fixed tag, not /releases/latest: the build is a PRERELEASE, and /latest skips those.
+    // Because the tag never changes ("sabr"), the up-to-date check must compare the release NAME
+    // ("sabr 2026.07.11.051141"), not the tag, or we would download once and never update again.
+    private const string YtdlpApiUrl = "https://api.github.com/repos/bashonly/yt-dlp/releases/tags/sabr";
     private const string FfmpegNightlyApiUrl = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest";
     private const string FfmpegApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest";
     private const string DenoApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest";
@@ -125,7 +132,8 @@ public class YtdlManager
         else if (!await CheckIfProcessStarts(YtdlPath))
             currentYtdlVersion = "Not Working";
 
-        var latestVersion = json.tag_name;
+        // See YtdlpApiUrl: the tag is a constant ("sabr"), so the release name carries the real version.
+        var latestVersion = string.IsNullOrEmpty(json.name) ? json.tag_name : json.name;
         Log.Information("YT-DLP Current: {Installed} Latest: {Latest}", currentYtdlVersion, latestVersion);
         if (string.IsNullOrEmpty(latestVersion))
         {
@@ -462,7 +470,8 @@ public class YtdlManager
             await stream.CopyToAsync(fileStream);
             Log.Information("Downloaded YT-DLP.");
             FileTools.MarkFileExecutable(YtdlPath);
-            Versions.CurrentVersion.Ytdlp = json.tag_name;
+            // Must match what TryDownloadYtdlp compares against, or every check re-downloads.
+            Versions.CurrentVersion.Ytdlp = string.IsNullOrEmpty(json.name) ? json.tag_name : json.name;
             Versions.Save();
             return;
         }

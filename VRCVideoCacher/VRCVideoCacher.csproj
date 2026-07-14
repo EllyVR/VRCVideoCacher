@@ -36,6 +36,30 @@
         <DebugType>portable</DebugType>
     </PropertyGroup>
 
+    <!-- SABR feature-branch test build. Same as Release, but:
+           * version becomes 2026.x.y-sabr, so testers (and Sentry) can tell it apart at a glance;
+           * the self-updater is disabled (see SABRRELEASE in Program.cs). That is NOT optional: "-sabr"
+             is a SemVer PRERELEASE, which ranks BELOW the plain release, so the updater would decide
+             mainline is newer and overwrite every tester's build with it. -->
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SabrRelease|AnyCPU'">
+        <DefineConstants>SABRRELEASE</DefineConstants>
+        <!-- Appends to the <Version> set above. NOT VersionSuffix: that is only honoured when the version
+             is composed from VersionPrefix, and this project sets <Version> outright, so VersionSuffix is
+             silently ignored. -->
+        <Version>$(Version)-sabr</Version>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <!-- Suppress trim warnings from third-party libraries -->
+        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+        <!-- IL2037: EF Core 10 DynamicDependency on ExecuteUpdate overload not resolvable by ILLink -->
+        <NoWarn>$(NoWarn);IL2037</NoWarn>
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SteamRelease|AnyCPU'">
         <DefineConstants>STEAMRELEASE</DefineConstants>
         <PublishSingleFile>true</PublishSingleFile>
@@ -73,6 +97,12 @@
         <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.8.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
+        <!-- EF Core 10.0.8 pulls SQLitePCLRaw 2.1.11, whose bundled SQLite has a high-severity integer
+             overflow (CVE-2025-6965 / GHSA-2m69-gcr7-jv3q, affects <= 2.1.11). Pin the bundle forward to
+             2.1.12, which lifts the whole family (core/lib/provider) onto a patched SQLite. Staying on
+             2.1.x deliberately: 3.x is a major version EF Core 10 is not tested against.
+             Remove this once EF Core references 2.1.12+ itself. -->
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
         <PackageReference Include="EmbedIO" Version="3.5.2" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="securifybv.ShellLink" Version="0.1.0" />
