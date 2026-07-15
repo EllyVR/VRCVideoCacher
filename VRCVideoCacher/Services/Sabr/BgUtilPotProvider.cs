@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Serilog;
 using SharpCompress.Readers;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
 
 namespace VRCVideoCacher.Services.Sabr;
@@ -72,18 +73,26 @@ internal static class BgUtilPotProvider
     /// </summary>
     public static string PluginSearchDir { get; } = Program.UtilsPath;
 
-    private static int Port =>
-        Uri.TryCreate(ConfigManager.Config.SabrPotBaseUrl, UriKind.Absolute, out var uri) ? uri.Port : 4416;
+    // The URL we ACTUALLY use. Defaults to the configured (preferred) value; if that port is already
+    // taken at startup we rebase this onto a free one (see ReassignPortIfInUse). Config stays the
+    // preferred value — a transient conflict must not rewrite Config.json. Everything derives from this.
+    private static string _baseUrl = ConfigManager.Config.SabrPotBaseUrl.TrimEnd('/');
 
-    private static string PingUrl => $"{ConfigManager.Config.SabrPotBaseUrl.TrimEnd('/')}/ping";
+    /// <summary>The provider URL actually in use (may differ from config if the port had to be reassigned).</summary>
+    public static string BaseUrl => _baseUrl;
+
+    private static int Port =>
+        Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) ? uri.Port : 4416;
+
+    private static string PingUrl => $"{_baseUrl}/ping";
 
     /// <summary>
-    /// True when the configured provider is local (loopback) and we own its lifecycle. A non-loopback URL
-    /// means the operator runs the provider themselves (Docker, another host); we then only health-check
-    /// it and never download/install/spawn anything.
+    /// True when the provider is local (loopback) and we own its lifecycle. A non-loopback URL means the
+    /// operator runs the provider themselves (Docker, another host); we then only health-check it and
+    /// never download/install/spawn/reassign anything.
     /// </summary>
     private static bool IsAutoManaged =>
-        Uri.TryCreate(ConfigManager.Config.SabrPotBaseUrl, UriKind.Absolute, out var uri) && uri.IsLoopback;
+        Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) && uri.IsLoopback;
 
     // Provisioning + supervision run at most once; readiness is polled by WaitReadyAsync.
     private static readonly object InitLock = new();
@@ -148,6 +157,7 @@ internal static class BgUtilPotProvider
     {
         if (IsAutoManaged)
         {
+            ReassignPortIfInUse();
             try
             {
                 await EnsureInstalledAsync();
@@ -170,6 +180,31 @@ internal static class BgUtilPotProvider
         // Keep the (local) server alive for the life of the app; for an external provider this loop only
         // health-checks. The first iteration starts the server and the health poll flips _isReady.
         await SuperviseAsync();
+    }
+
+    /// <summary>
+    /// If our preferred port is already taken (another app — or an orphaned bgutil server from a
+    /// hard-killed previous run), move to a free one instead of failing. We can do this because we own the
+    /// server: it launches with <c>-p {Port}</c> and the extractor is told the same <see cref="BaseUrl"/>.
+    /// </summary>
+    private static void ReassignPortIfInUse()
+    {
+        var preferred = Port;
+        if (!PortAudit.IsInUse(preferred))
+            return;
+
+        var who = PortAudit.DescribeListener(preferred);
+        var free = PortAudit.FindFreePort(preferred);
+        if (free == preferred)
+        {
+            Log.Warning("bgutil port {Port} is in use by {Process} and no free port was found nearby; " +
+                        "the provider may fail to start", preferred, who);
+            return;
+        }
+
+        _baseUrl = new UriBuilder(_baseUrl) { Port = free }.Uri.ToString().TrimEnd('/');
+        Log.Warning("bgutil port {Preferred} is in use by {Process}; using port {Free} instead",
+            preferred, who, free);
     }
 
     private static async Task SuperviseAsync()
