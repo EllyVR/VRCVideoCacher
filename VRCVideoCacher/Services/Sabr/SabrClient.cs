@@ -28,7 +28,10 @@ internal sealed class SabrSource
     public int Width;
     public int Height;
     public long Bandwidth;
-    /// <summary>Null on android_vr, which is why we prefer it — a PO token means a JS/BotGuard provider.</summary>
+    /// <summary>
+    /// The web client's GVS PO token (base64url), minted by the bgutil provider during extraction. The
+    /// SABR server attests against it together with the client_info, so it must accompany every request.
+    /// </summary>
     public string? PoToken;
 }
 
@@ -57,6 +60,9 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     private const int MaxEmptyResponses = 3;
     private const int MaxTransportRetries = 10;
     private const int MaxReloads = 3;
+    // A VOD ad makes the server withhold content for a few backoff cycles; allow enough waits to sit
+    // through one before we call it a stall.
+    private const int MaxAdWaits = 12;
 
     private readonly TrackState _audio = new(source.AudioFormat, isVideo: false);
     private readonly TrackState _video = new(source.VideoFormat, isVideo: true);
@@ -71,6 +77,12 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     private byte[]? _playbackCookie;
     private long _playerTimeMs;
     private int _reloads;
+
+    // Server-pushed contexts (VOD ads). We must echo the ones marked for sending back on each request,
+    // and honour the backoff the server sets, or it never serves the real content.
+    private readonly Dictionary<int, SabrContextUpdate> _sabrContextUpdates = new();
+    private readonly HashSet<int> _sabrContextsToSend = [];
+    private int _pendingBackoffMs;
 
     /// <summary>Total duration, known after the first response. 0 until then.</summary>
     public long DurationMs { get; private set; }
@@ -131,6 +143,7 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
 
         var emptyResponses = 0;
         var transportRetries = 0;
+        var adWaits = 0;
 
         while (!IsComplete())
         {
@@ -156,6 +169,20 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
             if (gotSegments)
             {
                 emptyResponses = 0;
+                adWaits = 0;
+            }
+            else if (_pendingBackoffMs > 0 && HasSendableAdContext())
+            {
+                // The server is making the player "watch" a VOD ad before it hands over content. Honour
+                // the backoff and re-request (BuildRequest now echoes the ad context) instead of hammering
+                // — hammering just trips the stall guard, which is exactly what happened before.
+                if (++adWaits > MaxAdWaits)
+                    throw new SabrException(
+                        $"SABR stream stuck behind an ad after {MaxAdWaits} server-required waits");
+                var wait = TimeSpan.FromMilliseconds(_pendingBackoffMs);
+                log.Information("SABR: waiting {Seconds:0.0}s for a server-required ad backoff ({Wait}/{Max})",
+                    wait.TotalSeconds, adWaits, MaxAdWaits);
+                await Task.Delay(wait, ct);
             }
             else if (++emptyResponses >= MaxEmptyResponses)
             {
@@ -224,6 +251,8 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         var newSegments = false;
         string? redirect = null;
         var reload = false;
+        // Reflects only THIS response's NextRequestPolicy; the ad-wait decision reads it after the loop.
+        _pendingBackoffMs = 0;
 
         await foreach (var part in UmpReader.ReadPartsAsync(body, ct))
         {
@@ -261,8 +290,22 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                 }
 
                 case UmpPartId.NextRequestPolicy:
-                    // Opaque session token; the server expects it back on every subsequent request.
-                    _playbackCookie = SabrResponse.DecodePlaybackCookie(part.Payload) ?? _playbackCookie;
+                {
+                    // playback_cookie: opaque session token echoed on every later request.
+                    // backoff_time_ms: how long the server wants us to wait — a VOD ad "playing" out.
+                    var (cookie, backoffMs) = SabrResponse.DecodeNextRequestPolicy(part.Payload);
+                    _playbackCookie = cookie ?? _playbackCookie;
+                    if (backoffMs > 0)
+                        _pendingBackoffMs = backoffMs;
+                    break;
+                }
+
+                case UmpPartId.SabrContextUpdate:
+                    ProcessSabrContextUpdate(SabrContextUpdate.Decode(part.Payload));
+                    break;
+
+                case UmpPartId.SabrContextSendingPolicy:
+                    ProcessSabrContextSendingPolicy(SabrContextSendingPolicy.Decode(part.Payload));
                     break;
 
                 case UmpPartId.SabrRedirect:
@@ -270,12 +313,13 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                     break;
 
                 case UmpPartId.StreamProtectionStatus:
-                    // 3 = ATTESTATION_REQUIRED. We deliberately use a client that needs no PO token, so
-                    // this means YouTube has closed that window rather than that we forgot one.
+                    // 3 = ATTESTATION_REQUIRED. We send the web client's PO token on every request, so this
+                    // means the token the bgutil provider minted was rejected or has expired — not that one
+                    // was missing.
                     if (SabrResponse.DecodeProtectionStatus(part.Payload) == 3)
                         throw new SabrException(
-                            "YouTube demanded attestation (a PO token) for this stream. The android_vr " +
-                            "no-token path may no longer be available.");
+                            "YouTube rejected our PO token (attestation required). The bgutil-minted token " +
+                            "may be invalid or expired.");
                     break;
 
                 case UmpPartId.SabrError:
@@ -331,7 +375,46 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         _poToken = refreshed.PoToken;
         // The cookie belongs to the old session; the new player response will issue another.
         _playbackCookie = null;
+        // Ad/session context ids are scoped to the old session — drop them (matches yt-dlp on reload).
+        _sabrContextUpdates.Clear();
+        _sabrContextsToSend.Clear();
+        _pendingBackoffMs = 0;
     }
+
+    /// <summary>
+    /// Registers a server-pushed context (typically a VOD ad). Mirrors yt-dlp: invalid updates and
+    /// KEEP_EXISTING duplicates are ignored; send_by_default marks it for immediate echoing.
+    /// </summary>
+    private void ProcessSabrContextUpdate(SabrContextUpdate update)
+    {
+        if (!update.IsValid)
+        {
+            log.Warning("Ignoring an invalid SabrContextUpdate");
+            return;
+        }
+        const int keepExisting = 2;
+        if (update.WritePolicy == keepExisting && _sabrContextUpdates.ContainsKey(update.Type))
+            return;
+
+        _sabrContextUpdates[update.Type] = update;
+        if (update.SendByDefault)
+            _sabrContextsToSend.Add(update.Type);
+        log.Debug("Registered SabrContextUpdate type {Type} ({Bytes} bytes){Send}",
+            update.Type, update.Value!.Length, update.SendByDefault ? ", sending" : "");
+    }
+
+    private void ProcessSabrContextSendingPolicy(SabrContextSendingPolicy policy)
+    {
+        foreach (var type in policy.Start)
+            _sabrContextsToSend.Add(type);
+        foreach (var type in policy.Stop)
+            _sabrContextsToSend.Remove(type);
+        foreach (var type in policy.Discard)
+            _sabrContextUpdates.Remove(type);
+    }
+
+    /// <summary>True while the server is holding content behind an ad we're being asked to "play".</summary>
+    private bool HasSendableAdContext() => _sabrContextsToSend.Any(_sabrContextUpdates.ContainsKey);
 
     private byte[] BuildRequest()
     {
@@ -352,6 +435,15 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                 ClientInfo = _clientInfo,
                 PoToken = _poToken is null ? null : Base64Url(_poToken),
                 PlaybackCookie = _playbackCookie,
+                // Echo back the ad/session contexts the server is waiting on, plus any it wants that we
+                // haven't received the value for yet.
+                SabrContexts = _sabrContextsToSend
+                    .Where(_sabrContextUpdates.ContainsKey)
+                    .Select(type => new SabrContext(type, _sabrContextUpdates[type].Value!))
+                    .ToList(),
+                UnsentSabrContexts = _sabrContextsToSend
+                    .Where(type => !_sabrContextUpdates.ContainsKey(type))
+                    .ToList(),
             },
         };
 
