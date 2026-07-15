@@ -149,17 +149,35 @@ internal sealed class ClientInfo : IProtoMessage
     }
 }
 
+/// <summary>One ad/session context the server told us to echo back. Opaque — we never parse the value.</summary>
+internal sealed class SabrContext(int type, byte[] value) : IProtoMessage
+{
+    public void WriteTo(ProtoWriter w)
+    {
+        w.Varint(1, type);
+        w.Bytes(2, value);
+    }
+}
+
 internal sealed class StreamerContext : IProtoMessage
 {
     public ClientInfo? ClientInfo;
     public byte[]? PoToken;
     public byte[]? PlaybackCookie;
+    /// <summary>Ad/session contexts the server asked us to send back (VOD ads gate content behind this).</summary>
+    public List<SabrContext> SabrContexts = [];
+    /// <summary>Context types the server wants but whose value we haven't received yet.</summary>
+    public List<int> UnsentSabrContexts = [];
 
     public void WriteTo(ProtoWriter w)
     {
         w.Message(1, ClientInfo);
         w.Bytes(2, PoToken);
         w.Bytes(3, PlaybackCookie);
+        w.Messages(5, SabrContexts);
+        // Repeated int32, written unpacked (one tag each) — the server accepts either encoding.
+        foreach (var type in UnsentSabrContexts)
+            w.Varint(6, type);
     }
 }
 
@@ -282,6 +300,97 @@ internal sealed class FormatInitializationMetadata
     }
 }
 
+/// <summary>
+/// Server-pushed context (part 57), most commonly a VOD ad. The server won't serve real content until
+/// we echo this back (as a <see cref="SabrContext"/>) on subsequent requests. Value is opaque.
+/// </summary>
+internal sealed class SabrContextUpdate
+{
+    public int Type;
+    public byte[]? Value;
+    public bool SendByDefault;
+    public int WritePolicy; // 1 = OVERWRITE, 2 = KEEP_EXISTING (0 = unspecified ⇒ invalid)
+
+    /// <summary>yt-dlp ignores updates missing any of type/value/write_policy.</summary>
+    public bool IsValid => Type != 0 && Value is { Length: > 0 } && WritePolicy != 0;
+
+    public static SabrContextUpdate Decode(ReadOnlySpan<byte> data)
+    {
+        var result = new SabrContextUpdate();
+        var r = new ProtoReader(data);
+        while (r.Next(out var field, out var wire))
+        {
+            switch (field)
+            {
+                case 1 when wire == 0: result.Type = (int)r.ReadVarint(); break;
+                case 3 when wire == 2: result.Value = r.ReadBytes().ToArray(); break;
+                case 4 when wire == 0: result.SendByDefault = r.ReadVarint() != 0; break;
+                case 5 when wire == 0: result.WritePolicy = (int)r.ReadVarint(); break;
+                default: r.Skip(wire); break; // scope(2) and anything else are not needed
+            }
+        }
+        return result;
+    }
+}
+
+/// <summary>SabrContextSendingPolicy (part 59): the server toggling which context types we echo.</summary>
+internal sealed class SabrContextSendingPolicy
+{
+    public readonly List<int> Start = [];
+    public readonly List<int> Stop = [];
+    public readonly List<int> Discard = [];
+
+    public static SabrContextSendingPolicy Decode(ReadOnlySpan<byte> data)
+    {
+        var result = new SabrContextSendingPolicy();
+        var r = new ProtoReader(data);
+        while (r.Next(out var field, out var wire))
+        {
+            // Repeated int32 may arrive packed (wire 2) or one-per-tag (wire 0); handle both.
+            switch (field)
+            {
+                case 1: ReadInts(ref r, wire, result.Start); break;
+                case 2: ReadInts(ref r, wire, result.Stop); break;
+                case 3: ReadInts(ref r, wire, result.Discard); break;
+                default: r.Skip(wire); break;
+            }
+        }
+        return result;
+    }
+
+    private static void ReadInts(ref ProtoReader r, int wire, List<int> into)
+    {
+        if (wire == 0)
+        {
+            into.Add((int)r.ReadVarint());
+            return;
+        }
+        if (wire != 2)
+        {
+            r.Skip(wire);
+            return;
+        }
+
+        // Packed: a length-delimited block of consecutive raw varints (NOT tag-prefixed).
+        var block = r.ReadBytes();
+        var pos = 0;
+        while (pos < block.Length)
+        {
+            ulong value = 0;
+            var shift = 0;
+            while (pos < block.Length)
+            {
+                var b = block[pos++];
+                value |= (ulong)(b & 0x7F) << shift;
+                if ((b & 0x80) == 0)
+                    break;
+                shift += 7;
+            }
+            into.Add((int)value);
+        }
+    }
+}
+
 internal static class SabrResponse
 {
     /// <summary>SabrRedirect.redirect_url — fires on nearly every first request.</summary>
@@ -297,17 +406,26 @@ internal static class SabrResponse
         return null;
     }
 
-    /// <summary>NextRequestPolicy.playback_cookie — opaque; must be echoed back on every later request.</summary>
-    public static byte[]? DecodePlaybackCookie(ReadOnlySpan<byte> data)
+    /// <summary>
+    /// NextRequestPolicy: the playback_cookie (opaque, echoed back on every later request) and
+    /// backoff_time_ms (how long the server wants us to wait before the next request — used to make a
+    /// VOD "play" an ad before it serves content).
+    /// </summary>
+    public static (byte[]? cookie, int backoffMs) DecodeNextRequestPolicy(ReadOnlySpan<byte> data)
     {
+        byte[]? cookie = null;
+        var backoff = 0;
         var r = new ProtoReader(data);
         while (r.Next(out var field, out var wire))
         {
-            if (field == 7 && wire == 2)
-                return r.ReadBytes().ToArray();
-            r.Skip(wire);
+            switch (field)
+            {
+                case 4 when wire == 0: backoff = (int)r.ReadVarint(); break;
+                case 7 when wire == 2: cookie = r.ReadBytes().ToArray(); break;
+                default: r.Skip(wire); break;
+            }
         }
-        return null;
+        return (cookie, backoff);
     }
 
     /// <summary>StreamProtectionStatus.status: 1=OK, 2=ATTESTATION_PENDING, 3=ATTESTATION_REQUIRED.</summary>

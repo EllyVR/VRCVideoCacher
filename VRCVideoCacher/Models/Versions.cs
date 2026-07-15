@@ -39,4 +39,7 @@ public class VersionJson
     public string Ytdlp { get; set; } = string.Empty;
     public string Ffmpeg { get; set; } = string.Empty;
     public string Deno { get; set; } = string.Empty;
+    // Installed tag of the bgutil PO token provider (source + plugin + `deno install`). Empty until the
+    // provider has been fully provisioned; compared against BgUtilPotProvider.BgUtilTag.
+    public string BgUtil { get; set; } = string.Empty;
 }
