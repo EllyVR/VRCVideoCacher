@@ -6,6 +6,7 @@ using Avalonia;
 using Serilog;
 using VRCVideoCacher.API;
 using VRCVideoCacher.Services;
+using VRCVideoCacher.Services.Sabr;
 using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
 #if STEAMRELEASE
@@ -182,6 +183,12 @@ internal sealed class Program
             YtdlManager.StartYtdlUpdaterThread();
             _ = YtdlManager.TryDownloadFfmpeg();
         }
+
+        // Warm the SABR PO token provider now (downloads/installs on first run, then supervises its Deno
+        // server) so it is usually ready by the first SABR playback. Runs in the background; SABR waits on
+        // its readiness and fails cleanly if it never comes up. Deno is provisioned just above.
+        if (ConfigManager.Config.SabrRestreamEnabled)
+            BgUtilPotProvider.Ensure();
 
         if (OperatingSystem.IsWindows())
             AutoStartShortcut.TryUpdateShortcutPath();

@@ -145,6 +145,15 @@ public class ConfigModel
     // Testing/eval: force ALL uncached YouTube videos through the SABR restream path (skip the
     // normal direct-URL resolution), so the feature can be exercised before SABR-only is widespread.
     public bool SabrRestreamForce = true;
+    // Base URL of the bgutil PO token provider. SABR uses the web client, which requires a GVS PO token;
+    // the token comes from this provider (auto-managed on our Deno at the default localhost port). A
+    // non-loopback URL points at an externally-run provider and skips auto-management.
+    //
+    // Host is "localhost", NOT "127.0.0.1", deliberately: the bgutil server binds "::" (IPv6), which on
+    // Windows is v6only, so a bare 127.0.0.1 connection is refused. "localhost" resolves to both ::1 and
+    // 127.0.0.1 and the client falls through to whichever the server is actually on (IPv6 here, or IPv4
+    // when the server had to fall back to 0.0.0.0 on IPv6-less machines).
+    public string SabrPotBaseUrl = "http://localhost:4416";
 
     // Caching
     public string CachedAssetPath = "";

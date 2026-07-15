@@ -27,8 +27,17 @@ public class WebServerLogger : ILogger
                 WebServer.Log.Warning("{WebServerLogEvent:l}", message);
                 break;
             case LogLevel.Info:
-                WebServer.Log.Information("{WebServerLogEvent:l}", message);
+                // SABR HLS segment fetches (206 Partial Content) fire constantly during playback — one per
+                // segment, per viewer — and drown out everything else at Info. Keep them, but at Debug.
+                if (IsHlsPartialContent(rawMessage))
+                    WebServer.Log.Debug("{WebServerLogEvent:l}", message);
+                else
+                    WebServer.Log.Information("{WebServerLogEvent:l}", message);
                 break;
         }
     }
+
+    private static bool IsHlsPartialContent(string message) =>
+        message.Contains("/hls/", StringComparison.Ordinal) &&
+        message.Contains("206", StringComparison.Ordinal);
 }

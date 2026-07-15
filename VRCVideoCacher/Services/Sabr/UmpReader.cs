@@ -13,7 +13,9 @@ internal enum UmpPartId
     SabrSeek = 45,
     ReloadPlayerResponse = 46,
     NextRequestPolicy = 35,
+    SabrContextUpdate = 57,
     StreamProtectionStatus = 58,
+    SabrContextSendingPolicy = 59,
 }
 
 internal readonly record struct UmpPart(int PartId, byte[] Payload);

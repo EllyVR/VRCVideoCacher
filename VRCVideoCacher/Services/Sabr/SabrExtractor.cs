@@ -31,6 +31,13 @@ internal static class SabrExtractor
     private static readonly HashSet<string> MobileClients = new(StringComparer.OrdinalIgnoreCase)
         { "ANDROID_VR", "ANDROID", "ANDROID_TV", "ANDROID_MUSIC", "IOS", "IOS_MUSIC", "VISIONOS" };
 
+    /// <summary>
+    /// How long a playback request waits for the PO token provider to be ready before failing cleanly.
+    /// The provider is warmed at startup, so by the time a video plays it is normally already up; this is
+    /// only the ceiling for the case where a request arrives while it is still coming online.
+    /// </summary>
+    private static readonly TimeSpan PotProviderTimeout = TimeSpan.FromSeconds(45);
+
     /// <param name="fmp4Only">
     /// Restrict to fMP4 tracks (H.264 + AAC). Required when the fragments are served to HLS directly:
     /// HLS cannot carry WebM segments, and YouTube only ships Opus and VP9/AV1 in WebM.
@@ -38,38 +45,30 @@ internal static class SabrExtractor
     public static async Task<SabrSource> ExtractAsync(string videoUrl, int maxHeight, string ytdlpPath,
         string? cookiesPath, ILogger log, CancellationToken ct = default, bool fmp4Only = false)
     {
+        // The web client's SABR formats require a GVS PO token; make sure the provider that mints it is up
+        // before we extract, so a missing token surfaces as a clean failure here rather than a mid-stream
+        // attestation stall.
+        if (!await BgUtilPotProvider.WaitReadyAsync(PotProviderTimeout, ct))
+            throw new SabrException(
+                "PO token provider (bgutil) is not ready, so the web SABR client cannot be used.");
+
         var json = await RunYtdlpAsync(videoUrl, ytdlpPath, cookiesPath, log, ct);
 
         var videoId = json["id"]?.Value<string>()
                       ?? throw new SabrException("yt-dlp returned no video id");
 
-        // Only formats the server will serve us without a PO token — anything else needs a JS/BotGuard
-        // provider we don't have. Failing here gives a clear "no usable format" instead of an opaque
-        // attestation error mid-stream.
-        var usable = (json["formats"] as JArray ?? [])
+        // We drive SABR through the WEB client only. Its formats carry a GVS PO token (minted by the
+        // bgutil provider and surfaced in _sabr_config.po_token); that token, plus the web client_info, is
+        // what the SABR server attests against.
+        var formats = (json["formats"] as JArray ?? [])
             .Where(f => f["protocol"]?.Value<string>() == "sabr")
-            .Where(f => f["_sabr_config"]?["po_token"] is null or { Type: JTokenType.Null })
+            .Where(f => IsClient(f, "web"))
             .ToList();
 
-        if (usable.Count == 0)
+        if (formats.Count == 0)
             throw new SabrException(
-                "No SABR formats available without a PO token. YouTube may have closed the android_vr path.");
-
-        // Stick to ONE client: audio and video must come from the same session, and the request differs
-        // per client (see MobileClients). We take whichever token-free client actually works rather than
-        // insisting on a particular one — which client YouTube offers changes over time and by account,
-        // so naming a favourite just creates a thing to break.
-        var formats = usable
-            .GroupBy(ClientOf, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault(g => ClientNames.ContainsKey(g.Key)
-                                 && PickVideo(g.ToList(), maxHeight, fmp4Only) != null
-                                 && PickAudio(g.ToList(), fmp4Only) != null)
-            ?.ToList();
-
-        if (formats == null)
-            throw new SabrException(
-                "No SABR client offered a usable audio+video pair without a PO token (saw: " +
-                string.Join(", ", usable.Select(ClientOf).Distinct()) + ")");
+                "No web-client SABR formats found. yt-dlp may not have used the web client — check cookies " +
+                "and that the bgutil plugin loaded (--plugin-dirs).");
 
         var client = ClientOf(formats[0]);
 
@@ -89,6 +88,12 @@ internal static class SabrExtractor
             audio["format_id"]?.Value<string>(), audio["acodec"]?.Value<string>());
 
         var config = video["_sabr_config"]!;
+        var poToken = config["po_token"]?.Value<string>();
+        if (string.IsNullOrEmpty(poToken))
+            throw new SabrException(
+                "The web SABR format carried no po_token — the bgutil PO token provider did not supply one. " +
+                "SABR playback cannot proceed without it.");
+
         return new SabrSource
         {
             VideoId = videoId,
@@ -102,7 +107,7 @@ internal static class SabrExtractor
             AudioFormat = ParseFormatId(audio["_sabr_config"]!),
             VideoFormat = ParseFormatId(config),
             Hdr = hdr,
-            PoToken = null,
+            PoToken = poToken,
             VideoCodec = video["vcodec"]?.Value<string>() ?? "avc1.4d401f",
             AudioCodec = audio["acodec"]?.Value<string>() ?? "mp4a.40.2",
             Width = video["width"]?.Value<int>() ?? 1920,
@@ -205,9 +210,20 @@ internal static class SabrExtractor
         ILogger log, CancellationToken ct)
     {
         var args = new StringBuilder();
-        // formats=duplicate exposes the SABR variants alongside the normal ones. Do NOT add a
-        // player_client override: forcing android_vr *with* account cookies returns "No video formats found".
-        args.Append("-J --no-warnings --extractor-args \"youtube:formats=duplicate\" ");
+        // formats=duplicate exposes the SABR variants alongside the normal ones. player_client=web pins us
+        // to the web client, whose SABR formats require a GVS PO token that the bgutil plugin supplies.
+        args.Append("-J --no-warnings --extractor-args \"youtube:formats=duplicate;player_client=web\" ");
+        // The web client's streaming URL carries an 'n' challenge yt-dlp must descramble during extraction,
+        // which needs a JS runtime. (android_vr didn't — REQUIRE_JS_PLAYER was false there.)
+        if (File.Exists(YtdlManager.DenoPath))
+            args.Append($"--js-runtimes deno:\"{YtdlManager.DenoPath}\" ");
+        // The bgutil PO token plugin: point yt-dlp at the plugin search dir (--plugin-dirs; yt-dlp finds
+        // <dir>/yt-dlp-plugins/yt_dlp_plugins under it) and tell the plugin where the server is. We pass
+        // base_url explicitly rather than relying on the plugin's auto-detect default (127.0.0.1) — the
+        // server binds IPv6 "::", so a bare 127.0.0.1 is refused on Windows; "localhost" (the
+        // SabrPotBaseUrl default) resolves to both families and connects. See ConfigManager.
+        args.Append($"--plugin-dirs \"{BgUtilPotProvider.PluginSearchDir}\" ");
+        args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={ConfigManager.Config.SabrPotBaseUrl.TrimEnd('/')}\" ");
         if (!string.IsNullOrEmpty(cookiesPath) && File.Exists(cookiesPath))
             args.Append($"--cookies \"{cookiesPath}\" ");
         args.Append($"\"{videoUrl}\"");
