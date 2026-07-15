@@ -223,7 +223,7 @@ internal static class SabrExtractor
         // server binds IPv6 "::", so a bare 127.0.0.1 is refused on Windows; "localhost" (the
         // SabrPotBaseUrl default) resolves to both families and connects. See ConfigManager.
         args.Append($"--plugin-dirs \"{BgUtilPotProvider.PluginSearchDir}\" ");
-        args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={ConfigManager.Config.SabrPotBaseUrl.TrimEnd('/')}\" ");
+        args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={BgUtilPotProvider.BaseUrl}\" ");
         if (!string.IsNullOrEmpty(cookiesPath) && File.Exists(cookiesPath))
             args.Append($"--cookies \"{cookiesPath}\" ");
         args.Append($"\"{videoUrl}\"");

@@ -152,6 +152,9 @@ internal sealed class Program
         OpenVRService.Start(CurrentProcessPath);
 
         Directory.CreateDirectory(UtilsPath);
+        // Surface a fixed-port (9696) conflict up front — with the offending process — before WebServer
+        // throws an opaque bind error. Reassignable ports (bgutil) handle themselves when they start.
+        PortAudit.CheckWebServerPort();
         // SABRRELEASE: the version carries a "-sabr" suffix, which SemVer ranks BELOW the plain release —
         // so the updater would consider mainline "newer" and overwrite the test build. Never self-update
         // a feature-branch build.
