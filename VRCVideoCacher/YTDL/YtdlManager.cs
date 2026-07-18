@@ -313,9 +313,6 @@ public class YtdlManager
         if (!Directory.Exists(Program.UtilsPath))
             throw new Exception("Failed to get Utils path");
 
-        if (!ConfigManager.Config.CacheYouTube)
-            return;
-
         using var apiResponse = await HttpClient.GetAsync(OperatingSystem.IsWindows() ? FfmpegApiUrl : FfmpegNightlyApiUrl);
         if (!apiResponse.IsSuccessStatusCode)
         {
