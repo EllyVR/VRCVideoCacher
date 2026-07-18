@@ -14,6 +14,13 @@ public class ThirdPartyYTResolver : ISiteHandler
         DefaultRequestHeaders = { { "User-Agent", "VRCVideoCacher" } }
     };
 
+    private readonly HttpClient _client;
+
+    public ThirdPartyYTResolver() : this(NoAutoRedirectClient) { }
+
+    /// <summary>Overload so tests can drive the redirect chain with a stub handler.</summary>
+    public ThirdPartyYTResolver(HttpClient client) => _client = client;
+
     public bool CanHandle(Uri uri) => false; // rewrite only
 
     public Task<VideoInfo?> GetVideoInfo(string url, Uri uri, bool avPro) => Task.FromResult<VideoInfo?>(null);
@@ -29,7 +36,7 @@ public class ThirdPartyYTResolver : ISiteHandler
         for (var i = 0; i < maxHops; i++)
         {
             using var req = new HttpRequestMessage(HttpMethod.Head, current);
-            using var res = await NoAutoRedirectClient.SendAsync(req);
+            using var res = await _client.SendAsync(req);
 
             var location = res.Headers.Location;
             if (location == null)
