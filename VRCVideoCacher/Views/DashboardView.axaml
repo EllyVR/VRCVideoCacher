@@ -3,18 +3,41 @@
              xmlns:vm="using:VRCVideoCacher.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
              xmlns:l="using:Jeek.Avalonia.Localization"
+             xmlns:ctl="using:VRCVideoCacher.Controls"
              x:Class="VRCVideoCacher.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
 <Grid RowDefinitions="Auto, *">
-    
+
     <Border
         Grid.Row="0"
         Background="#1a73e8"
         IsVisible="{Binding HasMotd}"
         Padding="12,8">
+        <!-- The MOTD is remote text rendered as markdown so it can carry clickable links.
+             HyperlinkButton's themed accent colour is unreadable on this blue, so links are
+             restyled to white + underline to read as links against the banner.
+
+             The hover/pressed states MUST be overridden on the template's ContentPresenter, not on
+             the control: Fluent paints its own near-white hover fill there, which a Background setter
+             at this level never reaches — leaving white text on a white fill, i.e. invisible. -->
+        <Border.Styles>
+            <Style Selector="HyperlinkButton">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="TextBlock.TextDecorations" Value="Underline"/>
+                <Setter Property="Cursor" Value="Hand"/>
+            </Style>
+            <Style Selector="HyperlinkButton:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#d6e4ff"/>
+            </Style>
+            <Style Selector="HyperlinkButton:pressed /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#b9d0ff"/>
+            </Style>
+        </Border.Styles>
         <TextBlock
             Foreground="White"
-            Text="{Binding Motd}"
+            ctl:MarkdownText.Text="{Binding Motd}"
             TextWrapping="Wrap"
             HorizontalAlignment="Center"
             FontWeight="Medium" />
