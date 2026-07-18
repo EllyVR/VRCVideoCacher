@@ -139,6 +139,10 @@
           <TargetPath>libopenvr_api.so</TargetPath>
         </None>
         <EmbeddedResource Include="manifest.vrmanifest" />
+        <!-- ~1s of H.264 + stereo Opus in MP4: the fixture OpusMp4Check decodes through Media
+             Foundation to prove the machine can actually play what SabrSegmentMuxer produces. -->
+        <None Remove="opus_probe.mp4" />
+        <EmbeddedResource Include="opus_probe.mp4" />
     </ItemGroup>
 
     <ItemGroup>
