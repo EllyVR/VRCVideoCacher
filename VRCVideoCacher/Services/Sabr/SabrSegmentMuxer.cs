@@ -113,8 +113,11 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
     /// Muxes complete, already-fetched tracks into a single playable file — the cached copy, produced
     /// from the very fragments we streamed, so a SABR video is fetched once rather than twice.
     ///
-    /// H.264/VP9 + Opus in MP4 is deliberate and safe: the HLS segments AVPro already plays are exactly
-    /// that, so the cached file needs no separate AAC fetch.
+    /// H.264/VP9 + Opus in MP4 is deliberate: the HLS segments AVPro already plays are exactly that, so
+    /// the cached file needs no separate AAC fetch. Note it inherits the same caveat — where a machine's
+    /// Opus codec is broken or absent, Media Foundation plays this file with silent audio. That is a
+    /// codec-verification problem, not a reason to switch the muxer to AAC (a pre-existing AVPro AAC bug
+    /// rules that out); see the SABR section of CLAUDE.md.
     /// </summary>
     public async Task MuxCompleteAsync(string videoTrackPath, string audioTrackPath, string outputPath,
         CancellationToken ct = default)
