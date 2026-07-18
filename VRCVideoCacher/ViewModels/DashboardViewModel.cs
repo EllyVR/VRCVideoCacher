@@ -91,7 +91,9 @@ public partial class DashboardViewModel : ViewModelBase
 
     private void OnApiConfigChanged()
     {
-        Motd = VvcConfigService.CurrentConfig.Motd;
+        // Fires on the hourly YtdlUpdaterTask thread. Setting Motd now builds HyperlinkButton controls
+        // (MarkdownText renders it as inlines), so this must happen on the UI thread.
+        Dispatcher.UIThread.InvokeAsync(() => Motd = VvcConfigService.CurrentConfig.Motd);
     }
 
     private void OnCacheChanged(string fileName, CacheChangeType changeType)
