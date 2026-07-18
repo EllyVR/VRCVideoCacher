@@ -33,6 +33,20 @@ internal sealed class SabrSource
     /// SABR server attests against it together with the client_info, so it must accompany every request.
     /// </summary>
     public string? PoToken;
+
+    /// <summary>
+    /// A live broadcast (yt-dlp <c>live_status == "is_live"</c>). Changes the fetch fundamentally: there
+    /// is no end, no <c>sidx</c>, no <c>total_segments</c>, and sequence numbers start in the millions.
+    /// <c>post_live</c> is NOT live — it is a finished broadcast being turned into a VOD.
+    /// </summary>
+    public bool IsLive;
+
+    /// <summary>
+    /// The broadcast's target segment duration (<c>_sabr_config.target_duration_sec</c>). Live media
+    /// headers frequently omit the duration, so this is what we fall back to. Observed as 2 on a real
+    /// stream, so do NOT assume yt-dlp's 5s default.
+    /// </summary>
+    public int TargetDurationSec;
 }
 
 internal sealed record SabrSegment(bool IsVideo, long SequenceNumber, long StartMs, long DurationMs, bool IsInit);
@@ -46,7 +60,13 @@ internal sealed record SabrSegment(bool IsVideo, long SequenceNumber, long Start
 /// <see cref="ClientAbrState.PlayerTimeMs"/> starts playback at an arbitrary time, and a warm client
 /// services that in one round-trip instead of the seconds a yt-dlp respawn costs.
 ///
-/// VOD only — live/DVR, ads, captions and format-switching are deliberately not implemented.
+/// Handles VOD and live broadcasts. Captions and format-switching are deliberately not implemented.
+///
+/// Live differs in ways that are not configuration but control flow, all driven by
+/// <see cref="SabrSource.IsLive"/>: the fetch never completes, an empty response at the broadcast head
+/// is normal (wait, don't fail), there is no segment index, segment durations must be estimated, and
+/// the entry point is the "live edge" trick — set player_time to <see cref="LiveEdgeStartMs"/> and let
+/// the server clamp it. See <see cref="LiveMetadata"/>.
 /// </summary>
 /// <param name="reloadAsync">
 /// Re-runs extraction to get a fresh player response. The server can demand this mid-stream
@@ -63,6 +83,22 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     // A VOD ad makes the server withhold content for a few backoff cycles; allow enough waits to sit
     // through one before we call it a stall.
     private const int MaxAdWaits = 12;
+
+    /// <summary>
+    /// How you ask for the live edge. There is no "give me the head" field — the client sends an absurd
+    /// player time and the server clamps it to the head (and/or we roll it back ourselves once
+    /// <see cref="LiveMetadata"/> tells us where the head is). Value matches yt-dlp's JS_MAX_SAFE_INTEGER.
+    /// </summary>
+    public const long LiveEdgeStartMs = (1L << 53) - 1;
+
+    // Live: how long we sit at the head getting nothing before concluding the broadcast has ended
+    // rather than that we are merely waiting for the next segment.
+    private const int LiveEndEmptyResponses = 5;
+    private static readonly TimeSpan LiveEndQuietPeriod = TimeSpan.FromSeconds(30);
+    // Underestimating a live segment's duration is deliberate: it keeps player_time slightly behind the
+    // server's notion of where we are, so we never ask for a segment that does not exist yet.
+    private const int LiveDurationToleranceMs = 100;
+    private const int LiveDefaultTargetDurationSec = 5;
 
     private readonly TrackState _audio = new(source.AudioFormat, isVideo: false);
     private readonly TrackState _video = new(source.VideoFormat, isVideo: true);
@@ -84,8 +120,25 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     private readonly HashSet<int> _sabrContextsToSend = [];
     private int _pendingBackoffMs;
 
-    /// <summary>Total duration, known after the first response. 0 until then.</summary>
+    // Live broadcast state, from LiveMetadata (part 31). Null until the first one arrives.
+    private readonly bool _isLive = source.IsLive;
+    private long _liveHeadSequence;
+    private long? _minSeekableMs;
+    private long? _maxSeekableMs;
+
+    /// <summary>Estimated live segment duration — the fallback when a media header omits it.</summary>
+    private int EstSegmentDurationMs =>
+        (source.TargetDurationSec > 0 ? source.TargetDurationSec : LiveDefaultTargetDurationSec) * 1000
+        - LiveDurationToleranceMs;
+
+    /// <summary>Total duration, known after the first response. 0 until then. Meaningless when live.</summary>
     public long DurationMs { get; private set; }
+
+    /// <summary>The broadcast head's sequence number, or 0 if not live / not yet known.</summary>
+    public long LiveHeadSequence => _liveHeadSequence;
+
+    /// <summary>Raised when the broadcast ends: the fetch went quiet while sitting at the head.</summary>
+    public bool BroadcastEnded { get; private set; }
 
     private readonly TaskCompletionSource<SegmentIndex> _segmentIndex =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -124,10 +177,30 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         catch (Exception ex)
         {
             // Never leave a caller awaiting an index on a fetch that has already died.
-            _segmentIndex.TrySetException(ex);
-            _audioIndex.TrySetException(ex);
+            //
+            // Live has no index and so nobody ever awaits these. Faulting a Task that is never observed
+            // means the finalizer thread rethrows it later as an UnobservedTaskException — which surfaces
+            // as a pair of errors (one per track) at teardown, long after the cancellation that caused
+            // them, and with ErrorPopups on becomes a popup for what is a perfectly normal shutdown.
+            if (_isLive)
+            {
+                _segmentIndex.TrySetCanceled();
+                _audioIndex.TrySetCanceled();
+            }
+            else
+            {
+                _segmentIndex.TrySetException(ex);
+                _audioIndex.TrySetException(ex);
+                // Faulted-but-unawaited is possible on VOD too (a fill cancelled by a seek after the
+                // indexes were already published), so mark them observed either way.
+                Observe(_segmentIndex.Task);
+                Observe(_audioIndex.Task);
+            }
             throw;
         }
+
+        static void Observe(Task task) => _ = task.ContinueWith(
+            t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
     }
 
     private async Task DownloadCoreAsync(Stream audioOut, Stream videoOut, long startTimeMs,
@@ -144,6 +217,7 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         var emptyResponses = 0;
         var transportRetries = 0;
         var adWaits = 0;
+        var lastActivity = DateTime.UtcNow;
 
         while (!IsComplete())
         {
@@ -170,6 +244,27 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
             {
                 emptyResponses = 0;
                 adWaits = 0;
+                lastActivity = DateTime.UtcNow;
+            }
+            else if (_isLive && !HasSendableAdContext())
+            {
+                // An empty response at the broadcast head is the NORMAL state of a live stream that has
+                // caught up — the next segment simply does not exist yet. Waiting is correct; the VOD
+                // stall guard below would kill the session within three requests.
+                emptyResponses++;
+                var quietFor = DateTime.UtcNow - lastActivity;
+                if (emptyResponses >= LiveEndEmptyResponses && quietFor >= LiveEndQuietPeriod && IsAtLiveHead())
+                {
+                    log.Information("SABR: broadcast {VideoId} ended (no new media for {Seconds:0}s at the head)",
+                        source.VideoId, quietFor.TotalSeconds);
+                    BroadcastEnded = true;
+                    break;
+                }
+
+                var wait = TimeSpan.FromMilliseconds(Math.Max(_pendingBackoffMs, EstSegmentDurationMs));
+                log.Verbose("SABR: at live head, waiting {Seconds:0.0}s for the next segment",
+                    wait.TotalSeconds);
+                await Task.Delay(wait, ct);
             }
             else if (_pendingBackoffMs > 0 && HasSendableAdContext())
             {
@@ -224,12 +319,14 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                     name, index.Count, index.TotalDurationMs / 1000.0);
                 target.TrySetResult(index);
             }
-            else if (isLastChance)
+            else if (isLastChance && !_isLive)
             {
                 target.TrySetException(new SabrException(
                     $"No segment index (sidx/Cues) at the head of the {name} track, so its exact timeline " +
                     "is unavailable and the playlist cannot be published up front"));
             }
+            // Live has no index by design — measured: no sidx anywhere in a live fMP4 track. The timeline
+            // is discovered fragment by fragment instead, so never fail the fetch over a missing one.
         };
 
     /// <summary>One POST. Returns whether any new media arrived.</summary>
@@ -267,7 +364,15 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                     var header = MediaHeader.Decode(part.Payload);
                     if (header.Compressed)
                         throw new SabrException("Server sent a compressed media segment, which we cannot decode");
+                    // Live headers routinely omit the duration. Estimating it is not optional: player time
+                    // advances by consumed duration, so a zero would leave the fetch stuck in place.
+                    if (_isLive && !header.DurationKnown && !header.IsInitSegment)
+                        header.DurationMs = EstSegmentDurationMs;
                     var track = TrackFor(header.FormatId);
+                    log.Verbose("SABR header: {Track} seq={Seq} init={Init} start={Start} dur={Dur} len={Len} fmt={Fmt}",
+                        track?.IsVideo switch { true => "video", false => "audio", null => "UNMATCHED" },
+                        header.SequenceNumber, header.IsInitSegment, header.StartMs, header.DurationMs,
+                        header.ContentLength, header.FormatId);
                     if (track != null)
                         partials[header.HeaderId] = new PartialSegment(track, header);
                     break;
@@ -299,6 +404,10 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                         _pendingBackoffMs = backoffMs;
                     break;
                 }
+
+                case UmpPartId.LiveMetadata:
+                    ProcessLiveMetadata(LiveMetadata.Decode(part.Payload));
+                    break;
 
                 case UmpPartId.SabrContextUpdate:
                     ProcessSabrContextUpdate(SabrContextUpdate.Decode(part.Payload));
@@ -332,8 +441,18 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                     break;
 
                 case UmpPartId.SabrSeek:
-                    // Server-initiated seek. Only meaningful for live/DVR, which we don't serve.
-                    throw new SabrException("Server sent SabrSeek, which this VOD-only client does not handle");
+                {
+                    // Server-initiated reposition. On a VOD this should never happen and means we have
+                    // misunderstood the stream; on live it is routine (the DVR window slid past us).
+                    var seek = SabrSeek.Decode(part.Payload);
+                    if (!_isLive)
+                        throw new SabrException("Server sent SabrSeek on a VOD stream, which we do not handle");
+                    if (seek.SeekToMs is not { } seekTo)
+                        throw new SabrException("Server sent a SabrSeek with no usable seek time");
+                    log.Information("SABR: server seek to {SeekTo}ms (was {Was}ms)", seekTo, _playerTimeMs);
+                    ApplyServerSeek(seekTo);
+                    break;
+                }
 
                 default:
                     log.Verbose("Ignoring UMP part {PartId} ({Size} bytes)", part.PartId, part.Payload.Length);
@@ -470,7 +589,12 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     private void InitializeFormat(FormatInitializationMetadata metadata)
     {
         var track = TrackFor(metadata.FormatId);
-        if (track == null || track.TotalSegments > 0)
+        if (track == null)
+            return;
+
+        // VOD declares its size once and it never changes, so latching the first value is right. A live
+        // broadcast's "total" is the moving head, re-sent as it grows — latching would freeze it.
+        if (track.TotalSegments > 0 && !_isLive)
             return;
 
         track.TotalSegments = metadata.TotalSegments;
@@ -482,6 +606,63 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     }
 
     /// <summary>
+    /// Where the broadcast is now. This is the only authoritative head signal on live — there is no
+    /// growing index and no total_segments — so it drives both "have we caught up" and the DVR bounds.
+    /// </summary>
+    private void ProcessLiveMetadata(LiveMetadata metadata)
+    {
+        if (metadata.HeadSequenceNumber > 0)
+        {
+            _liveHeadSequence = metadata.HeadSequenceNumber;
+            // Live never sends total_segments; the head is the closest thing to it.
+            foreach (var track in Tracks)
+                track.TotalSegments = metadata.HeadSequenceNumber;
+        }
+
+        _minSeekableMs = metadata.MinSeekableTimeMs ?? _minSeekableMs;
+        _maxSeekableMs = metadata.MaxSeekableTimeMs ?? _maxSeekableMs;
+
+        // The DVR window slid past us — we are asking for segments the server no longer keeps, and it
+        // will simply serve nothing forever. The server SHOULD send SabrSeek here but does not always,
+        // so jump forward ourselves.
+        if (_minSeekableMs is { } min && _playerTimeMs < min)
+        {
+            log.Information("SABR: player time {Player}ms fell behind the DVR window ({Min}ms); jumping forward",
+                _playerTimeMs, min);
+            ApplyServerSeek(min);
+        }
+    }
+
+    /// <summary>
+    /// Repositions the fetch. The consumed ranges describe media we no longer hold contiguously with the
+    /// new position, so they must be dropped or the server would think we already have what follows.
+    /// </summary>
+    private void ApplyServerSeek(long toMs)
+    {
+        _playerTimeMs = toMs;
+        foreach (var track in Tracks)
+            track.Consumed = null;
+    }
+
+    /// <summary>Have we caught up with the broadcast? Used only to tell "ended" from "still producing".</summary>
+    private bool IsAtLiveHead()
+    {
+        // No LiveMetadata at all means we cannot know — treat as at-head so a dead stream can still end
+        // rather than hanging forever.
+        if (_liveHeadSequence <= 0 && _maxSeekableMs is null)
+            return true;
+
+        if (_maxSeekableMs is { } max && _playerTimeMs + EstSegmentDurationMs >= max)
+            return true;
+
+        return _liveHeadSequence > 0 &&
+               Tracks.All(t => t.LastSequence > 0 && _liveHeadSequence - t.LastSequence <= LiveHeadSegmentTolerance);
+    }
+
+    // The last segment or two of a broadcast is often never served, so "at the head" has to be fuzzy.
+    private const int LiveHeadSegmentTolerance = 4;
+
+    /// <summary>
     /// Player time advances to the end of the slowest track's consumed range — that is the point up to
     /// which we hold BOTH audio and video, and therefore what the server should continue from.
     /// </summary>
@@ -490,9 +671,19 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         var next = Tracks.Min(t => t.ConsumedEndMs);
         if (next > _playerTimeMs)
             _playerTimeMs = next;
+
+        // Live starts at LiveEdgeStartMs, an absurd time the server clamps by serving us the head. Until
+        // we know where the head is we must not keep asking from the far future, or nothing ever arrives.
+        if (_isLive && _maxSeekableMs is { } max && _playerTimeMs > max + EstSegmentDurationMs)
+        {
+            var floor = Tracks.Max(t => t.ConsumedEndMs);
+            _playerTimeMs = Math.Max(floor, max + EstSegmentDurationMs);
+        }
     }
 
+    /// <summary>A live broadcast is never complete; it ends by going quiet at the head.</summary>
     private bool IsComplete() =>
+        !_isLive &&
         Tracks.All(t => t.TotalSegments > 0) &&
         (Tracks.All(t => t.LastSequence >= t.TotalSegments) ||
          Tracks.All(t => t.EndTimeMs > 0 && _playerTimeMs >= t.EndTimeMs));

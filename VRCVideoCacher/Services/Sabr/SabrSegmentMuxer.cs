@@ -264,7 +264,12 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
     }
 
     /// <summary>Offset of the first <c>moof</c> — everything before it is the init segment.</summary>
-    private static int FindMoof(ReadOnlySpan<byte> data)
+    /// <summary>
+    /// Offset of the first <c>moof</c>, i.e. where the initialisation boxes end and media begins.
+    /// Internal because live needs the same split for a different reason: a livestream sends no separate
+    /// init segment, it prepends <c>ftyp+moov</c> (and an <c>emsg</c>) to the first media fragment.
+    /// </summary>
+    internal static int FindMoof(ReadOnlySpan<byte> data)
     {
         var offset = 0;
         while (offset + 8 <= data.Length)

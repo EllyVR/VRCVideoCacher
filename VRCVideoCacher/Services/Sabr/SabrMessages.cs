@@ -216,6 +216,10 @@ internal sealed class MediaHeader
     public FormatId? FormatId;
     public long? ContentLength;
     public bool Compressed;
+    /// <summary>Live only, and only sometimes: used to estimate a missing content_length.</summary>
+    public long BitrateBps;
+    /// <summary>True when the server gave no duration at all — live headers often omit it.</summary>
+    public bool DurationKnown;
 
     // time_range, used when start_ms/duration_ms are absent.
     private long _rangeStartTicks;
@@ -234,19 +238,22 @@ internal sealed class MediaHeader
                 case 7 when wire == 0: result.Compressed = r.ReadVarint() != 0; break;
                 case 8 when wire == 0: result.IsInitSegment = r.ReadVarint() != 0; break;
                 case 9 when wire == 0: result.SequenceNumber = (long)r.ReadVarint(); break;
+                case 10 when wire == 0: result.BitrateBps = (long)r.ReadVarint(); break;
                 case 11 when wire == 0: result.StartMs = (long)r.ReadVarint(); break;
-                case 12 when wire == 0: result.DurationMs = (long)r.ReadVarint(); break;
+                case 12 when wire == 0: result.DurationMs = (long)r.ReadVarint(); result.DurationKnown = true; break;
                 case 13 when wire == 2: result.FormatId = Sabr.FormatId.Decode(r.ReadBytes()); break;
                 case 14 when wire == 0: result.ContentLength = (long)r.ReadVarint(); break;
                 case 15 when wire == 2: result.ReadTimeRange(r.ReadBytes()); break;
                 default: r.Skip(wire); break;
             }
         }
-        // VOD headers normally carry start_ms/duration_ms outright; time_range is the fallback encoding.
+        // VOD headers normally carry start_ms/duration_ms outright; time_range is the fallback encoding,
+        // and on live it is frequently the ONLY encoding.
         if (result is { DurationMs: 0, _rangeTimescale: > 0 })
         {
             result.StartMs = result._rangeStartTicks * 1000 / result._rangeTimescale;
             result.DurationMs = result._rangeDurationTicks * 1000 / result._rangeTimescale;
+            result.DurationKnown = result.DurationMs > 0;
         }
         return result;
     }
@@ -293,6 +300,82 @@ internal sealed class FormatInitializationMetadata
                 case 5 when wire == 2: result.MimeType = r.ReadString(); break;
                 case 9 when wire == 0: result.DurationTicks = (long)r.ReadVarint(); break;
                 case 10 when wire == 0: result.DurationTimescale = (int)r.ReadVarint(); break;
+                default: r.Skip(wire); break;
+            }
+        }
+        return result;
+    }
+}
+
+/// <summary>
+/// Where the broadcast currently is (part 31, live only). This is how a live client learns the head —
+/// there is no growing <c>sidx</c> and <c>FormatInitializationMetadata.total_segments</c> is absent, so
+/// <see cref="HeadSequenceNumber"/> is the only authoritative "how far has the stream got" signal.
+///
+/// The seekable pair bounds the DVR window. Sitting past <see cref="MaxSeekableTimeMs"/> means we have
+/// caught up and must wait; falling behind <see cref="MinSeekableTimeMs"/> means the window slid past us
+/// and we must jump forward, because the server will not serve what it no longer keeps.
+/// </summary>
+internal sealed class LiveMetadata
+{
+    public long HeadSequenceNumber;
+    public long HeadSequenceTimeMs;
+    public long WallTimeMs;
+
+    private long _minSeekableTicks;
+    private int _minSeekableTimescale;
+    private long _maxSeekableTicks;
+    private int _maxSeekableTimescale;
+
+    public long? MinSeekableTimeMs =>
+        _minSeekableTimescale > 0 ? _minSeekableTicks * 1000 / _minSeekableTimescale : null;
+
+    public long? MaxSeekableTimeMs =>
+        _maxSeekableTimescale > 0 ? _maxSeekableTicks * 1000 / _maxSeekableTimescale : null;
+
+    public static LiveMetadata Decode(ReadOnlySpan<byte> data)
+    {
+        var result = new LiveMetadata();
+        var r = new ProtoReader(data);
+        while (r.Next(out var field, out var wire))
+        {
+            switch (field)
+            {
+                case 3 when wire == 0: result.HeadSequenceNumber = (long)r.ReadVarint(); break;
+                case 4 when wire == 0: result.HeadSequenceTimeMs = (long)r.ReadVarint(); break;
+                case 5 when wire == 0: result.WallTimeMs = (long)r.ReadVarint(); break;
+                case 12 when wire == 0: result._minSeekableTicks = (long)r.ReadVarint(); break;
+                case 13 when wire == 0: result._minSeekableTimescale = (int)r.ReadVarint(); break;
+                case 14 when wire == 0: result._maxSeekableTicks = (long)r.ReadVarint(); break;
+                case 15 when wire == 0: result._maxSeekableTimescale = (int)r.ReadVarint(); break;
+                default: r.Skip(wire); break;
+            }
+        }
+        return result;
+    }
+}
+
+/// <summary>
+/// Server-initiated reposition (part 45, live only). Sent when our player time is outside what the
+/// server is willing to serve — typically because the DVR window slid past us.
+/// </summary>
+internal sealed class SabrSeek
+{
+    private long _seekTicks;
+    private int _timescale;
+
+    public long? SeekToMs => _timescale > 0 ? _seekTicks * 1000 / _timescale : null;
+
+    public static SabrSeek Decode(ReadOnlySpan<byte> data)
+    {
+        var result = new SabrSeek();
+        var r = new ProtoReader(data);
+        while (r.Next(out var field, out var wire))
+        {
+            switch (field)
+            {
+                case 1 when wire == 0: result._seekTicks = (long)r.ReadVarint(); break;
+                case 2 when wire == 0: result._timescale = (int)r.ReadVarint(); break;
                 default: r.Skip(wire); break;
             }
         }

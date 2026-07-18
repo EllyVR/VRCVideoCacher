@@ -33,7 +33,21 @@ public static class SabrRestreamService
     /// </summary>
     private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(2);
 
-    private static readonly ConcurrentDictionary<string, SabrHlsSession> Sessions = new();
+    /// <summary>
+    /// Live sessions are reaped far sooner, because silence means much more here and costs much more.
+    ///
+    /// A live player MUST re-fetch the playlist every segment (~2s) to discover new ones, so a gap of
+    /// this length is unambiguous — whereas a VOD player legitimately goes quiet for minutes once it has
+    /// buffered ahead, which is why that timeout stays long. And the cost of guessing wrong is
+    /// asymmetric: an unwatched live fetch keeps pulling the broadcast at full bitrate forever, and
+    /// unlike VOD none of it is cached, so every byte is wasted.
+    ///
+    /// Coming back is cheap and correct: a new session starts at the live edge, which is where a
+    /// returning viewer wants to be anyway.
+    /// </summary>
+    private static readonly TimeSpan LiveIdleTimeout = TimeSpan.FromSeconds(20);
+
+    private static readonly ConcurrentDictionary<string, ISabrSession> Sessions = new();
 
     /// <summary>
     /// What each live session was started for, so a session that ends WITHOUT having produced the cache
@@ -46,7 +60,7 @@ public static class SabrRestreamService
     /// session is only published at the end of a multi-second start — without this they each spawn a
     /// pipeline and fight over the same directory.
     /// </summary>
-    private static readonly ConcurrentDictionary<string, Lazy<Task<SabrHlsSession?>>> Starting = new();
+    private static readonly ConcurrentDictionary<string, Lazy<Task<ISabrSession?>>> Starting = new();
 
     /// <summary>Directory HLS sessions are written to; served by EmbedIO at <c>/hls</c>.</summary>
     public static string HlsRootPath { get; } = Path.Join(Program.DataPath, "hls");
@@ -114,7 +128,7 @@ public static class SabrRestreamService
             return existing.PlaybackUrl;
         }
 
-        var starter = Starting.GetOrAdd(videoId, _ => new Lazy<Task<SabrHlsSession?>>(
+        var starter = Starting.GetOrAdd(videoId, _ => new Lazy<Task<ISabrSession?>>(
             () => StartSessionAsync(videoInfo), LazyThreadSafetyMode.ExecutionAndPublication));
         try
         {
@@ -137,7 +151,15 @@ public static class SabrRestreamService
         }
     }
 
-    private static async Task<SabrHlsSession?> StartSessionAsync(VideoInfo videoInfo)
+    /// <summary>
+    /// Whether the running session for this video is a live broadcast. Callers use it to skip anything
+    /// that only makes sense for a finite video — above all queueing a cache download, which for a
+    /// livestream would never finish.
+    /// </summary>
+    public static bool IsLiveSession(string videoId) =>
+        Sessions.TryGetValue(videoId, out var session) && session is SabrLiveSession;
+
+    private static async Task<ISabrSession?> StartSessionAsync(VideoInfo videoInfo)
     {
         var videoId = videoInfo.VideoId;
 
@@ -151,9 +173,28 @@ public static class SabrRestreamService
             ? YtdlManager.CookiesPath
             : null;
 
+        // Extract once, here, because liveness is only knowable from the extraction — and a live
+        // broadcast needs an entirely different session. The result is handed to whichever session we
+        // build, so this costs no extra yt-dlp run.
         // The one yt-dlp we ship is the SABR-capable build, used here purely as a link extractor (-J).
+        var source = await SabrExtractor.ExtractAsync(videoInfo.VideoUrl, maxHeight, YtdlManager.YtdlPath,
+            cookies, Log);
+
+        if (source.IsLive)
+        {
+            if (!ConfigManager.Config.SabrLiveEnabled)
+            {
+                Log.Information("{VideoId} is a livestream and SabrLiveEnabled is off; using the normal path",
+                    videoId);
+                return null;
+            }
+
+            return await SabrLiveSession.StartAsync(videoId, source, HlsRootPath, playbackUrl,
+                YtdlManager.FfmpegPath, Log);
+        }
+
         var session = await SabrHlsSession.StartAsync(videoId, videoInfo.VideoUrl, maxHeight, HlsRootPath,
-            playbackUrl, YtdlManager.YtdlPath, YtdlManager.FfmpegPath, cookies, Log);
+            playbackUrl, YtdlManager.YtdlPath, YtdlManager.FfmpegPath, cookies, Log, source);
 
         if (CacheConverges)
             session.OnFullyFetched = WriteCacheFileAsync;
@@ -224,6 +265,35 @@ public static class SabrRestreamService
     }
 
     /// <summary>
+    /// The current live playlist, or null when this is not a live session's playlist request.
+    ///
+    /// Live playlists are served by us rather than by EmbedIO's static file module, because that module
+    /// emits <c>ETag</c>/<c>Last-Modified</c> and honours <c>If-None-Match</c>. A live playlist is
+    /// rewritten every couple of seconds, and two rewrites inside one filesystem timestamp tick would
+    /// let it answer <c>304 Not Modified</c> with a stale playlist — which stalls playback with no error
+    /// anywhere. A finite VOD playlist never changes, so it is happily left to the file module.
+    /// </summary>
+    public static async Task<string?> TryGetLivePlaylistAsync(string requestedPath)
+    {
+        var parts = requestedPath.Trim('/').Split('/');
+        if (parts.Length != 2 || parts[1] != HlsPlaylist.PlaylistName)
+            return null;
+        if (!Sessions.TryGetValue(parts[0], out var session) || session is not SabrLiveSession live)
+            return null;
+
+        try
+        {
+            await live.EnsureAsync(HlsPlaylist.PlaylistName);
+            return await File.ReadAllTextAsync(Path.Combine(HlsRootPath, parts[0], HlsPlaylist.PlaylistName));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to serve live playlist: {Path}", requestedPath);
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Guarantees the video ends up cached even when the streamed fetch could not supply it.
     ///
     /// A session only writes the cache file if it holds EVERY fragment — and seeking cancels the fill, so
@@ -252,19 +322,30 @@ public static class SabrRestreamService
     {
         while (true)
         {
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            // Polled often, because the live timeout is short and every extra second of an unwatched
+            // live session is bandwidth spent on nothing.
+            await Task.Delay(TimeSpan.FromSeconds(5));
             foreach (var (id, session) in Sessions)
             {
-                if (session.IdleFor <= IdleTimeout)
+                var isLive = session is SabrLiveSession;
+
+                // A finished broadcast has nothing left to serve, so it need not wait out the idle
+                // timeout — but give it a grace period so the player can drain what it already has.
+                var ended = session is SabrLiveSession { Ended: true } &&
+                            session.IdleFor > TimeSpan.FromSeconds(10);
+
+                if (!ended && session.IdleFor <= (isLive ? LiveIdleTimeout : IdleTimeout))
                     continue;
 
-                Log.Information("Tearing down idle SABR HLS session for {VideoId} (idle {Idle:g})",
-                    id, session.IdleFor);
+                Log.Information("Tearing down SABR session for {VideoId} ({Reason}, idle {Idle:g})",
+                    id, ended ? "broadcast ended" : "idle", session.IdleFor);
                 Sessions.TryRemove(id, out _);
 
                 // Do this BEFORE Dispose: it deletes the session directory, and with it any chance of
                 // telling whether we actually got the video cached.
-                if (SessionVideos.TryRemove(id, out var videoInfo))
+                // A live broadcast is never cached and has no "complete copy" to fall back to — queueing
+                // a download for one would hand the single serial download worker a job that never ends.
+                if (SessionVideos.TryRemove(id, out var videoInfo) && session is not SabrLiveSession)
                     EnsureCached(videoInfo);
 
                 session.Dispose();

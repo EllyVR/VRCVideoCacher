@@ -150,4 +150,9 @@
         <EmbeddedResource Include="Languages\*.loc.json" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- The SABR client and its protobuf/UMP types are internal; the tests drive them directly. -->
+        <InternalsVisibleTo Include="VRCVideoCacher.Tests" />
+    </ItemGroup>
+
 </Project>

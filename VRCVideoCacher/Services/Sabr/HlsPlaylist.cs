@@ -21,6 +21,50 @@ internal static class HlsPlaylist
 
     public static string SegmentName(int index) => $"seg_{index:D5}.m4s";
 
+    /// <summary>
+    /// Live segments are named by the server's absolute sequence number, not a zero-based index — the
+    /// numbers run into the millions and the window slides, so there is no stable "segment 0".
+    /// </summary>
+    public static string LiveSegmentName(long sequence) => $"seg_{sequence}.m4s";
+
+    /// <summary>
+    /// A live (sliding-window) playlist. The inverse of <see cref="Build"/> in every respect that
+    /// matters:
+    ///
+    /// <list type="bullet">
+    /// <item><b>No <c>EXT-X-ENDLIST</c></b> — its presence is precisely what tells a player the stream
+    ///   has ended. For VOD we go out of our way to emit it (AVPro will not scrub without it); here it
+    ///   must never appear until the broadcast is actually over.</item>
+    /// <item><b>No <c>PLAYLIST-TYPE</c></b> — <c>VOD</c> would promise the playlist never changes, and
+    ///   <c>EVENT</c> would promise segments are only ever appended, which a sliding window violates.</item>
+    /// <item><b><c>EXT-X-MEDIA-SEQUENCE</c> moves</b> — it is what tells the player that the segments
+    ///   which rolled off the front are gone rather than renumbered.</item>
+    /// </list>
+    /// </summary>
+    public static string BuildLive(IReadOnlyList<LiveFragment> window, int targetDurationSec)
+    {
+        var targetDuration = window.Count > 0
+            ? (int)Math.Max(targetDurationSec, Math.Ceiling(window.Max(f => f.DurationMs) / 1000.0))
+            : Math.Max(targetDurationSec, 1);
+
+        var sb = new StringBuilder();
+        sb.Append("#EXTM3U\n");
+        sb.Append("#EXT-X-VERSION:7\n");
+        sb.Append($"#EXT-X-TARGETDURATION:{targetDuration}\n");
+        sb.Append($"#EXT-X-MEDIA-SEQUENCE:{(window.Count > 0 ? window[0].Sequence : 0)}\n");
+        sb.Append("#EXT-X-INDEPENDENT-SEGMENTS\n");
+        sb.Append($"#EXT-X-MAP:URI=\"{InitName}\"\n");
+
+        foreach (var fragment in window)
+        {
+            var seconds = (fragment.DurationMs / 1000.0).ToString("F6", CultureInfo.InvariantCulture);
+            sb.Append($"#EXTINF:{seconds},\n");
+            sb.Append(LiveSegmentName(fragment.Sequence)).Append('\n');
+        }
+
+        return sb.ToString();
+    }
+
     /// <summary>A complete VOD playlist — every segment listed, ENDLIST present — from the index alone.</summary>
     public static string Build(SegmentIndex index)
     {
