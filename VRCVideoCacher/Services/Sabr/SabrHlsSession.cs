@@ -20,7 +20,7 @@ namespace VRCVideoCacher.Services.Sabr;
 /// Seeking past the fetched region restarts the SABR fetch at the target rather than waiting for the
 /// sequential fill to crawl there.
 /// </summary>
-internal sealed class SabrHlsSession
+internal sealed class SabrHlsSession : ISabrSession
 {
     private const string RawVideoDir = "raw_v";
     private const string RawAudioDir = "raw_a";
@@ -92,7 +92,8 @@ internal sealed class SabrHlsSession
     }
 
     public static async Task<SabrHlsSession> StartAsync(string videoId, string videoUrl, int maxHeight,
-        string rootDir, string playbackUrl, string ytdlpPath, string ffmpegPath, string? cookiesPath, ILogger log)
+        string rootDir, string playbackUrl, string ytdlpPath, string ffmpegPath, string? cookiesPath, ILogger log,
+        SabrSource? preExtracted = null)
     {
         var dir = Path.Combine(rootDir, videoId);
         if (Directory.Exists(dir))
@@ -105,7 +106,9 @@ internal sealed class SabrHlsSession
         Task<SabrSource> Extract(CancellationToken ct) =>
             SabrExtractor.ExtractAsync(videoUrl, maxHeight, ytdlpPath, cookiesPath, log, ct);
 
-        var source = await Extract(CancellationToken.None);
+        // The caller may already have extracted (it has to, to tell live from VOD) — reuse it rather
+        // than paying for a second yt-dlp run on every play.
+        var source = preExtracted ?? await Extract(CancellationToken.None);
 
         // One round-trip: both tracks' indexes ride at the head of their streams, so the whole timeline
         // is known before any media is fetched.

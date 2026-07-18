@@ -81,13 +81,23 @@ internal static class SabrExtractor
                         : $"No SABR video format found at or below {maxHeight}p");
 
         var hdr = IsHdr(video);
-        log.Information("SABR formats for {VideoId}: video {VideoFormat} ({VCodec} {Height}p {Range}) + audio {AudioFormat} ({ACodec})",
+        var config = video["_sabr_config"]!;
+
+        // live_status rides in _sabr_config (yt-dlp _video.py:3765). Only "is_live" is a live fetch —
+        // "post_live" is a finished broadcast being turned into a VOD, which behaves as a VOD and does
+        // have an index. target_duration_sec (:3814) is the segment length; measured as 2 on a real
+        // stream, so never assume a default.
+        var liveStatus = config["live_status"]?.Value<string>();
+        var isLive = string.Equals(liveStatus, "is_live", StringComparison.Ordinal);
+        var targetDurationSec = config["target_duration_sec"]?.Value<int?>() ?? 0;
+
+        log.Information("SABR formats for {VideoId}{Live}: video {VideoFormat} ({VCodec} {Height}p {Range}) + audio {AudioFormat} ({ACodec})",
             videoId,
+            isLive ? $" [LIVE, {targetDurationSec}s segments]" : string.Empty,
             video["format_id"]?.Value<string>(), video["vcodec"]?.Value<string>(), video["height"]?.Value<int>(),
             hdr ? "HDR" : "SDR",
             audio["format_id"]?.Value<string>(), audio["acodec"]?.Value<string>());
 
-        var config = video["_sabr_config"]!;
         var poToken = config["po_token"]?.Value<string>();
         if (string.IsNullOrEmpty(poToken))
             throw new SabrException(
@@ -113,6 +123,8 @@ internal static class SabrExtractor
             Width = video["width"]?.Value<int>() ?? 1920,
             Height = video["height"]?.Value<int>() ?? 1080,
             Bandwidth = (long)((Bitrate(video) + Bitrate(audio)) * 1000),
+            IsLive = isLive,
+            TargetDurationSec = targetDurationSec,
         };
     }
 
