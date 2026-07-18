@@ -7,6 +7,8 @@ internal enum UmpPartId
     MediaHeader = 20,
     Media = 21,
     MediaEnd = 22,
+    /// <summary>Live only. Carries the broadcast head and the seekable (DVR) window.</summary>
+    LiveMetadata = 31,
     FormatInitializationMetadata = 42,
     SabrRedirect = 43,
     SabrError = 44,
