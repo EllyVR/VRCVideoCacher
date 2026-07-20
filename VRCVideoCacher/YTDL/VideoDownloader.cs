@@ -65,6 +65,7 @@ public class VideoDownloader
                         success = await DownloadVRDancingVideoWithId(queueItem);
                         break;
                     case UrlType.Other:
+                        success = await DownloadGenericVideo(queueItem);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
