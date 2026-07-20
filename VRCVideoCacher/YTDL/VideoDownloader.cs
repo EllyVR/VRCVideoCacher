@@ -60,23 +60,14 @@ public class VideoDownloader
             var success = false;
             try
             {
-                switch (queueItem.UrlType)
+                success = queueItem.UrlType switch
                 {
-                    case UrlType.YouTube:
-                        success = await DownloadYouTubeVideo(queueItem);
-                        break;
-                    case UrlType.PyPyDance:
-                        success = await DownloadVideoWithId(queueItem);
-                        break;
-                    case UrlType.VRDancing:
-                        success = await DownloadVRDancingVideoWithId(queueItem);
-                        break;
-                    case UrlType.Other:
-                        success = await DownloadGenericVideo(queueItem);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    UrlType.YouTube => await DownloadYouTubeVideo(queueItem),
+                    UrlType.PyPyDance => await DownloadVideoWithId(queueItem),
+                    UrlType.VRDancing => await DownloadVRDancingVideoWithId(queueItem),
+                    UrlType.Other => await DownloadGenericVideo(queueItem),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
             }
             catch (Exception ex)
             {
