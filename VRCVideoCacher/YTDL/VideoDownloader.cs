@@ -335,4 +335,70 @@ public class VideoDownloader
         Log.Information("Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
         return true;
     }
+
+    private static async Task<bool> DownloadGenericVideo(VideoInfo videoInfo)
+    {
+        using var tempDir = new TempDir();
+        var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
+
+        var url = videoInfo.VideoUrl;
+        var process = new Process
+        {
+            StartInfo =
+            {
+                FileName = YtdlManager.YtdlPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            }
+        };
+        process.StartInfo.Arguments = $"-q -o \"{tempDownloadMp4Path}\" --remux-video mp4 \"{url}\"";
+        Log.Information("Downloading Generic Video: {Args}", process.StartInfo.Arguments);
+        process.Start();
+        await process.WaitForExitAsync();
+        var error = await process.StandardError.ReadToEndAsync();
+        error = error.Trim();
+        if (process.ExitCode != 0)
+        {
+            Log.Error("Failed to download Generic Video: {exitCode} {URL} {error}", process.ExitCode, url, error);
+            return false;
+        }
+
+        Thread.Sleep(100);
+
+        var fileName = $"{videoInfo.VideoId}.{videoInfo.DownloadFormat.ToString().ToLower()}";
+        var filePath = Path.Join(CacheManager.CachePath, fileName);
+        if (File.Exists(filePath))
+        {
+            Log.Error("File already exists, canceling...");
+            try
+            {
+                if (File.Exists(tempDownloadMp4Path))
+                    File.Delete(tempDownloadMp4Path);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to delete temp file: {ex}", ex.ToString());
+            }
+
+            return false;
+        }
+
+        if (File.Exists(tempDownloadMp4Path))
+        {
+            File.Move(tempDownloadMp4Path, filePath);
+        }
+        else
+        {
+            Log.Error("Failed to download Generic Video: {URL}", url);
+            return false;
+        }
+
+        CacheManager.AddToCache(fileName);
+        Log.Information("Generic Video Downloaded: {URL}", $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}");
+        return true;
+    }
 }
