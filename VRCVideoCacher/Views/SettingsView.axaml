@@ -125,6 +125,7 @@
 
                         <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{l:Localize CachePyPyDanceVideos}"/>
                         <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{l:Localize CacheVRDancingVideos}"/>
+                        <CheckBox IsChecked="{Binding CacheGeneric}" Content="{l:Localize CacheGenericVideos}"/>
                         <CheckBox IsChecked="{Binding CacheOnly}" Content="{l:Localize OnlyServeCachedVideos}"/>
                         <CheckBox IsChecked="{Binding RedirectVRDancing}" Content="{l:Localize RedirectVRDancing}"/>
                     </StackPanel>

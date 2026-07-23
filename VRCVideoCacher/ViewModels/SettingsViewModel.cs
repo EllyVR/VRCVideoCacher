@@ -67,6 +67,9 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _cacheVRDancing;
+    
+    [ObservableProperty]
+    private bool _cacheGeneric;
 
     [ObservableProperty]
     private bool _cacheOnly;
@@ -160,6 +163,7 @@ public partial class SettingsViewModel : ViewModelBase
         CacheMaxSizeInGb = config.CacheMaxSizeInGb;
         CachePyPyDance = config.CachePyPyDance;
         CacheVRDancing = config.CacheVrDancing;
+        CacheGeneric = config.CacheGeneric;
         CacheOnly = config.CacheOnly;
         PatchResonite = config.PatchResonite;
         PatchVRC = config.PatchVrChat;
@@ -270,6 +274,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.CacheMaxSizeInGb = CacheMaxSizeInGb;
         config.CachePyPyDance = CachePyPyDance;
         config.CacheVrDancing = CacheVRDancing;
+        config.CacheGeneric = CacheGeneric;
         config.CacheOnly = CacheOnly;
         config.PatchResonite = PatchResonite;
         config.PatchVrChat = PatchVRC;
