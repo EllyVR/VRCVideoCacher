@@ -15,10 +15,13 @@
         <Product>yt-dlp-stub</Product>
         <CETCompat>false</CETCompat>
     </PropertyGroup>
-    
-    <PropertyGroup Condition="$([System.OperatingSystem]::IsLinux())">
+
+    <PropertyGroup>
+        <_TargetOS>$(RuntimeIdentifier.Split('-')[0])</_TargetOS>
+        <_HostOS>$(NETCoreSdkRuntimeIdentifier.Split('-')[0])</_HostOS>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == '' OR '$(_TargetOS)' != '$(_HostOS)'">
         <PublishAot>false</PublishAot>
         <PublishSingleFile>true</PublishSingleFile>
     </PropertyGroup>
-
 </Project>
