@@ -155,8 +155,8 @@
                         <Button Command="{Binding ToggleVideoPlayersCommand}"
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0">
                             <Panel>
-                                <TextBlock Text="Disable Videoplayers" IsVisible="{Binding VideoPlayersEnabled}" FontWeight="Bold"/>
-                                <TextBlock Text="Enable Videoplayers" IsVisible="{Binding !VideoPlayersEnabled}" FontWeight="Bold"/>
+                                <TextBlock Text="Disable" IsVisible="{Binding VideoPlayersEnabled}" FontWeight="Bold"/>
+                                <TextBlock Text="Enable" IsVisible="{Binding !VideoPlayersEnabled}" FontWeight="Bold"/>
                             </Panel>
                         </Button>
                     </StackPanel>
