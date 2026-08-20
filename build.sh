@@ -39,7 +39,7 @@ if [ "$RESTART" = true ]; then
     echo "=== (Re)starting VRCVideoCacher ==="
     pkill -9 -f VRCVideoCacher 2>/dev/null || true
     sleep 1
-    steam steam://rungameid/4296960 || xdg-open steam://rungameid/4296960
+    (nohup steam steam://rungameid/4296960 >/dev/null 2>&1 || nohup xdg-open steam://rungameid/4296960 >/dev/null 2>&1 &)
     echo "VRCVideoCacher launched via Steam."
 
     echo "=== Waiting 5s for process status & logs... ==="
