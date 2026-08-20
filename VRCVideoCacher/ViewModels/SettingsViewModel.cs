@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,17 +8,6 @@ using VRCVideoCacher.API;
 namespace VRCVideoCacher.ViewModels;
 
 public record LanguageOption(string Code, string DisplayName);
-
-public partial class BlockedUrlEntry : ObservableObject
-{
-    [ObservableProperty]
-    private string _url;
-
-    public BlockedUrlEntry(string url)
-    {
-        _url = url;
-    }
-}
 
 public partial class SettingsViewModel : ViewModelBase
 {
@@ -48,28 +35,7 @@ public partial class SettingsViewModel : ViewModelBase
     private string _cachedAssetPath = string.Empty;
 
     [ObservableProperty]
-    private bool _cacheYouTube;
-
-    [ObservableProperty]
-    private int _cacheYouTubeMaxResolution;
-
-    // Resolution options for the dropdown
-    public int[] ResolutionOptions { get; } = [720, 1080, 1440, 2160];
-
-    [ObservableProperty]
-    private int _cacheYouTubeMaxLength;
-
-    [ObservableProperty]
     private float _cacheMaxSizeInGb;
-
-    [ObservableProperty]
-    private bool _cachePyPyDance;
-
-    [ObservableProperty]
-    private bool _cacheVRDancing;
-
-    [ObservableProperty]
-    private bool _cacheOnly;
 
     // Patching
     [ObservableProperty]
@@ -77,9 +43,6 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _patchVRC;
-
-    [ObservableProperty]
-    private bool _redirectVRDancing;
 
     // Updates
     [ObservableProperty]
@@ -90,12 +53,6 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _startMinimized;
-
-    // Blocked URLs
-    public ObservableCollection<BlockedUrlEntry> BlockedUrls { get; } = [];
-
-    [ObservableProperty]
-    private string _blockRedirect = string.Empty;
 
     // Status
     [ObservableProperty]
@@ -138,7 +95,6 @@ public partial class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel()
     {
-        BlockedUrls.CollectionChanged += OnBlockedUrlsCollectionChanged;
         ConfigManager.OnConfigChanged += LoadFromConfig;
         LoadFromConfig();
     }
@@ -154,13 +110,7 @@ public partial class SettingsViewModel : ViewModelBase
         YtdlAdditionalArgs = config.YtdlpAdditionalArgs;
         YtdlDubLanguage = config.YtdlpDubLanguage;
         CachedAssetPath = config.CachedAssetPath;
-        CacheYouTube = config.CacheYouTube;
-        CacheYouTubeMaxResolution = config.CacheYouTubeMaxResolution;
-        CacheYouTubeMaxLength = config.CacheYouTubeMaxLength;
         CacheMaxSizeInGb = config.CacheMaxSizeInGb;
-        CachePyPyDance = config.CachePyPyDance;
-        CacheVRDancing = config.CacheVrDancing;
-        CacheOnly = config.CacheOnly;
         PatchResonite = config.PatchResonite;
         PatchVRC = config.PatchVrChat;
         AutoUpdate = config.AutoUpdateVrcVideoCacher;
@@ -168,13 +118,6 @@ public partial class SettingsViewModel : ViewModelBase
         StartMinimized = config.StartMinimized;
         StartWithSteamVr = config.StartWithSteamVr;
         ErrorPopups = config.ErrorPopups;
-        RedirectVRDancing = config.RedirectVRDancing;
-        BlockedUrls.Clear();
-        foreach (var url in config.BlockedUrls)
-        {
-            BlockedUrls.Add(new BlockedUrlEntry(url));
-        }
-        BlockRedirect = config.BlockRedirect;
 
         SelectedLanguageOption = AvailableLanguageOptions.FirstOrDefault(o => o.Code == config.Language)
                                  ?? AvailableLanguageOptions.FirstOrDefault();
@@ -197,55 +140,19 @@ public partial class SettingsViewModel : ViewModelBase
         StatusMessageColor = "#FFB74D";
     }
 
-    private void OnBlockedUrlsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.OldItems is not null)
-        {
-            foreach (var oldItem in e.OldItems.OfType<BlockedUrlEntry>())
-            {
-                oldItem.PropertyChanged -= OnBlockedUrlEntryPropertyChanged;
-            }
-        }
-
-        if (e.NewItems is not null)
-        {
-            foreach (var newItem in e.NewItems.OfType<BlockedUrlEntry>())
-            {
-                newItem.PropertyChanged += OnBlockedUrlEntryPropertyChanged;
-            }
-        }
-
-        SetHasChanges();
-    }
-
-    private void OnBlockedUrlEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(BlockedUrlEntry.Url))
-        {
-            SetHasChanges();
-        }
-    }
-
     partial void OnWebServerUrlChanged(string value) => SetHasChanges();
     partial void OnYtdlUseCookiesChanged(bool value) => SetHasChanges();
     partial void OnYtdlAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnYtdlAdditionalArgsChanged(string value) => SetHasChanges();
     partial void OnYtdlDubLanguageChanged(string value) => SetHasChanges();
     partial void OnCachedAssetPathChanged(string value) => SetHasChanges();
-    partial void OnCacheYouTubeChanged(bool value) => SetHasChanges();
-    partial void OnCacheYouTubeMaxResolutionChanged(int value) => SetHasChanges();
-    partial void OnCacheYouTubeMaxLengthChanged(int value) => SetHasChanges();
     partial void OnCacheMaxSizeInGbChanged(float value) => SetHasChanges();
-    partial void OnCachePyPyDanceChanged(bool value) => SetHasChanges();
-    partial void OnCacheVRDancingChanged(bool value) => SetHasChanges();
-    partial void OnCacheOnlyChanged(bool value) => SetHasChanges();
     partial void OnPatchResoniteChanged(bool value) => SetHasChanges();
     partial void OnPatchVRCChanged(bool value) => SetHasChanges();
     partial void OnAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnCloseToTrayChanged(bool value) => SetHasChanges();
     partial void OnStartMinimizedChanged(bool value) => SetHasChanges();
     partial void OnStartWithSteamVrChanged(bool value) => SetHasChanges();
-    partial void OnBlockRedirectChanged(string value) => SetHasChanges();
     partial void OnErrorPopupsChanged(bool value) => SetHasChanges();
 
     [RelayCommand]
@@ -264,13 +171,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.YtdlpAdditionalArgs = YtdlAdditionalArgs;
         config.YtdlpDubLanguage = YtdlDubLanguage;
         config.CachedAssetPath = CachedAssetPath;
-        config.CacheYouTube = CacheYouTube;
-        config.CacheYouTubeMaxResolution = CacheYouTubeMaxResolution;
-        config.CacheYouTubeMaxLength = CacheYouTubeMaxLength;
         config.CacheMaxSizeInGb = CacheMaxSizeInGb;
-        config.CachePyPyDance = CachePyPyDance;
-        config.CacheVrDancing = CacheVRDancing;
-        config.CacheOnly = CacheOnly;
         config.PatchResonite = PatchResonite;
         config.PatchVrChat = PatchVRC;
         config.AutoUpdateVrcVideoCacher = AutoUpdate;
@@ -278,11 +179,6 @@ public partial class SettingsViewModel : ViewModelBase
         config.StartMinimized = StartMinimized;
         config.StartWithSteamVr = StartWithSteamVr;
         config.ErrorPopups = ErrorPopups;
-        config.BlockedUrls = BlockedUrls
-            .Select(item => item.Url)
-            .ToArray();
-        config.BlockRedirect = BlockRedirect;
-        config.RedirectVRDancing = RedirectVRDancing;
         ConfigManager.TrySaveConfig();
         HasChanges = false;
         StatusMessage = Localizer.Get("SettingsSaved");
@@ -295,17 +191,5 @@ public partial class SettingsViewModel : ViewModelBase
         LoadFromConfig();
         StatusMessage = Localizer.Get("SettingsReset");
         StatusMessageColor = "#81C784";
-    }
-
-    [RelayCommand]
-    private void AddBlockedUrl()
-    {
-        BlockedUrls.Add(new BlockedUrlEntry("https://"));
-    }
-
-    [RelayCommand]
-    private void RemoveBlockedUrl(BlockedUrlEntry url)
-    {
-        BlockedUrls.Remove(url);
     }
 }

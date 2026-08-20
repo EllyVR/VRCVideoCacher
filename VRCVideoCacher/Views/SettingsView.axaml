@@ -10,29 +10,27 @@
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="10">
             <TextBlock Text="{l:Localize Settings}" FontSize="24" FontWeight="Bold"/>
-            
+
             <!-- Status Message -->
             <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Margin="15,0" VerticalAlignment="Center"
                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Foreground="{Binding StatusMessageColor}"/>
-            
+
             <Button Grid.Column="2" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,10,0">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <mi:MaterialIcon Kind="Undo" Width="16" Height="16"/>
                     <TextBlock Text="{l:Localize Reset}"/>
                 </StackPanel>
             </Button>
-            
+
             <Button Grid.Column="3" Command="{Binding SaveSettingsCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <mi:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
                     <TextBlock Text="{l:Localize Save}"/>
                 </StackPanel>
             </Button>
-
-
         </Grid>
-        
+
         <ScrollViewer Grid.Row="1">
             <StackPanel Spacing="20" Margin="10">
                 <!-- General Settings -->
@@ -51,13 +49,10 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                         </StackPanel>
-                        
+
                         <CheckBox IsChecked="{Binding CloseToTray}" Content="{l:Localize CloseToTray}"/>
-
                         <CheckBox IsChecked="{Binding StartMinimized}" Content="{l:Localize StartMinimized}"/>
-
                         <CheckBox IsChecked="{Binding StartWithSteamVr}" Content="{l:Localize StartWithSteamVr}"/>
-
                         <CheckBox IsChecked="{Binding ErrorPopups}" Content="{l:Localize ErrorPopups}"/>
                     </StackPanel>
                 </Border>
@@ -94,7 +89,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Cache Settings -->
+                <!-- Cache Storage Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
                         <TextBlock Text="{l:Localize CacheSettings}" FontWeight="SemiBold" FontSize="16"/>
@@ -108,25 +103,6 @@
                             <TextBlock Text="{l:Localize MaxCacheSizeLabel}"/>
                             <NumericUpDown Value="{Binding CacheMaxSizeInGb}" Minimum="0" Maximum="10000" Increment="1" FormatString="0.#"/>
                         </StackPanel>
-
-                        <CheckBox IsChecked="{Binding CacheYouTube}" Content="{l:Localize CacheYouTubeVideos}"/>
-
-                        <StackPanel Spacing="5" Margin="30,0,0,0" IsVisible="{Binding CacheYouTube}">
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="{l:Localize MaxYouTubeResolution}"/>
-                                <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding CacheYouTubeMaxResolution}"/>
-                            </StackPanel>
-
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="{l:Localize MaxVideoLength}"/>
-                                <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Increment="10"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <CheckBox IsChecked="{Binding CachePyPyDance}" Content="{l:Localize CachePyPyDanceVideos}"/>
-                        <CheckBox IsChecked="{Binding CacheVRDancing}" Content="{l:Localize CacheVRDancingVideos}"/>
-                        <CheckBox IsChecked="{Binding CacheOnly}" Content="{l:Localize OnlyServeCachedVideos}"/>
-                        <CheckBox IsChecked="{Binding RedirectVRDancing}" Content="{l:Localize RedirectVRDancing}"/>
                     </StackPanel>
                 </Border>
 
@@ -146,40 +122,6 @@
                         <TextBlock Text="{l:Localize Updates}" FontWeight="SemiBold" FontSize="16"/>
 
                         <CheckBox IsChecked="{Binding AutoUpdate}" Content="{l:Localize AutoUpdateVRCVideoCacher}"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Blocked URLs -->
-                <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
-                    <StackPanel Spacing="15">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock Text="{l:Localize BlockedUrls}" FontWeight="SemiBold" FontSize="16"/>
-                            <Button Grid.Column="1" Command="{Binding AddBlockedUrlCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                                    <TextBlock Text="{l:Localize Add}"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                        <ItemsControl ItemsSource="{Binding BlockedUrls}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid ColumnDefinitions="*, Auto" Margin="0,5">
-                                        <TextBox Grid.Column="0" Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Button Grid.Column="1" Margin="5,0,0,0"
-                                                Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).RemoveBlockedUrlCommand}"
-                                                CommandParameter="{Binding}">
-                                            <mi:MaterialIcon Kind="Delete" Width="16" Height="16"/>
-                                        </Button>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <StackPanel Spacing="5" Margin="0,20,0,0">
-                            <TextBlock Text="{l:Localize BlockedUrlRedirect}" FontWeight="SemiBold" FontSize="16"/>
-                            <TextBox Text="{Binding BlockRedirect}" PlaceholderText="Redirect URL"/>
-                        </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>

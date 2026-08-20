@@ -76,17 +76,27 @@ public class ApiController : WebApiController
 
         Log.Information("Request URL: {URL}", requestUrl);
 
-        if (requestUrl.StartsWith("https://eu2.vrdancing.club/weekend/") && ConfigManager.Config.RedirectVRDancing)
+        // Evaluate request URL against configured URI rules engine
+        var evalResult = RuleEngine.EvaluateUrl(requestUrl);
+
+        if (evalResult.Action == RuleAction.Block)
         {
-            await HttpContext.SendStringAsync(requestUrl.Replace("eu2", "na2"), "text/plain", Encoding.UTF8);
+            Log.Warning("URL Is Blocked by Rule '{RuleName}': {URL}", evalResult.MatchedRule.Name, requestUrl);
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+        else if (evalResult.Action == RuleAction.Redirect)
+        {
+            Log.Information("URL Redirected by Rule '{RuleName}': {Original} -> {Redirect}", evalResult.MatchedRule.Name, requestUrl, evalResult.RedirectUrl);
+            requestUrl = evalResult.RedirectUrl;
+        }
+        else if (evalResult.Action == RuleAction.Direct)
+        {
+            Log.Information("URL Action is Direct (Rule '{RuleName}'): Bypassing caching.", evalResult.MatchedRule.Name);
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
 
-        if (ConfigManager.Config.BlockedUrls.Any(blockedUrl => requestUrl.StartsWith(blockedUrl)))
-        {
-            Log.Warning("URL Is Blocked: {URL}", requestUrl);
-            requestUrl = ConfigManager.Config.BlockRedirect;
-        }
 
         if (requestUrl.StartsWith("https://mightygymcdn.nyc3.cdn.digitaloceanspaces.com"))
         {
@@ -120,6 +130,10 @@ public class ApiController : WebApiController
             Log.Information("Failed to get Video Info for URL: {URL}", requestUrl);
             return;
         }
+
+        videoInfo.MaxResolution = evalResult.MaxResolution ?? 1080;
+        videoInfo.MaxDurationMinutes = evalResult.MaxDurationMinutes ?? 0;
+
         DatabaseManager.AddPlayHistory(videoInfo);
 
         if (source == "resonite")
@@ -142,13 +156,6 @@ public class ApiController : WebApiController
         if (string.IsNullOrEmpty(videoInfo.VideoId))
         {
             Log.Information("Failed to get Video ID: Bypassing.");
-            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
-            return;
-        }
-
-        if (ConfigManager.Config.CacheOnly)
-        {
-            Log.Information("Cache Only Mode Enabled: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
             return;
         }
@@ -191,10 +198,7 @@ public class ApiController : WebApiController
 
         // check if file is cached again to handle race condition
         (isCached, _, _) = GetCachedFile(videoInfo.VideoId, avPro);
-        if (!isCached && (
-                (videoInfo.UrlType == UrlType.YouTube && ConfigManager.Config.CacheYouTube) ||
-                (videoInfo.UrlType == UrlType.PyPyDance && ConfigManager.Config.CachePyPyDance) ||
-                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVrDancing)))
+        if (!isCached && evalResult.Action == RuleAction.Cache)
         {
             VideoDownloader.QueueDownload(videoInfo);
         }
