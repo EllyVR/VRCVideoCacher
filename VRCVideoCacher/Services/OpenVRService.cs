@@ -63,7 +63,7 @@ public class OpenVRService
                                 Logger.Warning("Failed to register startup manifest");
                             }
                         }
-                        if (LaunchArgs.CloseWithSteamVr || true)
+                        if (LaunchArgs.CloseWithSteamVr)
                         {
                             await PollEventsUntilQuit();
                         }
@@ -78,14 +78,17 @@ public class OpenVRService
                         break;
                 }
 
-                try
+                if (initError == EVRInitError.None)
                 {
-                    OpenVR.Shutdown();
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning("Exception during shutdown: {Msg}", ex.Message);
-                    return;
+                    try
+                    {
+                        OpenVR.Shutdown();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning("Exception during shutdown: {Msg}", ex.Message);
+                        return;
+                    }
                 }
             }
         });

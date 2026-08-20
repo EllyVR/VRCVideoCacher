@@ -35,6 +35,33 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+            {
+                LoggerUtils.LogUnhandledException(ex, "FATAL: Unhandled AppDomain Exception");
+                SaveCrashReport(ex, "AppDomain.UnhandledException");
+            }
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            if (e.Exception != null)
+            {
+                e.SetObserved();
+                var fullString = e.Exception.ToString();
+                if (fullString.Contains("DBus", StringComparison.OrdinalIgnoreCase) ||
+                    fullString.Contains("freedesktop", StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Warning(e.Exception, "Ignored background DBus UnobservedTaskException");
+                    return;
+                }
+
+                LoggerUtils.LogUnhandledException(e.Exception, "Unobserved Task Exception");
+                SaveCrashReport(e.Exception, "TaskScheduler.UnobservedTaskException");
+            }
+        };
+
         LaunchArgs.SetupArguments(args);
         // Must run before Steam API init — this process may be a privileged subprocess invoked by ElevatorManager
         HostsManager.TryRun();
@@ -87,7 +114,9 @@ internal sealed class Program
             }
             else
             {
-                Console.WriteLine("Application is already running, Exiting...");
+                var msg = "Application is already running, Exiting...";
+                Logger.Information("{Message}", msg);
+                Console.WriteLine(msg);
                 Environment.Exit(0);
             }
         }
@@ -98,14 +127,6 @@ internal sealed class Program
         Logger = Log.ForContext("SourceContext", "Core");
 
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
-
-        TaskScheduler.UnobservedTaskException += (_, e) =>
-        {
-            if (e.Exception != null && e.Exception is Exception ex)
-            {
-                LoggerUtils.LogUnhandledException(ex, "Unobserved task exception");
-            }
-        };
 #if !DEBUG
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
@@ -157,15 +178,21 @@ internal sealed class Program
         Updater.Cleanup();
         if (Environment.CommandLine.Contains("--Reset"))
         {
+            Logger.Information("Exiting after restoring all yt-dlp backups (--Reset).");
             FileTools.RestoreAllYtdl();
             Environment.Exit(0);
         }
         if (Environment.CommandLine.Contains("--Hash"))
         {
+            Logger.Information("Exiting after printing hash (--Hash).");
             Console.WriteLine(GetOurYtdlpHash());
             Environment.Exit(0);
         }
-        Console.CancelKeyPress += (_, _) => Environment.Exit(0);
+        Console.CancelKeyPress += (_, _) =>
+        {
+            Logger.Information("Received Console CancelKeyPress (SIGINT / Ctrl+C), Exiting...");
+            Environment.Exit(0);
+        };
         AppDomain.CurrentDomain.ProcessExit += (_, _) => OnAppQuit();
 
         YtdlpHash = GetOurYtdlpHash();
@@ -339,5 +366,38 @@ internal sealed class Program
     public static void NotifyCookiesUpdated()
     {
         OnCookiesUpdated?.Invoke();
+    }
+
+    public static void SaveCrashReport(Exception ex, string source)
+    {
+        try
+        {
+            var reportPath = Path.Combine(DataPath, "CRASH_REPORT.txt");
+            Directory.CreateDirectory(DataPath);
+            var reportContent = $@"==================================================
+VRCVideoCacher Crash Report
+Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}
+Source: {source}
+Version: {Version}
+OS: {Environment.OSVersion} (64-bit: {Environment.Is64BitOperatingSystem})
+Process ID: {Environment.ProcessId}
+Command Line: {Environment.CommandLine}
+==================================================
+Exception Type: {ex.GetType().FullName}
+Message: {ex.Message}
+--------------------------------------------------
+Stack Trace:
+{ex.StackTrace}
+--------------------------------------------------
+Inner Exception: {ex.InnerException}
+==================================================
+";
+            File.WriteAllText(reportPath, reportContent);
+            Console.Error.WriteLine(reportContent);
+        }
+        catch
+        {
+            // Ignore failure writing crash report
+        }
     }
 }
