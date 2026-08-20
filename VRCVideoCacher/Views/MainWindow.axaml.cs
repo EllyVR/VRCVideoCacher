@@ -14,6 +14,21 @@ public partial class MainWindow : Window
         Dispatcher.UIThread.UnhandledException += OnUnhandledException;
     }
 
+    protected override async void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+
+        if (DataContext is MainWindowViewModel vm && vm.Rules.HasChanges)
+        {
+            e.Cancel = true;
+            var canClose = await vm.Rules.CheckUnsavedChangesAsync(this);
+            if (canClose)
+            {
+                Close();
+            }
+        }
+    }
+
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         if (e.Exception != null && e.Exception is Exception ex)

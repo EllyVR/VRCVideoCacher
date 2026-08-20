@@ -1,3 +1,5 @@
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Jeek.Avalonia.Localization;
@@ -74,27 +76,42 @@ public partial class MainWindowViewModel : ViewModelBase
         return $"{adjustedSize:N2} {suffixes[mag]}";
     }
 
-    [RelayCommand]
-    private void NavigateToDashboard() => CurrentView = Dashboard;
+    private async Task NavigateToAsync(ViewModelBase targetView)
+    {
+        if (CurrentView == targetView) return;
+
+        if (CurrentView == Rules && Rules.HasChanges)
+        {
+            var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+            var parentWindow = lifetime?.MainWindow;
+            var canProceed = await Rules.CheckUnsavedChangesAsync(parentWindow);
+            if (!canProceed) return;
+        }
+
+        CurrentView = targetView;
+    }
 
     [RelayCommand]
-    private void NavigateToRules() => CurrentView = Rules;
+    private async Task NavigateToDashboard() => await NavigateToAsync(Dashboard);
 
     [RelayCommand]
-    private void NavigateToSettings() => CurrentView = Settings;
+    private async Task NavigateToRules() => await NavigateToAsync(Rules);
 
     [RelayCommand]
-    private void NavigateToCacheBrowser() => CurrentView = CacheBrowser;
+    private async Task NavigateToSettings() => await NavigateToAsync(Settings);
 
     [RelayCommand]
-    private void NavigateToDownloadQueue() => CurrentView = DownloadQueue;
+    private async Task NavigateToCacheBrowser() => await NavigateToAsync(CacheBrowser);
 
     [RelayCommand]
-    private void NavigateToLogViewer() => CurrentView = LogViewer;
+    private async Task NavigateToDownloadQueue() => await NavigateToAsync(DownloadQueue);
 
     [RelayCommand]
-    private void NavigateToHistory() => CurrentView = History;
+    private async Task NavigateToLogViewer() => await NavigateToAsync(LogViewer);
 
     [RelayCommand]
-    public void NavigateToAbout() => CurrentView = About;
+    private async Task NavigateToHistory() => await NavigateToAsync(History);
+
+    [RelayCommand]
+    public async Task NavigateToAbout() => await NavigateToAsync(About);
 }

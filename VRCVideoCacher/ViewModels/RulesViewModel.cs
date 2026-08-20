@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +14,7 @@ namespace VRCVideoCacher.ViewModels;
 public partial class RuleEntryViewModel : ObservableObject
 {
     public UriRule Rule { get; }
+    public Action? OnEnabledChanged;
 
     public string Name => Rule.Name;
     public string Pattern => Rule.Pattern;
@@ -38,6 +40,7 @@ public partial class RuleEntryViewModel : ObservableObject
             {
                 Rule.Enabled = value;
                 OnPropertyChanged();
+                OnEnabledChanged?.Invoke();
             }
         }
     }
@@ -79,6 +82,18 @@ public partial class RulesViewModel : ViewModelBase
     {
         ConfigManager.OnConfigChanged += LoadFromConfig;
         LoadFromConfig();
+    }
+
+    private RuleEntryViewModel CreateEntry(UriRule rule)
+    {
+        var entry = new RuleEntryViewModel(rule);
+        entry.OnEnabledChanged += () =>
+        {
+            if (_isLoading) return;
+            EvaluateTestUrl();
+            SetHasChanges();
+        };
+        return entry;
     }
 
     partial void OnTestUrlChanged(string value)
@@ -128,7 +143,7 @@ public partial class RulesViewModel : ViewModelBase
 
         foreach (var rule in configRules)
         {
-            Rules.Add(new RuleEntryViewModel(rule));
+            Rules.Add(CreateEntry(rule));
         }
 
         HasChanges = false;
@@ -145,7 +160,7 @@ public partial class RulesViewModel : ViewModelBase
         StatusMessageColor = "#FFB74D";
     }
 
-    private void SaveToConfig()
+    public void SaveToConfig()
     {
         ConfigManager.Config.UriRules = Rules.Select(r => r.Rule).ToList();
         ConfigManager.TrySaveConfig();
@@ -153,6 +168,41 @@ public partial class RulesViewModel : ViewModelBase
         StatusMessage = Localizer.Get("SettingsSaved");
         StatusMessageColor = "#81C784";
         EvaluateTestUrl();
+    }
+
+    public async Task<bool> CheckUnsavedChangesAsync(Window? parentWindow)
+    {
+        if (!HasChanges) return true; // OK to proceed
+
+        var confirmVm = new ConfirmUnsavedViewModel();
+        var dialog = new ConfirmUnsavedWindow { DataContext = confirmVm };
+
+        UnsavedChangesResult result = UnsavedChangesResult.Cancel;
+        confirmVm.CloseRequested += (res) =>
+        {
+            result = res;
+            dialog.Close();
+        };
+
+        if (parentWindow != null)
+        {
+            await dialog.ShowDialog(parentWindow);
+        }
+
+        switch (result)
+        {
+            case UnsavedChangesResult.Save:
+                SaveToConfig();
+                return true;
+
+            case UnsavedChangesResult.Discard:
+                LoadFromConfig();
+                return true;
+
+            case UnsavedChangesResult.Cancel:
+            default:
+                return false;
+        }
     }
 
     [RelayCommand]
@@ -170,9 +220,10 @@ public partial class RulesViewModel : ViewModelBase
 
         if (result)
         {
-            var newEntry = new RuleEntryViewModel(editVm.RuleResult);
+            var newEntry = CreateEntry(editVm.RuleResult);
             Rules.Add(newEntry);
-            SaveToConfig();
+            EvaluateTestUrl();
+            SetHasChanges();
         }
     }
 
@@ -201,7 +252,8 @@ public partial class RulesViewModel : ViewModelBase
             entry.Rule.RedirectTarget = editVm.RuleResult.RedirectTarget;
 
             entry.RefreshProperties();
-            SaveToConfig();
+            EvaluateTestUrl();
+            SetHasChanges();
         }
     }
 
@@ -213,7 +265,8 @@ public partial class RulesViewModel : ViewModelBase
         if (index > 0)
         {
             Rules.Move(index, index - 1);
-            SaveToConfig();
+            EvaluateTestUrl();
+            SetHasChanges();
         }
     }
 
@@ -225,7 +278,8 @@ public partial class RulesViewModel : ViewModelBase
         if (index >= 0 && index < Rules.Count - 1)
         {
             Rules.Move(index, index + 1);
-            SaveToConfig();
+            EvaluateTestUrl();
+            SetHasChanges();
         }
     }
 
@@ -234,7 +288,8 @@ public partial class RulesViewModel : ViewModelBase
     {
         if (entry == null) return;
         Rules.Remove(entry);
-        SaveToConfig();
+        EvaluateTestUrl();
+        SetHasChanges();
     }
 
     [RelayCommand]
@@ -243,11 +298,10 @@ public partial class RulesViewModel : ViewModelBase
         Rules.Clear();
         foreach (var rule in ConfigModel.GetDefaultRules())
         {
-            Rules.Add(new RuleEntryViewModel(rule));
+            Rules.Add(CreateEntry(rule));
         }
-        SaveToConfig();
-        StatusMessage = "Reset to default rules!";
-        StatusMessageColor = "#81C784";
+        EvaluateTestUrl();
+        SetHasChanges();
     }
 
     [RelayCommand]
