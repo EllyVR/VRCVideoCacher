@@ -21,6 +21,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public DashboardViewModel Dashboard { get; }
     public SettingsViewModel Settings { get; }
+    public RulesViewModel Rules { get; }
     public CacheBrowserViewModel CacheBrowser { get; }
     public DownloadQueueViewModel DownloadQueue { get; }
     public LogViewerViewModel LogViewer { get; }
@@ -31,6 +32,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Dashboard = new DashboardViewModel();
         Settings = new SettingsViewModel();
+        Rules = new RulesViewModel();
         CacheBrowser = new CacheBrowserViewModel();
         DownloadQueue = new DownloadQueueViewModel();
         LogViewer = new LogViewerViewModel();
@@ -74,6 +76,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void NavigateToDashboard() => CurrentView = Dashboard;
+
+    [RelayCommand]
+    private void NavigateToRules() => CurrentView = Rules;
 
     [RelayCommand]
     private void NavigateToSettings() => CurrentView = Settings;

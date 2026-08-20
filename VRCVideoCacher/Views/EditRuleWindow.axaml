@@ -1,0 +1,86 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VRCVideoCacher.ViewModels"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        xmlns:l="using:Jeek.Avalonia.Localization"
+        x:Class="VRCVideoCacher.Views.EditRuleWindow"
+        x:DataType="vm:EditRuleViewModel"
+        Title="{Binding Title}"
+        Width="650" MinWidth="550"
+        Height="500" MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="#1e1e1e">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+
+        <!-- Form Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="15">
+                <!-- Name & Enable -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,10,0">
+                        <TextBlock Text="{l:Localize RuleName}" FontWeight="SemiBold"/>
+                        <TextBox Text="{Binding Name}" PlaceholderText="Rule Name (e.g. YouTube Videos)"/>
+                    </StackPanel>
+                    <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" Content="{l:Localize Enabled}" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
+                </Grid>
+
+                <!-- Pattern -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="{l:Localize RegexPattern}" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding Pattern}" FontFamily="Consolas,Monospace,Courier New" PlaceholderText="^https?://..."/>
+                    <TextBlock Text="{Binding PatternError}" Foreground="#EF5350" FontSize="12"
+                               IsVisible="{Binding PatternError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+
+                <!-- Action Selector -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="{l:Localize Action}" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding AvailableActions}" SelectedItem="{Binding SelectedAction}" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Cache Options -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="15" IsVisible="{Binding IsCacheAction}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{l:Localize CacheSettings}" FontWeight="SemiBold" Foreground="#81C784"/>
+                        <Grid ColumnDefinitions="*, *">
+                            <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,10,0">
+                                <TextBlock Text="{l:Localize MaxYouTubeResolution}"/>
+                                <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding MaxResolution}" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="5" Margin="10,0,0,0">
+                                <TextBlock Text="{l:Localize MaxVideoLength}"/>
+                                <NumericUpDown Value="{Binding MaxDurationMinutes}" Minimum="0" Maximum="10000" Increment="10"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Redirect Options -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="15" IsVisible="{Binding IsRedirectAction}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{l:Localize RedirectTarget}" FontWeight="SemiBold" Foreground="#64B5F6"/>
+                        <TextBox Text="{Binding RedirectTarget}" PlaceholderText="https://youtube.com/watch?v=$1"/>
+                        <TextBlock Text="Tokens: $0, $1, $2, {url}, {url.domain}, {url.path}, {url.query}, {url.query.v}, {url.fragment}"
+                                   FontSize="11" Foreground="#B0BEC5" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
+            <Button Command="{Binding CancelCommand}" Content="{l:Localize Cancel}"/>
+            <Button Command="{Binding SaveCommand}" Content="{l:Localize Save}" Classes="accent"/>
+        </StackPanel>
+    </Grid>
+
+    <Window.Styles>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="#1DB954"/>
+        </Style>
+    </Window.Styles>
+</Window>

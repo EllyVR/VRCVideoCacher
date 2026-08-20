@@ -9,7 +9,7 @@
         x:DataType="viewModels:MainWindowViewModel"
         Title="{Binding Title}"
         Icon="avares://VRCVideoCacher/Assets/icon.ico"
-        Width="1000" Height="700"
+        Width="1050" Height="720"
         MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterScreen">
 
@@ -20,8 +20,8 @@
             <Border Grid.Column="0" Background="#1a1a1a" Padding="10">
                 <StackPanel Spacing="5">
                     <Image Source="avares://VRCVideoCacher/Assets/SmallBanner.png"
-                               Margin="0,10,0,20"
-                               HorizontalAlignment="Center"/>
+                                Margin="0,10,0,20"
+                                HorizontalAlignment="Center"/>
 
                     <Button Command="{Binding NavigateToDashboardCommand}"
                             HorizontalAlignment="Stretch"
@@ -63,6 +63,16 @@
                         </StackPanel>
                     </Button>
 
+                    <Button Command="{Binding NavigateToRulesCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Classes="nav-button">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Tune" Width="20" Height="20"/>
+                            <TextBlock Text="{l:Localize Rules}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button Command="{Binding NavigateToSettingsCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
@@ -100,6 +110,9 @@
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
                         <views:DashboardView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:RulesViewModel}">
+                        <views:RulesView/>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
                         <views:SettingsView/>

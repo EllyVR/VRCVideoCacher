@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VRCVideoCacher.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:l="using:Jeek.Avalonia.Localization"
+             x:Class="VRCVideoCacher.Views.RulesView"
+             x:DataType="vm:RulesViewModel">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header & Action Buttons -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto, Auto, Auto" Margin="10">
+            <TextBlock Text="{l:Localize Rules}" FontSize="24" FontWeight="Bold"/>
+
+            <!-- Status Message -->
+            <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Margin="15,0" VerticalAlignment="Center"
+                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       Foreground="{Binding StatusMessageColor}"/>
+
+            <!-- Test URL Field -->
+            <TextBox Grid.Column="2" Text="{Binding TestUrl, Mode=TwoWay}" PlaceholderText="Test URL" Width="240" Margin="0,0,10,0"/>
+
+            <!-- Reset Button -->
+            <Button Grid.Column="3" Command="{Binding ResetDefaultRulesCommand}" Margin="0,0,10,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <mi:MaterialIcon Kind="Undo" Width="16" Height="16"/>
+                    <TextBlock Text="{l:Localize Reset}"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Add Rule Button -->
+            <Button Grid.Column="4" Command="{Binding AddRuleCommand}" Margin="0,0,10,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <mi:MaterialIcon Kind="Plus" Width="16" Height="16"/>
+                    <TextBlock Text="{l:Localize AddRule}"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Save Button -->
+            <Button Grid.Column="5" Command="{Binding SaveRulesCommand}" Classes="accent">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <mi:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
+                    <TextBlock Text="{l:Localize Save}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Rules DataGrid / Table -->
+        <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Margin="10" Padding="10">
+            <DataGrid ItemsSource="{Binding Rules}" AutoGenerateColumns="False" CanUserResizeColumns="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Styles>
+                    <Style Selector="DataGridRow" x:DataType="vm:RuleEntryViewModel">
+                        <Setter Property="Background" Value="{Binding RowBackground}"/>
+                    </Style>
+                </DataGrid.Styles>
+                <DataGrid.Columns>
+                    <!-- Enabled Toggle -->
+                    <DataGridCheckBoxColumn Header="Active" Binding="{Binding Enabled, Mode=TwoWay}" Width="70"/>
+
+                    <!-- Rule Name -->
+                    <DataGridTextColumn Header="Rule Name" Binding="{Binding Name}" Width="160"/>
+
+                    <!-- Regex Pattern -->
+                    <DataGridTemplateColumn Header="Regex Pattern" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:RuleEntryViewModel">
+                                <TextBlock Text="{Binding Pattern}" VerticalAlignment="Center" Padding="8,0"
+                                           FontFamily="Consolas,Monospace,Courier New" Foreground="#81C784"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Action Summary -->
+                    <DataGridTemplateColumn Header="Action Summary" Width="240">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:RuleEntryViewModel">
+                                <TextBlock Text="{Binding ActionSummary}" VerticalAlignment="Center" Padding="8,0"
+                                           FontWeight="SemiBold" Foreground="#64B5F6"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Actions (Edit, Move Up, Move Down, Delete) -->
+                    <DataGridTemplateColumn Header="Actions" Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:RuleEntryViewModel">
+                                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                    <!-- Edit Pen Button -->
+                                    <Button Command="{Binding $parent[DataGrid].((vm:RulesViewModel)DataContext).EditRuleCommand}"
+                                            CommandParameter="{Binding}" Padding="6" ToolTip.Tip="Edit Rule">
+                                        <mi:MaterialIcon Kind="Pencil" Width="16" Height="16"/>
+                                    </Button>
+
+                                    <!-- Move Up -->
+                                    <Button Command="{Binding $parent[DataGrid].((vm:RulesViewModel)DataContext).MoveRuleUpCommand}"
+                                            CommandParameter="{Binding}" Padding="6" ToolTip.Tip="Move Up">
+                                        <mi:MaterialIcon Kind="ArrowUp" Width="16" Height="16"/>
+                                    </Button>
+
+                                    <!-- Move Down -->
+                                    <Button Command="{Binding $parent[DataGrid].((vm:RulesViewModel)DataContext).MoveRuleDownCommand}"
+                                            CommandParameter="{Binding}" Padding="6" ToolTip.Tip="Move Down">
+                                        <mi:MaterialIcon Kind="ArrowDown" Width="16" Height="16"/>
+                                    </Button>
+
+                                    <!-- Delete -->
+                                    <Button Command="{Binding $parent[DataGrid].((vm:RulesViewModel)DataContext).DeleteRuleCommand}"
+                                            CommandParameter="{Binding}" Padding="6" ToolTip.Tip="Delete Rule">
+                                        <mi:MaterialIcon Kind="Delete" Width="16" Height="16" Foreground="#E57373"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+
+    <UserControl.Styles>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="#1DB954"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>
