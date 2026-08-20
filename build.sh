@@ -39,14 +39,29 @@ if [ "$RESTART" = true ]; then
     echo "=== (Re)starting VRCVideoCacher ==="
     pkill -9 -f VRCVideoCacher 2>/dev/null || true
     sleep 1
-    nohup "${TARGET_DIR}/VRCVideoCacher" --no-steam > /dev/null 2>&1 &
-    echo "VRCVideoCacher started."
+    xdg-open steam://rungameid/4296960 || steam steam://rungameid/4296960
+    echo "VRCVideoCacher launched via Steam."
 
-    echo "=== Waiting 5s for logs... ==="
+    echo "=== Waiting 5s for process status & logs... ==="
     sleep 5
     LOG_FILE=$(ls -t "${HOME}/.config/VRCVideoCacher/Logs/VRCVideoCacher"*.log 2>/dev/null | head -n 1)
     if [ -n "${LOG_FILE}" ] && [ -f "${LOG_FILE}" ]; then
-        echo "=== Last 15 log lines (${LOG_FILE}) ==="
-        tail -n 15 "${LOG_FILE}"
+        echo "=== Last 25 log lines (${LOG_FILE}) ==="
+        tail -n 25 "${LOG_FILE}"
+    fi
+
+    echo "=== Process Status & Diagnostic Check ==="
+    PIDS=$(pgrep -f "${TARGET_DIR}/VRCVideoCacher" || true)
+    if [ -n "${PIDS}" ]; then
+        echo "VRCVideoCacher is RUNNING (PIDs: ${PIDS})"
+        PIDS_COMMA=$(echo "${PIDS}" | tr '\n' ',' | sed 's/,$//')
+        ps -p ${PIDS_COMMA} -o pid,user,%cpu,%mem,stat,start,time,command
+    else
+        echo "WARNING: VRCVideoCacher process is NOT running (Exited or Crashed after 5s)!"
+        CRASH_REPORT="${HOME}/.config/VRCVideoCacher/CRASH_REPORT.txt"
+        if [ -f "${CRASH_REPORT}" ]; then
+            echo "=== Found CRASH_REPORT.txt ==="
+            cat "${CRASH_REPORT}"
+        fi
     fi
 fi

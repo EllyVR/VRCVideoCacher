@@ -70,7 +70,7 @@ public class VideoId
         return handler == null ? null : await handler.GetVideoInfo(url, uri, avPro);
     }
 
-    public static async Task<string> TryGetYouTubeVideoId(string url)
+    public static async Task<string> TryGetYouTubeVideoId(string url, int maxDurationMinutes = 0)
     {
         var args = new List<string>();
         args.Add("-j");
@@ -107,9 +107,9 @@ public class VideoId
             Log.Warning("Failed to get video ID: Video is a stream");
             return string.Empty;
         }
-        if (data.Duration > ConfigManager.Config.CacheYouTubeMaxLength * 60)
+        if (maxDurationMinutes > 0 && data.Duration > maxDurationMinutes * 60)
         {
-            Log.Warning("Failed to get video ID: Video is longer than configured max length ({Length})", data.Duration / 60 / ConfigManager.Config.CacheYouTubeMaxLength);
+            Log.Warning("Failed to get video ID: Video is longer than configured max length ({Length}m > {Max}m)", data.Duration / 60, maxDurationMinutes);
             return string.Empty;
         }
 

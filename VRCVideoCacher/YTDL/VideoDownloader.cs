@@ -87,14 +87,12 @@ public class VideoDownloader
         if (DownloadQueue.Any(x => x.VideoId == videoInfo.VideoId &&
                                    x.DownloadFormat == videoInfo.DownloadFormat))
         {
-            // Log.Information("URL is already in the download queue.");
             return;
         }
         if (_currentDownload != null &&
             _currentDownload.VideoId == videoInfo.VideoId &&
             _currentDownload.DownloadFormat == videoInfo.DownloadFormat)
         {
-            // Log.Information("URL is already being downloaded.");
             return;
         }
 
@@ -119,7 +117,7 @@ public class VideoDownloader
         string? videoId;
         try
         {
-            videoId = await VideoId.TryGetYouTubeVideoId(url);
+            videoId = await VideoId.TryGetYouTubeVideoId(url, videoInfo.MaxDurationMinutes);
             if (string.IsNullOrEmpty(videoId))
             {
                 Log.Warning("Invalid YouTube URL: {URL}", url);
@@ -135,6 +133,8 @@ public class VideoDownloader
         using var tempDir = new TempDir();
         var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
         var tempDownloadWebmPath = Path.Join(tempDir.FullName, TempDownloadWebmName);
+
+        var maxRes = videoInfo.MaxResolution > 0 ? videoInfo.MaxResolution : 1080;
 
         var args = new List<string>();
         args.Add("-q");
@@ -155,23 +155,20 @@ public class VideoDownloader
 
         if (videoInfo.DownloadFormat == DownloadFormat.Webm)
         {
-            // process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" -f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec!=av01][vcodec!=vp9.2][protocol^=http]\" --remux-video mp4 {additionalArgs} -- \"{videoId}\"";
             var audioArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
                 ? "+ba[acodec=opus][ext=webm]"
                 : $"+(ba[acodec=opus][ext=webm][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[acodec=opus][ext=webm])";
             args.Add($"-o \"{tempDownloadWebmPath}\"");
-            args.Add($"-f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^av01'][ext=mp4][dynamic_range='SDR']{audioArg}/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='vp9'][ext=webm][dynamic_range='SDR']{audioArg}\"");
+            args.Add($"-f \"bv*[height<={maxRes}][vcodec~='^av01'][ext=mp4][dynamic_range='SDR']{audioArg}/bv*[height<={maxRes}][vcodec~='^vp9'][ext=webm][dynamic_range='SDR']{audioArg}\"");
         }
         else
         {
-            // Potato mode.
             var audioArgPotato = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
                 ? "+ba[ext=m4a]"
                 : $"+(ba[ext=m4a][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[ext=m4a])";
             args.Add($"-o \"{tempDownloadMp4Path}\"");
-            args.Add($"-f \"bv*[height<=1080][vcodec~='^(avc|h264)']{audioArgPotato}/bv*[height<=1080][vcodec~='^av01'][dynamic_range='SDR']\"");
+            args.Add($"-f \"bv*[height<={maxRes}][vcodec~='^(avc|h264)']{audioArgPotato}/bv*[height<={maxRes}][vcodec~='^av01'][dynamic_range='SDR']\"");
             args.Add("--remux-video mp4");
-            // $@"-f best/bestvideo[height<=?720]+bestaudio {url} " %(id)s.%(ext)s
         }
 
         process.StartInfo.Arguments = YtdlManager.GenerateYtdlArgs(args, $"-- \"{videoId}\"");
