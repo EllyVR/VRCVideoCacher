@@ -7,6 +7,7 @@ public enum RuleAction
     Direct,
     Cache,
     Redirect,
+    Rewrite,
     Block
 }
 
@@ -22,7 +23,7 @@ public class UriRule
     public int? MaxResolution { get; set; } // e.g. 1080
     public int? MaxDurationMinutes { get; set; } // e.g. 120
 
-    // Redirect action option
+    // Redirect / Rewrite action option
     public string RedirectTarget { get; set; } = string.Empty;
 
     public UriRule Clone()
@@ -61,6 +62,11 @@ public class UriRule
                 return string.IsNullOrWhiteSpace(RedirectTarget)
                     ? "Redirect"
                     : $"Redirect to {RedirectTarget}";
+
+            case RuleAction.Rewrite:
+                return string.IsNullOrWhiteSpace(RedirectTarget)
+                    ? "Rewrite"
+                    : $"Rewrite to {RedirectTarget}";
 
             case RuleAction.Block:
                 return "Block";

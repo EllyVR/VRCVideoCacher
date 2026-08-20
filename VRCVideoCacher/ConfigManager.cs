@@ -288,6 +288,22 @@ public class ConfigModel
             },
             new UriRule
             {
+                Name = "Dropbox Share Rewrite",
+                Pattern = @"^https?:\/\/(?:[a-zA-Z0-9-]+\.)*dropbox\.com\/(.*?)(?:\?dl=0)?$",
+                Action = RuleAction.Rewrite,
+                RedirectTarget = "https://www.dropbox.com/$1?dl=1",
+                Enabled = true
+            },
+            new UriRule
+            {
+                Name = "Google Drive File Rewrite",
+                Pattern = @"^https?:\/\/drive\.google\.com\/file\/d\/([^\/]+)(?:\/.*)?$",
+                Action = RuleAction.Rewrite,
+                RedirectTarget = "https://drive.google.com/uc?export=download&id=$1",
+                Enabled = true
+            },
+            new UriRule
+            {
                 Name = "MightyGym CDN Direct",
                 Pattern = @"^https?:\/\/(?:[a-zA-Z0-9-]+\.)*mightygymcdn\.nyc3\.cdn\.digitaloceanspaces\.com(?:[\/?#]|$)",
                 Action = RuleAction.Direct,

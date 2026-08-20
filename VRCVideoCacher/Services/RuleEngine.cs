@@ -55,6 +55,13 @@ public static class RuleEngine
 
                 switch (rule.Action)
                 {
+                    case RuleAction.Rewrite:
+                        var expandedRewrite = ExpandTemplate(rule.RedirectTarget, currentUrl, match);
+                        Log.Information("Rule '{RuleName}' rewritten URL: '{Original}' -> '{Rewritten}'", rule.Name, currentUrl, expandedRewrite);
+                        currentUrl = expandedRewrite;
+                        // Continue loop so lower rules evaluate against the rewritten URL
+                        break;
+
                     case RuleAction.Redirect:
                         var expandedRedirect = ExpandTemplate(rule.RedirectTarget, currentUrl, match);
                         Log.Information("Rule redirect expanded: '{Target}'", expandedRedirect);
@@ -66,6 +73,7 @@ public static class RuleEngine
                     case RuleAction.Cache:
                     case RuleAction.Direct:
                     default:
+                        result.FinalUrl = currentUrl;
                         return result;
                 }
             }

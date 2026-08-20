@@ -42,13 +42,14 @@ public partial class EditRuleViewModel : ObservableObject
         RuleAction.Direct,
         RuleAction.Cache,
         RuleAction.Redirect,
+        RuleAction.Rewrite,
         RuleAction.Block
     ];
 
     public int[] ResolutionOptions { get; } = [0, 720, 1080, 1440, 2160];
 
     public bool IsCacheAction => SelectedAction == RuleAction.Cache;
-    public bool IsRedirectAction => SelectedAction == RuleAction.Redirect;
+    public bool IsRedirectAction => SelectedAction == RuleAction.Redirect || SelectedAction == RuleAction.Rewrite;
 
     public UriRule RuleResult { get; private set; }
 
