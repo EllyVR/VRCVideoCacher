@@ -193,7 +193,7 @@ public class FileTools
         if (ConfigManager.Config.PatchVrChat)
         {
             if (!BackupAndReplaceYtdl(YtdlPathVrc, BackupPathVrc))
-                Log.Warning("Can't find VRC data or yt-dlp is locked/unmodifiable at {Path}", YtdlPathVrc);
+                Log.Warning("Can't find VRC data, it may not be installed. {Path}", YtdlPathVrc);
         }
         if (ConfigManager.Config.PatchResonite)
         {
