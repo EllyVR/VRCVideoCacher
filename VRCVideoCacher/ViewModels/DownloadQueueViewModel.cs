@@ -122,14 +122,39 @@ public partial class DownloadQueueViewModel : ViewModelBase
             return;
         }
 
+        var inputUrl = ManualUrl.Trim();
+        ManualUrl = string.Empty;
+
         try
         {
-            var videoInfo = await VideoId.GetVideoId(ManualUrl, true);
+            // Check if input URL is a playlist link (e.g. contains "list=" or "/playlist")
+            if (inputUrl.Contains("list=", StringComparison.OrdinalIgnoreCase) || inputUrl.Contains("/playlist", StringComparison.OrdinalIgnoreCase))
+            {
+                StatusMessage = "Fetching playlist items...";
+                var playlistUrls = await VideoId.ExtractPlaylistUrls(inputUrl);
+
+                if (playlistUrls.Count > 0)
+                {
+                    int addedCount = 0;
+                    foreach (var videoUrl in playlistUrls)
+                    {
+                        var info = await VideoId.GetVideoId(videoUrl, true);
+                        if (info != null)
+                        {
+                            VideoDownloader.QueueDownload(info);
+                            addedCount++;
+                        }
+                    }
+                    StatusMessage = $"Added {addedCount} playlist video(s) to queue";
+                    return;
+                }
+            }
+
+            var videoInfo = await VideoId.GetVideoId(inputUrl, true);
             if (videoInfo != null)
             {
                 VideoDownloader.QueueDownload(videoInfo);
                 StatusMessage = $"Added to queue: {videoInfo.VideoId}";
-                ManualUrl = string.Empty;
             }
             else
             {
@@ -138,7 +163,7 @@ public partial class DownloadQueueViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex}";
+            StatusMessage = $"Error: {ex.Message}";
         }
     }
 

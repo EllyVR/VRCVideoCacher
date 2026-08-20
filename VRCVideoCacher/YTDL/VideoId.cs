@@ -171,4 +171,28 @@ public class VideoId
         }
         return new Tuple<string, bool>(error, false);
     }
+
+    public static async Task<List<string>> ExtractPlaylistUrls(string url)
+    {
+        var args = new List<string>
+        {
+            "--flat-playlist",
+            "--print",
+            "webpage_url"
+        };
+
+        var (output, error, exitCode) = await RunYtdlpAsync(args, url);
+        if (exitCode != 0 || string.IsNullOrWhiteSpace(output))
+        {
+            Log.Warning("Failed to extract playlist URLs: {Error}", error);
+            return [];
+        }
+
+        var urls = output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(u => u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            .Distinct()
+            .ToList();
+
+        return urls;
+    }
 }
