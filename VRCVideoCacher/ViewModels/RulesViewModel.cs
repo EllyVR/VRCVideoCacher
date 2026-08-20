@@ -264,7 +264,8 @@ public partial class RulesViewModel : ViewModelBase
         var index = Rules.IndexOf(entry);
         if (index > 0)
         {
-            Rules.Move(index, index - 1);
+            Rules.RemoveAt(index);
+            Rules.Insert(index - 1, entry);
             EvaluateTestUrl();
             SetHasChanges();
         }
@@ -277,7 +278,8 @@ public partial class RulesViewModel : ViewModelBase
         var index = Rules.IndexOf(entry);
         if (index >= 0 && index < Rules.Count - 1)
         {
-            Rules.Move(index, index + 1);
+            Rules.RemoveAt(index);
+            Rules.Insert(index + 1, entry);
             EvaluateTestUrl();
             SetHasChanges();
         }
