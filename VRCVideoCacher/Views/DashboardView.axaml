@@ -143,6 +143,24 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+
+                <!-- Video Players Control Card -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="220">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Video" Width="24" Height="24" Foreground="#81C784"/>
+                            <TextBlock Text="Video Players" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+
+                        <Button Command="{Binding ToggleVideoPlayersCommand}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0">
+                            <Panel>
+                                <TextBlock Text="Disable Videoplayers" IsVisible="{Binding VideoPlayersEnabled}" FontWeight="Bold"/>
+                                <TextBlock Text="Enable Videoplayers" IsVisible="{Binding !VideoPlayersEnabled}" FontWeight="Bold"/>
+                            </Panel>
+                        </Button>
+                    </StackPanel>
+                </Border>
             </WrapPanel>
 
             <!-- Quick Actions -->

@@ -76,6 +76,13 @@ public class ApiController : WebApiController
 
         Log.Information("Request URL: {URL}", requestUrl);
 
+        if (!ConfigManager.Config.VideoPlayersEnabled)
+        {
+            Log.Warning("Video players are disabled via toggle. Blocking request: {URL}", requestUrl);
+            await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
         // Evaluate request URL against configured URI rules engine
         var evalResult = RuleEngine.EvaluateUrl(requestUrl);
 

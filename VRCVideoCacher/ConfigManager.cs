@@ -256,6 +256,7 @@ public class ConfigModel
 
     // Video Cacher
     public bool AutoUpdateVrcVideoCacher = true;
+    public bool VideoPlayersEnabled = true;
     public bool CloseToTray = true;
     public bool StartMinimized = false;
     public bool StartWithSteamVr = true;
@@ -284,6 +285,27 @@ public class ConfigModel
                 Action = RuleAction.Redirect,
                 RedirectTarget = "https://youtube.com/watch?v=$1",
                 Enabled = false
+            },
+            new UriRule
+            {
+                Name = "MightyGym CDN Direct",
+                Pattern = @"^https?:\/\/(?:[a-zA-Z0-9-]+\.)*mightygymcdn\.nyc3\.cdn\.digitaloceanspaces\.com(?:[\/?#]|$)",
+                Action = RuleAction.Direct,
+                Enabled = true
+            },
+            new UriRule
+            {
+                Name = "Illumination Media Direct",
+                Pattern = @"^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:imvrcdn\.com|illumination\.media)(?:[\/?#]|$)",
+                Action = RuleAction.Direct,
+                Enabled = true
+            },
+            new UriRule
+            {
+                Name = "Virtual Film Institute Direct",
+                Pattern = @"^https?:\/\/(?:[a-zA-Z0-9-]+\.)*virtualfilm\.institute(?:[\/?#]|$)",
+                Action = RuleAction.Direct,
+                Enabled = true
             },
             new UriRule
             {
