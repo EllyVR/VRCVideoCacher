@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:VRCVideoCacher.ViewModels"
-             xmlns:mi="using:Material.Icons.Avalonia"
-             xmlns:l="using:Jeek.Avalonia.Localization"
-             x:Class="VRCVideoCacher.Views.RulesView"
-             x:DataType="vm:RulesViewModel">
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:vm="using:VRCVideoCacher.ViewModels"
+              xmlns:mi="using:Material.Icons.Avalonia"
+              xmlns:l="using:Jeek.Avalonia.Localization"
+              x:Class="VRCVideoCacher.Views.RulesView"
+              x:DataType="vm:RulesViewModel">
 
     <Grid RowDefinitions="Auto, *">
         <!-- Header & Action Buttons -->
@@ -46,10 +46,25 @@
 
         <!-- Rules DataGrid / Table -->
         <Border Grid.Row="1" Background="#2d2d2d" CornerRadius="8" Margin="10" Padding="10">
-            <DataGrid ItemsSource="{Binding Rules}" AutoGenerateColumns="False" CanUserResizeColumns="True" GridLinesVisibility="Horizontal">
+            <DataGrid ItemsSource="{Binding Rules}" AutoGenerateColumns="False" CanUserResizeColumns="True" GridLinesVisibility="Horizontal" SelectionMode="Single">
                 <DataGrid.Styles>
                     <Style Selector="DataGridRow" x:DataType="vm:RuleEntryViewModel">
                         <Setter Property="Background" Value="{Binding RowBackground}"/>
+                    </Style>
+                    <Style Selector="DataGridRow:selected" x:DataType="vm:RuleEntryViewModel">
+                        <Setter Property="Background" Value="{Binding RowBackground}"/>
+                    </Style>
+                    <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                    <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                    <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                    <Style Selector="DataGridCell:focus /template/ Rectangle#FocusVisual">
+                        <Setter Property="IsVisible" Value="False"/>
                     </Style>
                 </DataGrid.Styles>
                 <DataGrid.Columns>
