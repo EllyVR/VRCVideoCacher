@@ -118,6 +118,42 @@
                                    FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
                     </StackPanel>
                 </Border>
+
+                <!-- yt-dlp Status -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Application" Width="24" Height="24" Foreground="#4FC3F7"/>
+                            <TextBlock Text="yt-dlp" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding YtdlpStatus}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Deno Status -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="CodeBraces" Width="24" Height="24" Foreground="#AED581"/>
+                            <TextBlock Text="Deno" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding DenoStatus}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- FFmpeg Status -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20" Margin="0,0,15,15" MinWidth="200">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <mi:MaterialIcon Kind="Video" Width="24" Height="24" Foreground="#FF8A65"/>
+                            <TextBlock Text="FFmpeg" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding FfmpegStatus}"
+                                   FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
             </WrapPanel>
 
             <!-- Quick Actions -->
