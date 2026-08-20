@@ -2,6 +2,7 @@
 **/bin/
 **/obj/
 Build/
+output_steam_linux/
 publish/
 
 # IDE

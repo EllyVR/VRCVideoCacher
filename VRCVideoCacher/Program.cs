@@ -244,12 +244,16 @@ internal sealed class Program
     public static async Task<bool?> ValidateCookiesAsync()
     {
         if (!IsCookiesEnabledAndValid())
+        {
+            Logger.Information("[Cookie Validation] IsCookiesEnabledAndValid returned false.");
             return null;
+        }
 
         try
         {
             var cookieContainer = new CookieContainer();
             var lines = await File.ReadAllLinesAsync(YtdlManager.CookiesPath);
+            int addedCount = 0;
             foreach (var line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
@@ -261,19 +265,22 @@ internal sealed class Program
 
                 try
                 {
-                    var domain = parts[0];
+                    var domain = parts[0].TrimStart('.');
                     var path = parts[2];
                     var secure = parts[3].Equals("TRUE", StringComparison.OrdinalIgnoreCase);
                     var name = parts[5];
                     var value = parts[6];
 
                     cookieContainer.Add(new Cookie(name, value, path, domain) { Secure = secure });
+                    addedCount++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Skip malformed cookie lines
+                    Logger.Debug("[Cookie Validation] Failed to parse cookie line: {Error}", ex.Message);
                 }
             }
+
+            Logger.Information("[Cookie Validation] Loaded {Count} cookies into CookieContainer.", addedCount);
 
             using var handler = new HttpClientHandler();
             handler.AllowAutoRedirect = false;
@@ -284,11 +291,12 @@ internal sealed class Program
 
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             using var response = await client.GetAsync("https://www.youtube.com/new", cts.Token);
-            return response.StatusCode == HttpStatusCode.OK;
+            Logger.Information("[Cookie Validation] GET https://www.youtube.com/new returned HTTP status: {StatusCode}", response.StatusCode);
+            return response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Found || ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400);
         }
         catch (Exception ex)
         {
-            Logger.Warning("Failed to validate cookies online: {Error}", ex.ToString());
+            Logger.Warning("[Cookie Validation] Failed to validate cookies online: {Error}", ex.ToString());
             return null;
         }
     }

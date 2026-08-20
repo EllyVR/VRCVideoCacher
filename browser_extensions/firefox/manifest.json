@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "VRCVideoCacher Cookies Exporter",
+  "description": "Exports cookies to VRCVideoCacher",
+  "version": "2.0.1",
+  "permissions": [
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "http://127.0.0.1:9696/*"
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAobjMvNXsxBKW+2oSQ63E/D/37awxzuZiJpsp9G+0MT0MfTMNcYH7OfA1QK7CBAMR9O/ZocruPCN9KhBivBcSI+9swR7H0/kZRIAhfC7X7qRXWB3gWQJXueRo72BA6np7btjCb/PUt3xDu7Q1N/36ERn1d/brCyoj6c3lh3aqEDA2+VljjM1VcClJEmRZjx1MCV9M+pfCyTWbCXKUugHw2GKKfxsqlozMt+w/fcipK2OxeRU3/llVff3Q6coQ6XuDc7b0t0SwA/l43U/l0b2+s65zbTzfw7CwkPbTtRuduej18GDUa4Cr5MHHLcZB3eJRaVvyvFklRL2c5tsUkUdlyQIDAQAB",
+  "author": "clienthax@gmail.com",
+  "minimum_chrome_version": "88",
+  "background": {
+    "service_worker": "background.mjs",
+    "scripts": [
+      "background.mjs"
+    ],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "vrcvideocacher@clienthax.com",
+      "strict_min_version": "138.0"
+    }
+  }
+}
