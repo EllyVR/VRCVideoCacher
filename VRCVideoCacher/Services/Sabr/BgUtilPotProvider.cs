@@ -34,17 +34,17 @@ internal static class BgUtilPotProvider
     private static readonly ILogger Log = Program.Logger.ForContext(typeof(BgUtilPotProvider));
 
     private const string LatestReleaseApiUrl =
-        "https://api.github.com/repos/Brainicism/bgutil-ytdlp-pot-provider/releases/latest";
+        "https://api.github.com/repos/clienthax/bgutil-ytdlp-pot-provider/releases/latest";
 
     /// <summary>
     /// Last resort only: the tag to install if the release check can't reach GitHub AND nothing is
     /// installed yet. Normal operation tracks the latest release (the plugin is coupled to yt-dlp's PO
     /// token API, and our yt-dlp auto-updates, so a stale plugin is the bigger risk).
     /// </summary>
-    private const string FallbackTag = "1.3.1";
+    private const string FallbackTag = "1.3.2";
 
     private static string SourceTarballUrl(string tag) =>
-        $"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{tag}.tar.gz";
+        $"https://github.com/clienthax/bgutil-ytdlp-pot-provider/archive/refs/tags/{tag}.tar.gz";
 
     private static readonly HttpClient HttpClient = new()
     {
