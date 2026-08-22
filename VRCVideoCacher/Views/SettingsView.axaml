@@ -94,6 +94,23 @@
                     </StackPanel>
                 </Border>
 
+                <!-- YouTube SABR Options -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="{l:Localize YouTubeSabrOptions}" FontWeight="SemiBold" FontSize="16"/>
+
+                        <CheckBox IsChecked="{Binding SabrFilterDrcAudio}"
+                                  Content="{l:Localize SabrFilterDrcAudio}"
+                                  ToolTip.Tip="{l:Localize SabrFilterDrcAudioTooltip}"/>
+                        <CheckBox IsChecked="{Binding SabrFilterSuperResolution}"
+                                  Content="{l:Localize SabrFilterSuperResolution}"
+                                  ToolTip.Tip="{l:Localize SabrFilterSuperResolutionTooltip}"/>
+                        <CheckBox IsChecked="{Binding SabrFilterVoiceBoostedAudio}"
+                                  Content="{l:Localize SabrFilterVoiceBoostedAudio}"
+                                  ToolTip.Tip="{l:Localize SabrFilterVoiceBoostedAudioTooltip}"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Cache Settings -->
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
