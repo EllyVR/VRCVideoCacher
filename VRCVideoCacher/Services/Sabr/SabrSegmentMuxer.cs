@@ -122,10 +122,14 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
     public async Task MuxCompleteAsync(string videoTrackPath, string audioTrackPath, string outputPath,
         CancellationToken ct = default)
     {
+        // -f mp4 is NOT optional: the caller writes to a "<id>.mp4.part" temp path, and ffmpeg picks the
+        // muxer from the file EXTENSION — ".part" is unknown, so without an explicit format it fails with
+        // "Unable to choose an output format", the whole cache-convergence write dies, and the video is
+        // re-downloaded from scratch instead of being written once from the fragments we already have.
         // +faststart puts the moov up front so the file is seekable from the first byte over HTTP.
         await RunFfmpegAsync(
             $"-y -loglevel error -i \"{videoTrackPath}\" -i \"{audioTrackPath}\" " +
-            $"-map 0:v:0 -map 1:a:0 -c copy -movflags +faststart \"{outputPath}\"", ct);
+            $"-map 0:v:0 -map 1:a:0 -c copy -movflags +faststart -f mp4 \"{outputPath}\"", ct);
     }
 
     private static async Task WriteConcatenatedAsync(string path, byte[] init, IReadOnlyList<byte[]> fragments,
@@ -305,7 +309,11 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
         await process.WaitForExitAsync(ct);
 
         if (process.ExitCode != 0)
+        {
+            log.Debug($"[sabr-mux] {process.StartInfo.FileName} {process.StartInfo.Arguments}");
             throw new SabrException($"ffmpeg failed muxing a segment: {stderr.Trim()}");
+        }
+
         if (!string.IsNullOrWhiteSpace(stderr))
             log.Debug("[sabr-mux] {Error}", stderr.Trim());
     }
