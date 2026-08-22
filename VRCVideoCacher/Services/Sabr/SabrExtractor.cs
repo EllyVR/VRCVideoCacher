@@ -146,6 +146,13 @@ internal static class SabrExtractor
 
         audio = PickAudioLanguage(audio);
 
+        // Drop AI-modified variants if asked — but each filter keeps its variant when it's the only
+        // option left, so the video still plays rather than falling back to a dub or nothing.
+        if (ConfigManager.Config.SabrFilterDrcAudio)
+            audio = FilterKeepingSome(audio, IsDrc);
+        if (ConfigManager.Config.SabrFilterVoiceBoostedAudio)
+            audio = FilterKeepingSome(audio, IsVoiceBoosted);
+
         var aac = audio.Where(f => IsAac(f)).MaxBy(Bitrate);
         if (fmp4Only)
             return aac;
@@ -218,16 +225,47 @@ internal static class SabrExtractor
     /// well, and HDR is also the higher-bitrate variant, so ordering purely on bitrate would silently
     /// pick it (which is exactly the bug that made 4K videos fail).
     /// </summary>
-    private static JToken? PickVideo(List<JToken> formats, int maxHeight, bool fmp4Only) =>
-        formats
+    private static JToken? PickVideo(List<JToken> formats, int maxHeight, bool fmp4Only)
+    {
+        var candidates = formats
             .Where(f => f["vcodec"]?.Value<string>() is { } v && v != "none")
             .Where(f => !fmp4Only || IsH264(f)) // VP9/AV1 are WebM-only; HLS can't carry them natively
             .Where(f => (f["height"]?.Value<int>() ?? 0) <= maxHeight)
+            .ToList();
+
+        // Drop AI "super resolution" (upscaled) variants, keeping them only if nothing else is left.
+        if (ConfigManager.Config.SabrFilterSuperResolution)
+            candidates = FilterKeepingSome(candidates, IsSuperResolution);
+
+        return candidates
             .OrderByDescending(f => f["height"]?.Value<int>() ?? 0)
             .ThenBy(f => IsHdr(f) ? 1 : 0)
             .ThenBy(CodecRank)
             .ThenByDescending(Bitrate)
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Removes the formats matching <paramref name="unwanted"/> — unless that would remove them all, in
+    /// which case the list is returned untouched. A filtered-out variant is always better than no format.
+    /// </summary>
+    private static List<JToken> FilterKeepingSome(List<JToken> formats, Func<JToken, bool> unwanted)
+    {
+        var kept = formats.Where(f => !unwanted(f)).ToList();
+        return kept.Count > 0 ? kept : formats;
+    }
+
+    /// <summary>DRC (volume-normalised) audio — yt-dlp joins a "-drc" suffix onto the format id.</summary>
+    private static bool IsDrc(JToken format) =>
+        format["format_id"]?.Value<string>()?.EndsWith("-drc", StringComparison.Ordinal) == true;
+
+    /// <summary>AI "voice boosted" audio — yt-dlp joins a "-vb" suffix onto the format id.</summary>
+    private static bool IsVoiceBoosted(JToken format) =>
+        format["format_id"]?.Value<string>()?.EndsWith("-vb", StringComparison.Ordinal) == true;
+
+    /// <summary>AI "super resolution" (upscaled) video — yt-dlp joins a "-sr" suffix onto the format id.</summary>
+    private static bool IsSuperResolution(JToken format) =>
+        format["format_id"]?.Value<string>()?.EndsWith("-sr", StringComparison.Ordinal) == true;
 
     private static bool IsHdr(JToken format) =>
         format["dynamic_range"]?.Value<string>() is { } range
