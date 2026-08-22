@@ -162,6 +162,15 @@ public class ConfigModel
     // 127.0.0.1 and the client falls through to whichever the server is actually on (IPv6 here, or IPv4
     // when the server had to fall back to 0.0.0.0 on IPv6-less machines).
     public string SabrPotBaseUrl = "http://localhost:4416";
+    // Filter out YouTube's DRC (volume-normalised) audio tracks when picking SABR audio. yt-dlp tags
+    // these with a "-drc" format-id suffix. Off by default (they play fine); a preference, not a fix.
+    public bool SabrFilterDrcAudio = false;
+    // Filter out YouTube's AI "super resolution" (upscaled) video tracks when picking SABR video. yt-dlp
+    // tags these with a "-sr" format-id suffix and an "AI-upscaled" note. Off by default.
+    public bool SabrFilterSuperResolution = false;
+    // Filter out YouTube's AI "voice boosted" audio tracks when picking SABR audio. yt-dlp tags these
+    // with a "-vb" format-id suffix and an "AI-voice boosted" note. Off by default.
+    public bool SabrFilterVoiceBoostedAudio = false;
 
     // Caching
     public string CachedAssetPath = "";
