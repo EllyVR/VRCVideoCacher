@@ -131,7 +131,7 @@ public class ApiController : WebApiController
         if (source == "resonite")
         {
             Log.Information("Request sent from resonite sending json.");
-            await HttpContext.SendStringAsync(await VideoId.GetURLResonite(videoInfo.VideoUrl), "text/plain", Encoding.UTF8);
+            await HttpContext.SendStringAsync(await VideoId.GetURLResonite(videoInfo), "text/plain", Encoding.UTF8);
             return;
         }
 
@@ -149,6 +149,15 @@ public class ApiController : WebApiController
         {
             Log.Information("Failed to get Video ID: Bypassing.");
             await HttpContext.SendStringAsync(string.Empty, "text/plain", Encoding.UTF8);
+            return;
+        }
+
+        // A player that loops on a deleted video would otherwise make us re-run yt-dlp against YouTube on
+        // every request, which is exactly what gets us bot-checked. If we already learned the video is
+        // gone, refuse it here — before any YouTube contact — with a 403 so the player stops asking.
+        if (videoInfo.UrlType == UrlType.YouTube && UnavailableVideoCache.IsUnavailable(videoInfo.VideoId))
+        {
+            await RespondVideoUnavailable(videoInfo.VideoId);
             return;
         }
 
@@ -178,6 +187,14 @@ public class ApiController : WebApiController
                 return;
             }
             Log.Warning("Forced SABR restream failed; falling back to normal resolution.");
+
+            // The SABR extract may have just learned the video is gone (deleted/private). If so, don't
+            // fall through to another yt-dlp call for the same dead video — refuse it now.
+            if (UnavailableVideoCache.IsUnavailable(videoInfo.VideoId))
+            {
+                await RespondVideoUnavailable(videoInfo.VideoId);
+                return;
+            }
         }
 
         var (response, success) = await VideoId.GetUrl(videoInfo, avPro);
@@ -187,6 +204,15 @@ public class ApiController : WebApiController
             // only send the error back if it's for YouTube, otherwise let it play the request URL normally
             if (videoInfo.UrlType == UrlType.YouTube)
             {
+                // A genuinely gone video fails identically on every retry — and through SABR too — so
+                // record it and stop, sparing both the SABR rescue below and the player's next request.
+                if (UnavailableVideoCache.IsUnavailabilityError(response))
+                {
+                    UnavailableVideoCache.Mark(videoInfo.VideoId);
+                    await RespondVideoUnavailable(videoInfo.VideoId);
+                    return;
+                }
+
                 // SABR-only videos have no playable direct URL; try to restream them live to AVPro.
                 var restreamUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
                 if (!string.IsNullOrEmpty(restreamUrl))
@@ -237,6 +263,18 @@ public class ApiController : WebApiController
         {
             VideoDownloader.QueueDownload(videoInfo);
         }
+    }
+
+    /// <summary>
+    /// Refuses a known-unavailable video with 403. A 4xx tells the player this is a permanent "won't
+    /// serve", so a well-behaved one stops retrying — unlike the 500 a real error returns, which invites
+    /// the retry loop that gets us bot-checked. Either way we no longer touch YouTube for it.
+    /// </summary>
+    private async Task RespondVideoUnavailable(string videoId)
+    {
+        Log.Information("Refusing known-unavailable video {VideoId} without contacting YouTube.", videoId);
+        HttpContext.Response.StatusCode = 403;
+        await HttpContext.SendStringAsync("Video unavailable.", "text/plain", Encoding.UTF8);
     }
 
     private static (bool isCached, string filePath, string fileName) GetCachedFile(string videoId, bool avPro)

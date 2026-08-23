@@ -142,7 +142,19 @@ public static class SabrRestreamService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to start SABR HLS session for {VideoId}", videoId);
+            // A video YouTube reports as gone (deleted/private/removed) is an expected outcome, not a
+            // fault — remember it so the caller can refuse the next request without another YouTube hit,
+            // and log it quietly. Firing Log.Error here would pop an error dialog for a perfectly normal
+            // "that video doesn't exist". Genuine failures (PO token, no formats, muxer) still error out.
+            if (UnavailableVideoCache.IsUnavailabilityError(ex.Message))
+            {
+                UnavailableVideoCache.Mark(videoId);
+                Log.Information("SABR: YouTube video {VideoId} is unavailable; not restreaming it", videoId);
+            }
+            else
+            {
+                Log.Error(ex, "Failed to start SABR HLS session for {VideoId}", videoId);
+            }
             return null;
         }
         finally

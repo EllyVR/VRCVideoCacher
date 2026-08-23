@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using Serilog;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.YTDL;
@@ -116,6 +117,15 @@ public class VideoDownloader
     private static async Task<bool> DownloadYouTubeVideo(VideoInfo videoInfo)
     {
         var url = videoInfo.VideoUrl;
+
+        // Don't run yt-dlp against a video we already know is gone — both to spare the download the two
+        // YouTube hits below (id lookup + download) and to avoid the failure spam that gets us bot-checked.
+        if (UnavailableVideoCache.IsUnavailable(videoInfo.VideoId))
+        {
+            Log.Information("Skipping download of known-unavailable YouTube video {VideoId}", videoInfo.VideoId);
+            return false;
+        }
+
         string? videoId;
         try
         {
