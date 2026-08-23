@@ -5,6 +5,7 @@ using Serilog;
 using VRCVideoCacher.Database;
 using VRCVideoCacher.Database.Models;
 using VRCVideoCacher.Models;
+using VRCVideoCacher.Services;
 using VRCVideoCacher.YTDL.SiteHandlers;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -121,8 +122,14 @@ public class VideoId
         return data.Id;
     }
 
-    public static async Task<string> GetURLResonite(string url)
+    public static async Task<string> GetURLResonite(VideoInfo videoInfo)
     {
+        // Don't hit YouTube for a video we already know is gone — a looping player would otherwise get us
+        // bot-checked. Resonite treats an empty response as "no video", which is what we want here.
+        if (videoInfo.UrlType == UrlType.YouTube && UnavailableVideoCache.IsUnavailable(videoInfo.VideoId))
+            return string.Empty;
+
+        var url = videoInfo.VideoUrl;
         var args = new List<string>();
         if (!string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage))
             args.Add($"-f \"[language={ConfigManager.Config.YtdlpDubLanguage}]\"");
@@ -136,7 +143,10 @@ public class VideoId
         var (output, error, exitCode) = await RunYtdlpAsync(args, url);
         if (exitCode != 0)
         {
-            if (error.Contains("Sign in to confirm you’re not a bot")) // Exact Text, do not modify.
+            // Remember a gone video so the next request short-circuits before touching YouTube.
+            if (videoInfo.UrlType == UrlType.YouTube && UnavailableVideoCache.IsUnavailabilityError(error))
+                UnavailableVideoCache.Mark(videoInfo.VideoId);
+            else if (error.Contains("Sign in to confirm you’re not a bot")) // Exact Text, do not modify.
                 Log.Error("Fix this error by running cookie setup.");
 
             return string.Empty;
