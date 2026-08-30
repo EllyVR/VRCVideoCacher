@@ -51,6 +51,7 @@
   "SabrFilterSuperResolutionTooltip": "Skip YouTube's AI-upscaled ('super resolution') video variants and use the original video instead.",
   "SabrFilterVoiceBoostedAudio": "Filter AI voice-boosted audio",
   "SabrFilterVoiceBoostedAudioTooltip": "Skip YouTube's AI 'voice boosted' audio variants. A voice-boosted track is still used if it is the only one available for the chosen language.",
+  "SabrAdditionalArgs": "Additional SABR yt-dlp Arguments",
   "CacheSettings": "Cache Settings",
   "CachePathLabel": "Cache Path (leave empty for default)",
   "MaxCacheSizeLabel": "Max Cache Size in GB (0 = unlimited)",

@@ -51,6 +51,7 @@
   "SabrFilterSuperResolutionTooltip": "YouTube の AI アップスケール（「超解像」）映像を除外し、代わりに元の映像を使用します。",
   "SabrFilterVoiceBoostedAudio": "AI 音声強調（ボイスブースト）音声を除外",
   "SabrFilterVoiceBoostedAudioTooltip": "YouTube の AI「音声強調」音声を除外します。選択した言語で他に選択肢がない場合のみ音声強調トラックを使用します。",
+  "SabrAdditionalArgs": "追加の SABR yt-dlp 引数",
   "CacheSettings": "キャッシュの設定",
   "CachePathLabel": "キャッシュのパス (空白で既定を使用)",
   "MaxCacheSizeLabel": "キャッシュの最大サイズ (GB 単位、0 = 無制限)",

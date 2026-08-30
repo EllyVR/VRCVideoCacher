@@ -153,7 +153,7 @@ public class ConfigModel
     // costs disk and start-up latency and buys rewind that VRChat cannot use anyway (AVPro will not
     // scrub a playlist without EXT-X-ENDLIST, which a live playlist must never carry).
     public int SabrLiveWindowSegments = 6;
-    // Base URL of the bgutil PO token provider. SABR uses the web client, which requires a GVS PO token;
+    // Base URL of the bgutil PO token provider. SABR uses the web client, which requires a GVS PO token for non premium accounts;
     // the token comes from this provider (auto-managed on our Deno at the default localhost port). A
     // non-loopback URL points at an externally-run provider and skips auto-management.
     //
@@ -175,6 +175,10 @@ public class ConfigModel
     // decode check. Lets the AAC fallback path be exercised on a machine that CAN play Opus. Off by
     // default (the check picks the codec automatically).
     public bool SabrForceAacAudio = false;
+    // Extra yt-dlp arguments appended to the SABR extraction run only (the -J link-extraction). Separate
+    // from YtdlpAdditionalArgs, which applies to the non-SABR/fallback path — the SABR extraction is a
+    // different command (web client, plugin dirs, PO token) so its overrides belong here.
+    public string SabrAdditionalArgs = string.Empty;
 
     // Caching
     public string CachedAssetPath = "";

@@ -51,6 +51,7 @@
   "SabrFilterSuperResolutionTooltip": "Ignora as variantes de vídeo ampliadas por IA (\"super-resolução\") do YouTube e usa o vídeo original.",
   "SabrFilterVoiceBoostedAudio": "Filtrar áudio com voz aprimorada por IA",
   "SabrFilterVoiceBoostedAudioTooltip": "Ignora as variantes de áudio com \"voz aprimorada\" por IA do YouTube. Uma faixa com voz aprimorada ainda é usada se for a única disponível para o idioma escolhido.",
+  "SabrAdditionalArgs": "Argumentos yt-dlp adicionais do SABR",
   "CacheSettings": "Preferências de cachê",
   "CachePathLabel": "Diretório do cachê (deixe em branco para padrão)",
   "MaxCacheSizeLabel": "Tamanho máximo de cachê em GB (0 = ilimitado)",
