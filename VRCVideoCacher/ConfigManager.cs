@@ -171,6 +171,10 @@ public class ConfigModel
     // Filter out YouTube's AI "voice boosted" audio tracks when picking SABR audio. yt-dlp tags these
     // with a "-vb" format-id suffix and an "AI-voice boosted" note. Off by default.
     public bool SabrFilterVoiceBoostedAudio = false;
+    // Testing/eval: force the SABR path to mux AAC audio instead of Opus, regardless of the Opus-in-MP4
+    // decode check. Lets the AAC fallback path be exercised on a machine that CAN play Opus. Off by
+    // default (the check picks the codec automatically).
+    public bool SabrForceAacAudio = false;
 
     // Caching
     public string CachedAssetPath = "";
