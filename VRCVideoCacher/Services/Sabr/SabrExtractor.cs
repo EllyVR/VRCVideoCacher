@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using VRCVideoCacher.Utils;
 using VRCVideoCacher.YTDL;
 
 namespace VRCVideoCacher.Services.Sabr;
@@ -143,8 +144,9 @@ internal static class SabrExtractor
     }
 
     /// <summary>
-    /// Opus by preference — the better codec — except in fMP4-only mode, where it isn't an option:
-    /// YouTube ships Opus exclusively in WebM, which HLS cannot carry as segments.
+    /// Opus by preference — the better codec — except in fMP4-only mode, where it isn't an option
+    /// (YouTube ships Opus exclusively in WebM, which HLS cannot carry as segments), and except when this
+    /// PC can't decode Opus-in-MP4 (<see cref="OpusMp4Check.PreferAacAudio"/>), where we mux AAC instead.
     ///
     /// Language is chosen BEFORE codec/bitrate (see <see cref="PickAudioLanguage"/>): YouTube auto-dubs
     /// a video into a dozen-plus languages that all share the original's itag, and the dubs frequently
@@ -168,6 +170,15 @@ internal static class SabrExtractor
 
         var aac = audio.Where(f => IsAac(f)).MaxBy(Bitrate);
         if (fmp4Only)
+            return aac;
+
+        // This PC can't decode Opus-in-MP4 (out-of-date/older Windows), so mux AAC instead — AVPro plays
+        // it fine now. Keep Opus only if the video has no AAC track at all (better than nothing). See
+        // OpusMp4Check. The IsWindows() guard is required: PreferAacAudio is a Windows-only signal.
+        // SabrForceAacAudio is the test override — exercise this path on a machine that CAN play Opus.
+        var preferAac = ConfigManager.Config.SabrForceAacAudio
+                        || (OperatingSystem.IsWindows() && OpusMp4Check.PreferAacAudio);
+        if (preferAac && aac is not null)
             return aac;
 
         return audio.Where(f => f["acodec"]!.Value<string>()!.StartsWith("opus", StringComparison.Ordinal))

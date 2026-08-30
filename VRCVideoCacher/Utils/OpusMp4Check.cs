@@ -33,27 +33,45 @@ internal static class OpusMp4Check
 
     private const string ProbeResourceName = "VRCVideoCacher.opus_probe.mp4";
 
+    // null until Run() has decided (and stays null if it could not be verified — non-Windows, or the
+    // probe failed to run). true/false is a positive decode result.
+    private static bool? _opusSupported;
+
+    /// <summary>
+    /// Whether the SABR path should mux <b>AAC</b> audio instead of Opus, because this PC cannot decode
+    /// Opus-in-MP4. Only true when we have <i>positively</i> determined Opus does not work — an
+    /// unverified result (probe failed, or non-Windows) leaves this false, so we never downgrade audio on
+    /// a guess. AVPro now plays AAC-in-MP4 fine, so this is a soft fallback, not a failure.
+    /// Callers must gate access on <see cref="OperatingSystem.IsWindows"/> (Run only executes on Windows).
+    /// </summary>
+    public static bool PreferAacAudio => _opusSupported == false;
+
     public static void Run()
     {
         try
         {
             if (Probe())
             {
+                _opusSupported = true;
                 Log.Debug("Opus-in-MP4 decode check passed");
                 return;
             }
+
+            _opusSupported = false;
         }
         catch (Exception ex)
         {
-            // A probe that cannot run is not proof of a broken machine — say so and move on rather
-            // than firing a scary popup at someone whose playback is fine.
-            Log.Warning(ex, "Could not verify Opus-in-MP4 support; skipping the check");
+            // A probe that cannot run is not proof of a broken machine — leave the result unknown and
+            // keep Opus rather than needlessly downgrading someone whose playback is fine.
+            Log.Warning(ex, "Could not verify Opus-in-MP4 support; keeping Opus audio");
             return;
         }
 
-        Log.Error("This PC cannot play Opus audio in MP4, so YouTube videos will FAIL TO LOAD in " +
-                  "VRChat. This is a Windows problem, not a VRCVideoCacher one. {Advice} " +
-                  "Windows Media Foundation file version: {Version}.",
+        // No longer a hard failure: AVPro plays AAC, and SabrExtractor falls back to it automatically, so
+        // playback still works — just with AAC audio. Warn (not Error) so this does NOT raise a popup.
+        Log.Warning("This PC cannot decode Opus audio in MP4, so SABR YouTube playback will use AAC audio " +
+                    "instead (slightly lower quality). This is a Windows limitation, not a VRCVideoCacher " +
+                    "one. {Advice} Windows Media Foundation file version: {Version}.",
             Advice(), Mp4SourceVersion() ?? "unknown");
     }
 
