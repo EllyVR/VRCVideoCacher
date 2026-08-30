@@ -46,6 +46,14 @@ internal static class SabrExtractor
     /// </summary>
     private static volatile bool _accountIsPremium;
 
+    /// <summary>
+    /// Whether the last extraction came back as a Premium session. The legacy (non-AVPro) path reads this
+    /// to decide whether to send a GVS PO token — Premium needs none, exactly as here. Only ever set true
+    /// by a SABR extraction, so a non-AVPro-only user (who never runs SABR) stays "not Premium" and keeps
+    /// sending the token, which is the safe default.
+    /// </summary>
+    internal static bool AccountIsPremium => _accountIsPremium;
+
     /// <param name="fmp4Only">
     /// Restrict to fMP4 tracks (H.264 + AAC). Required when the fragments are served to HLS directly:
     /// HLS cannot carry WebM segments, and YouTube only ships Opus and VP9/AV1 in WebM.
@@ -380,10 +388,8 @@ internal static class SabrExtractor
         // SabrPotBaseUrl default) resolves to both families and connects. See ConfigManager.
         // Skipped entirely for a Premium account, which needs no GVS PO token — so yt-dlp mints none.
         if (usePotProvider)
-        {
-            args.Append($"--plugin-dirs \"{BgUtilPotProvider.PluginSearchDir}\" ");
-            args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={BgUtilPotProvider.BaseUrl}\" ");
-        }
+            foreach (var potArg in BgUtilPotProvider.ExtractorArgs)
+                args.Append(potArg).Append(' ');
         if (!string.IsNullOrEmpty(cookiesPath) && File.Exists(cookiesPath))
             args.Append($"--cookies \"{cookiesPath}\" ");
         // Operator overrides for the SABR extraction specifically (separate from YtdlpAdditionalArgs,

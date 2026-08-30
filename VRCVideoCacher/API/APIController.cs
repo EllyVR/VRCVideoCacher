@@ -168,8 +168,10 @@ public class ApiController : WebApiController
             return;
         }
 
-        // Testing: force everything through the SABR restream path.
-        if (ConfigManager.Config.SabrRestreamForce && videoInfo.UrlType == UrlType.YouTube)
+        // Testing: force every AVPro YouTube request through the SABR restream path. SABR serves HLS,
+        // which only AVPro can play — the Unity built-in player (avpro=false) can't, so it must take the
+        // legacy direct-URL path below instead.
+        if (ConfigManager.Config.SabrRestreamForce && avPro && videoInfo.UrlType == UrlType.YouTube)
         {
             var forcedUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
             if (!string.IsNullOrEmpty(forcedUrl))
@@ -213,17 +215,22 @@ public class ApiController : WebApiController
                     return;
                 }
 
-                // SABR-only videos have no playable direct URL; try to restream them live to AVPro.
-                var restreamUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
-                if (!string.IsNullOrEmpty(restreamUrl))
+                // SABR-only videos have no playable direct URL; try to restream them live — but only for
+                // AVPro, since SABR serves HLS the Unity built-in player cannot play. A non-AVPro SABR-only
+                // video therefore has nothing to fall back to and simply fails (the 500 below).
+                if (avPro)
                 {
-                    Log.Information("Responding with SABR restream URL: {URL}", restreamUrl);
-                    await HttpContext.SendStringAsync(restreamUrl, "text/plain", Encoding.UTF8);
-                    // Still cache in the background so the next play is a direct cache hit — unless it
-                    // is a live broadcast, which can never be "fully" downloaded.
-                    if (ConfigManager.Config.CacheYouTube && !SabrRestreamService.IsLiveSession(videoInfo.VideoId))
-                        VideoDownloader.QueueDownload(videoInfo);
-                    return;
+                    var restreamUrl = await SabrRestreamService.TryGetRestreamUrlAsync(videoInfo);
+                    if (!string.IsNullOrEmpty(restreamUrl))
+                    {
+                        Log.Information("Responding with SABR restream URL: {URL}", restreamUrl);
+                        await HttpContext.SendStringAsync(restreamUrl, "text/plain", Encoding.UTF8);
+                        // Still cache in the background so the next play is a direct cache hit — unless it
+                        // is a live broadcast, which can never be "fully" downloaded.
+                        if (ConfigManager.Config.CacheYouTube && !SabrRestreamService.IsLiveSession(videoInfo.VideoId))
+                            VideoDownloader.QueueDownload(videoInfo);
+                        return;
+                    }
                 }
                 HttpContext.Response.StatusCode = 500;
                 await HttpContext.SendStringAsync(response, "text/plain", Encoding.UTF8);
