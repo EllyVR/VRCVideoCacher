@@ -39,6 +39,13 @@ internal static class SabrExtractor
     /// </summary>
     private static readonly TimeSpan PotProviderTimeout = TimeSpan.FromSeconds(45);
 
+    /// <summary>
+    /// Latched true once an extraction comes back as a Premium session (<see cref="IsPremiumStream"/>).
+    /// Premium web SABR needs no GVS PO token, so this makes every later extraction skip the bgutil
+    /// provider — no token minted, no wait on it. Reset if a Premium-assumed run yields no SABR formats.
+    /// </summary>
+    private static volatile bool _accountIsPremium;
+
     /// <param name="fmp4Only">
     /// Restrict to fMP4 tracks (H.264 + AAC). Required when the fragments are served to HLS directly:
     /// HLS cannot carry WebM segments, and YouTube only ships Opus and VP9/AV1 in WebM.
@@ -46,30 +53,40 @@ internal static class SabrExtractor
     public static async Task<SabrSource> ExtractAsync(string videoUrl, int maxHeight, string ytdlpPath,
         string? cookiesPath, ILogger log, CancellationToken ct = default, bool fmp4Only = false)
     {
-        // The web client's SABR formats require a GVS PO token; make sure the provider that mints it is up
-        // before we extract, so a missing token surfaces as a clean failure here rather than a mid-stream
-        // attestation stall.
-        if (!await BgUtilPotProvider.WaitReadyAsync(PotProviderTimeout, ct))
+        // A Premium account is served ad-free web SABR and, per yt-dlp's not_required_for_premium, needs
+        // NO GVS PO token — so once we know the account is Premium we stop minting one (and stop waiting
+        // on the provider). We only learn Premium status FROM an extraction, so the first run still uses
+        // the provider; _accountIsPremium then latches it for every run after.
+        var usePotProvider = !_accountIsPremium;
+
+        if (usePotProvider && !await BgUtilPotProvider.WaitReadyAsync(PotProviderTimeout, ct))
             throw new SabrException(
                 "PO token provider (bgutil) is not ready, so the web SABR client cannot be used.");
 
-        var json = await RunYtdlpAsync(videoUrl, ytdlpPath, cookiesPath, log, ct);
+        var json = await RunYtdlpAsync(videoUrl, ytdlpPath, cookiesPath, log, ct, usePotProvider);
 
         var videoId = json["id"]?.Value<string>()
                       ?? throw new SabrException("yt-dlp returned no video id");
 
-        // We drive SABR through the WEB client only. Its formats carry a GVS PO token (minted by the
-        // bgutil provider and surfaced in _sabr_config.po_token); that token, plus the web client_info, is
-        // what the SABR server attests against.
+        // We drive SABR through the WEB client only. For a non-Premium account these formats carry a GVS
+        // PO token (minted by the bgutil provider, surfaced in _sabr_config.po_token) that the SABR server
+        // attests against together with the web client_info; a Premium account gets them without one.
         var formats = (json["formats"] as JArray ?? [])
             .Where(f => f["protocol"]?.Value<string>() == "sabr")
             .Where(f => IsClient(f, "web"))
             .ToList();
 
         if (formats.Count == 0)
+        {
+            // We skipped the PO provider assuming Premium and got nothing back: the assumption was wrong
+            // (or the account is no longer Premium). Clear the latch so the next attempt brings the
+            // provider back — the caller retries on the next getvideo.
+            if (!usePotProvider)
+                _accountIsPremium = false;
             throw new SabrException(
                 "No web-client SABR formats found. yt-dlp may not have used the web client — check cookies " +
                 "and that the bgutil plugin loaded (--plugin-dirs).");
+        }
 
         var client = ClientOf(formats[0]);
 
@@ -111,6 +128,8 @@ internal static class SabrExtractor
         // token is only fatal when we are not Premium.
         var poToken = config["po_token"]?.Value<string>();
         var isPremium = IsPremiumStream(streamingUrl);
+        // Latch Premium so the next extraction skips the PO provider entirely (see the top of this method).
+        _accountIsPremium = isPremium;
         if (string.IsNullOrEmpty(poToken) && !isPremium)
             throw new SabrException(
                 "The web SABR format carried no po_token — the bgutil PO token provider did not supply one. " +
@@ -344,11 +363,11 @@ internal static class SabrExtractor
     }
 
     private static async Task<JObject> RunYtdlpAsync(string videoUrl, string ytdlpPath, string? cookiesPath,
-        ILogger log, CancellationToken ct)
+        ILogger log, CancellationToken ct, bool usePotProvider)
     {
         var args = new StringBuilder();
         // formats=duplicate exposes the SABR variants alongside the normal ones. player_client=web pins us
-        // to the web client, whose SABR formats require a GVS PO token that the bgutil plugin supplies.
+        // to the web client, whose SABR formats require a GVS PO token (non-Premium) that bgutil supplies.
         args.Append("-J --no-playlist --no-warnings --extractor-args \"youtube:formats=duplicate;player_client=web\" ");
         // The web client's streaming URL carries an 'n' challenge yt-dlp must descramble during extraction,
         // which needs a JS runtime. (android_vr didn't — REQUIRE_JS_PLAYER was false there.)
@@ -359,8 +378,12 @@ internal static class SabrExtractor
         // base_url explicitly rather than relying on the plugin's auto-detect default (127.0.0.1) — the
         // server binds IPv6 "::", so a bare 127.0.0.1 is refused on Windows; "localhost" (the
         // SabrPotBaseUrl default) resolves to both families and connects. See ConfigManager.
-        args.Append($"--plugin-dirs \"{BgUtilPotProvider.PluginSearchDir}\" ");
-        args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={BgUtilPotProvider.BaseUrl}\" ");
+        // Skipped entirely for a Premium account, which needs no GVS PO token — so yt-dlp mints none.
+        if (usePotProvider)
+        {
+            args.Append($"--plugin-dirs \"{BgUtilPotProvider.PluginSearchDir}\" ");
+            args.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={BgUtilPotProvider.BaseUrl}\" ");
+        }
         if (!string.IsNullOrEmpty(cookiesPath) && File.Exists(cookiesPath))
             args.Append($"--cookies \"{cookiesPath}\" ");
         args.Append($"\"{videoUrl}\"");
