@@ -65,9 +65,10 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
             // every segment carries overlapping audio and the player stalls.
             //
             // This has to be a separate pass with the trim on the OUTPUT side. Trimming on the input side
-            // (-ss before -i) silently does nothing here: the audio is WebM, and its Cues point at cluster
-            // offsets in YouTube's original file, which do not match the init+fragments we reconstruct — so
-            // ffmpeg's seek fails and hands back the whole fragment.
+            // (-ss before -i) silently does nothing here: the audio index points at offsets in YouTube's
+            // original file (WebM Cues for Opus, the sidx for the AAC fallback), which do not match the
+            // init+fragments we reconstruct — so ffmpeg's seek fails and hands back the whole fragment.
+            // (-f matroska is just the intermediate container; it carries Opus and AAC alike.)
             await RunFfmpegAsync(
                 $"-y -loglevel error -copyts -i \"{audioInput}\" -map 0:a:0 -c copy " +
                 $"-ss {start} -to {end} -avoid_negative_ts disabled -f matroska \"{audioTrimmed}\"", ct);
@@ -81,11 +82,21 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
             // segment cannot describe both: the second fragment ends up claiming the same start time as
             // the first, the decoder sees overlapping fragments, and video dies while audio plays on.
             // -frag_duration (600s, in microseconds) far exceeds any segment, keeping it to one fragment.
+            // AAC carries encoder priming that an edit list (elst) is meant to skip, and AVPro's HLS fMP4
+            // reader requires that edit list for an mp4a track: without it the video never loads in VRChat
+            // (it loads fine for Opus, which signals pre-skip via its dOps box and needs no elst). Our
+            // usual +empty_moov writes no edit list at all; +delay_moov defers the moov just enough for
+            // ffmpeg to emit one, while still producing a fragmented init we split at the first moof
+            // (verified: elst present, empty sample tables, media in the moof). Switch it ONLY for AAC —
+            // Opus plays with +empty_moov and adding an edit list on top of dOps could break it.
+            var movFlags = IsWebmInit(audioInit)
+                ? "+empty_moov+default_base_moof"
+                : "+delay_moov+default_base_moof";
             await RunFfmpegAsync(
                 $"-y -loglevel error -copyts -i \"{videoInput}\" -i \"{audioTrimmed}\" " +
                 $"-map 0:v:0 -map 1:a:0 -c copy -avoid_negative_ts disabled -f mp4 " +
                 $"-frag_duration 600000000 " +
-                $"-movflags +empty_moov+default_base_moof \"{output}\"", ct);
+                $"-movflags {movFlags} \"{output}\"", ct);
 
             var muxed = await File.ReadAllBytesAsync(output, ct);
             var mediaStart = FindMoof(muxed);
@@ -113,11 +124,9 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
     /// Muxes complete, already-fetched tracks into a single playable file — the cached copy, produced
     /// from the very fragments we streamed, so a SABR video is fetched once rather than twice.
     ///
-    /// H.264/VP9 + Opus in MP4 is deliberate: the HLS segments AVPro already plays are exactly that, so
-    /// the cached file needs no separate AAC fetch. Note it inherits the same caveat — where a machine's
-    /// Opus codec is broken or absent, Media Foundation plays this file with silent audio. That is a
-    /// codec-verification problem, not a reason to switch the muxer to AAC (a pre-existing AVPro AAC bug
-    /// rules that out); see the SABR section of CLAUDE.md.
+    /// The codecs match whatever the HLS segments AVPro already plays (H.264/VP9 + Opus, or H.264 + AAC
+    /// when this PC can't decode Opus-in-MP4 — see <see cref="SabrExtractor"/>/<c>OpusMp4Check</c>), so the
+    /// cached file is built straight from the fragments we streamed with no separate audio fetch.
     /// </summary>
     public async Task MuxCompleteAsync(string videoTrackPath, string audioTrackPath, string outputPath,
         CancellationToken ct = default)
@@ -140,6 +149,14 @@ internal sealed class SabrSegmentMuxer(string ffmpegPath, ILogger log)
         foreach (var fragment in fragments)
             await stream.WriteAsync(fragment, ct);
     }
+
+    /// <summary>
+    /// True if this audio init is WebM (Opus) — it opens with the EBML magic <c>1A 45 DF A3</c>. Anything
+    /// else is the fMP4 AAC fallback. This is what picks the muxer flags: AAC needs the edit list
+    /// (<c>+delay_moov</c>), Opus does not (<c>+empty_moov</c>, its proven path).
+    /// </summary>
+    private static bool IsWebmInit(byte[] init) =>
+        init.Length >= 4 && init[0] == 0x1A && init[1] == 0x45 && init[2] == 0xDF && init[3] == 0xA3;
 
     private static async Task WriteAtomicAsync(string path, byte[] data, CancellationToken ct)
     {
