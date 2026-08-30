@@ -314,7 +314,7 @@ internal static class SabrExtractor
         var args = new StringBuilder();
         // formats=duplicate exposes the SABR variants alongside the normal ones. player_client=web pins us
         // to the web client, whose SABR formats require a GVS PO token that the bgutil plugin supplies.
-        args.Append("-J --no-warnings --extractor-args \"youtube:formats=duplicate;player_client=web\" ");
+        args.Append("-J --no-playlist --no-warnings --extractor-args \"youtube:formats=duplicate;player_client=web\" ");
         // The web client's streaming URL carries an 'n' challenge yt-dlp must descramble during extraction,
         // which needs a JS runtime. (android_vr didn't — REQUIRE_JS_PLAYER was false there.)
         if (File.Exists(YtdlManager.DenoPath))
