@@ -99,18 +99,29 @@ internal static class SabrExtractor
             audio["format_id"]?.Value<string>(), audio["acodec"]?.Value<string>(),
             audio["language"]?.Value<string>() ?? "und");
 
+        var streamingUrl = video["url"]?.Value<string>()
+                           ?? throw new SabrException("SABR format carried no streaming URL");
+
+        // A YouTube Premium session is served an ad-free stream tagged with a content tier (ctier) in the
+        // streaming URL and, per yt-dlp's gvs_pot_required(..., not_required_for_premium), does NOT need a
+        // GVS PO token — so bgutil being down (or simply declining to mint one) must not block Premium
+        // playback. A non-Premium web session with no token gets no SABR formats at all, so it already
+        // failed the "no web-client SABR formats" check above and never reaches here; hence a missing
+        // token is only fatal when we are not Premium.
         var poToken = config["po_token"]?.Value<string>();
-        if (string.IsNullOrEmpty(poToken))
+        var isPremium = IsPremiumStream(streamingUrl);
+        if (string.IsNullOrEmpty(poToken) && !isPremium)
             throw new SabrException(
                 "The web SABR format carried no po_token — the bgutil PO token provider did not supply one. " +
                 "SABR playback cannot proceed without it.");
+        if (string.IsNullOrEmpty(poToken))
+            log.Information("SABR: {VideoId} is a Premium session; proceeding without a GVS PO token", videoId);
 
         return new SabrSource
         {
             VideoId = videoId,
             // Every SABR format shares the same ABR streaming URL and ustreamer config.
-            AbrStreamingUrl = video["url"]?.Value<string>()
-                              ?? throw new SabrException("SABR format carried no streaming URL"),
+            AbrStreamingUrl = streamingUrl,
             UstreamerConfig = config["video_playback_ustreamer_config"]?.Value<string>()
                               ?? throw new SabrException("SABR format carried no ustreamer config"),
             ClientInfo = ParseClientInfo(config["client_info"]),
@@ -118,7 +129,9 @@ internal static class SabrExtractor
             AudioFormat = ParseFormatId(audio["_sabr_config"]!),
             VideoFormat = ParseFormatId(config),
             Hdr = hdr,
-            PoToken = poToken,
+            // Empty ⇒ Premium (no token needed); normalise to null so the client omits it rather than
+            // sending an empty PoToken in StreamerContext.
+            PoToken = string.IsNullOrEmpty(poToken) ? null : poToken,
             VideoCodec = video["vcodec"]?.Value<string>() ?? "avc1.4d401f",
             AudioCodec = audio["acodec"]?.Value<string>() ?? "mp4a.40.2",
             Width = video["width"]?.Value<int>() ?? 1920,
@@ -270,6 +283,17 @@ internal static class SabrExtractor
     private static bool IsHdr(JToken format) =>
         format["dynamic_range"]?.Value<string>() is { } range
         && !range.Equals("SDR", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether yt-dlp extracted this as a YouTube Premium session. Premium streams are ad-free and carry
+    /// a content tier (<c>ctier</c>) in the streaming URL; a non-Premium web session has none. yt-dlp
+    /// does not surface its own Premium detection in the <c>-J</c> output, so this URL marker is the
+    /// signal we have — and it lines up exactly with the browser's Premium web SABR request.
+    /// </summary>
+    private static bool IsPremiumStream(string streamingUrl) =>
+        Uri.TryCreate(streamingUrl, UriKind.Absolute, out var uri)
+        && uri.Query.TrimStart('?').Split('&')
+            .Any(p => p.StartsWith("ctier=", StringComparison.OrdinalIgnoreCase));
 
     private static int CodecRank(JToken format) => format["vcodec"]?.Value<string>() switch
     {
