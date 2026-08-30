@@ -51,6 +51,7 @@
   "SabrFilterSuperResolutionTooltip": "跳过 YouTube 的 AI 放大（“超分辨率”）视频，改用原始视频。",
   "SabrFilterVoiceBoostedAudio": "过滤 AI 人声增强音频",
   "SabrFilterVoiceBoostedAudioTooltip": "跳过 YouTube 的 AI“人声增强”音频。如果所选语言仅有该音轨，仍会使用人声增强音轨。",
+  "SabrAdditionalArgs": "额外的 SABR yt-dlp 参数",
   "CacheSettings": "缓存设置",
   "CachePathLabel": "缓存路径（留空则使用默认路径）",
   "MaxCacheSizeLabel": "最大缓存大小（GB）（0 = 无限制）",

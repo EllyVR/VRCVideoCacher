@@ -52,6 +52,7 @@
   "SabrFilterSuperResolutionTooltip": "Kihagyja a YouTube AI-val felskálázott („szuperfelbontású”) videóváltozatait, és helyette az eredeti videót használja.",
   "SabrFilterVoiceBoostedAudio": "AI hangkiemelt (voice-boosted) hang szűrése",
   "SabrFilterVoiceBoostedAudioTooltip": "Kihagyja a YouTube AI „hangkiemelt” hangváltozatait. A hangkiemelt sáv csak akkor kerül felhasználásra, ha a kiválasztott nyelvhez ez az egyetlen elérhető.",
+  "SabrAdditionalArgs": "További SABR yt-dlp argumentumok",
   "CacheSettings": "Gyorsítótár Beállítások",
   "CachePathLabel": "Gyorsítótár Útvonal (hagyd üresen az alapértelmezett értékhez)",
   "MaxCacheSizeLabel": "Maximális Gyorsítótár Méret GB-ban (0 = korlátlan)",

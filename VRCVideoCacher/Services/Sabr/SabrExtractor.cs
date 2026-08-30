@@ -386,6 +386,10 @@ internal static class SabrExtractor
         }
         if (!string.IsNullOrEmpty(cookiesPath) && File.Exists(cookiesPath))
             args.Append($"--cookies \"{cookiesPath}\" ");
+        // Operator overrides for the SABR extraction specifically (separate from YtdlpAdditionalArgs,
+        // which is for the non-SABR path). Appended last so they can override the defaults above.
+        if (!string.IsNullOrWhiteSpace(ConfigManager.Config.SabrAdditionalArgs))
+            args.Append($"{ConfigManager.Config.SabrAdditionalArgs.Trim()} ");
         args.Append($"\"{videoUrl}\"");
 
         using var process = new Process
