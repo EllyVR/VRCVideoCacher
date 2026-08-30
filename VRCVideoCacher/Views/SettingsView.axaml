@@ -108,6 +108,11 @@
                         <CheckBox IsChecked="{Binding SabrFilterVoiceBoostedAudio}"
                                   Content="{l:Localize SabrFilterVoiceBoostedAudio}"
                                   ToolTip.Tip="{l:Localize SabrFilterVoiceBoostedAudioTooltip}"/>
+
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{l:Localize SabrAdditionalArgs}"/>
+                            <TextBox Text="{Binding SabrAdditionalArgs}" PlaceholderText="Optional arguments"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

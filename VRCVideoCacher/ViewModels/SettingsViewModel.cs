@@ -53,6 +53,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _sabrFilterVoiceBoostedAudio;
 
+    [ObservableProperty]
+    private string _sabrAdditionalArgs = string.Empty;
+
     // Cache Settings
     [ObservableProperty]
     private string _cachedAssetPath = string.Empty;
@@ -166,6 +169,7 @@ public partial class SettingsViewModel : ViewModelBase
         SabrFilterDrcAudio = config.SabrFilterDrcAudio;
         SabrFilterSuperResolution = config.SabrFilterSuperResolution;
         SabrFilterVoiceBoostedAudio = config.SabrFilterVoiceBoostedAudio;
+        SabrAdditionalArgs = config.SabrAdditionalArgs;
         CachedAssetPath = config.CachedAssetPath;
         CacheYouTube = config.CacheYouTube;
         CacheYouTubeMaxResolution = config.CacheYouTubeMaxResolution;
@@ -247,6 +251,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnSabrFilterDrcAudioChanged(bool value) => SetHasChanges();
     partial void OnSabrFilterSuperResolutionChanged(bool value) => SetHasChanges();
     partial void OnSabrFilterVoiceBoostedAudioChanged(bool value) => SetHasChanges();
+    partial void OnSabrAdditionalArgsChanged(string value) => SetHasChanges();
     partial void OnCachedAssetPathChanged(string value) => SetHasChanges();
     partial void OnCacheYouTubeChanged(bool value) => SetHasChanges();
     partial void OnCacheYouTubeMaxResolutionChanged(int value) => SetHasChanges();
@@ -282,6 +287,7 @@ public partial class SettingsViewModel : ViewModelBase
         config.SabrFilterDrcAudio = SabrFilterDrcAudio;
         config.SabrFilterSuperResolution = SabrFilterSuperResolution;
         config.SabrFilterVoiceBoostedAudio = SabrFilterVoiceBoostedAudio;
+        config.SabrAdditionalArgs = SabrAdditionalArgs;
         config.CachedAssetPath = CachedAssetPath;
         config.CacheYouTube = CacheYouTube;
         config.CacheYouTubeMaxResolution = CacheYouTubeMaxResolution;

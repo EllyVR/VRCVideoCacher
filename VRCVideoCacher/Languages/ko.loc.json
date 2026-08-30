@@ -51,6 +51,7 @@
   "SabrFilterSuperResolutionTooltip": "YouTube의 AI 업스케일('초해상도') 영상 변형을 건너뛰고 원본 영상을 사용합니다.",
   "SabrFilterVoiceBoostedAudio": "AI 음성 강화 오디오 필터링",
   "SabrFilterVoiceBoostedAudioTooltip": "YouTube의 AI '음성 강화' 오디오 변형을 건너뜁니다. 선택한 언어에서 유일한 트랙일 경우에는 음성 강화 트랙을 사용합니다.",
+  "SabrAdditionalArgs": "추가 SABR yt-dlp 인수",
   "CacheSettings": "캐시 설정",
   "CachePathLabel": "캐시 경로 (비워두면 기본값 사용)",
   "MaxCacheSizeLabel": "최대 캐시 크기 (단위: GB, 0 = 무제한)",
