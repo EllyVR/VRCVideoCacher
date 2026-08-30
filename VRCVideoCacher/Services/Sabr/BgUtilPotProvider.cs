@@ -81,6 +81,24 @@ internal static class BgUtilPotProvider
     /// <summary>The provider URL actually in use (may differ from config if the port had to be reassigned).</summary>
     public static string BaseUrl => _baseUrl;
 
+    /// <summary>
+    /// True once the provider is up and answering. A non-blocking snapshot — callers that must have it
+    /// use <see cref="WaitReadyAsync"/>; the legacy path only reads this so it never stalls on a provider
+    /// that is still coming up or disabled.
+    /// </summary>
+    public static bool IsReady => _isReady;
+
+    /// <summary>
+    /// The yt-dlp args that route GVS PO token minting through this provider — the plugin search dir and
+    /// the plugin's <c>base_url</c>. Shared by the SABR extractor and the legacy path so the two never
+    /// drift. Appended verbatim; each element is one already-quoted argument.
+    /// </summary>
+    public static string[] ExtractorArgs =>
+    [
+        $"--plugin-dirs \"{PluginSearchDir}\"",
+        $"--extractor-args \"youtubepot-bgutilhttp:base_url={BaseUrl}\"",
+    ];
+
     private static int Port =>
         Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) ? uri.Port : 4416;
 
