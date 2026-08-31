@@ -133,13 +133,17 @@ internal sealed class Program
         // Start backend on background thread
         Task.Run(async () =>
         {
-            try
+            for (var i = 0; i < 3; i++)
             {
-                await InitVrcVideoCacher();
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Backend error: {Message}", ex.Message);
+                try
+                {
+                    await InitVrcVideoCacher();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Backend error: {Message}", ex.Message);
+                }
             }
         });
     }
