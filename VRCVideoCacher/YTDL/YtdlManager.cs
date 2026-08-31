@@ -217,37 +217,47 @@ public class YtdlManager
         Log.Information("Downloading Deno...");
         var url = assets.First().browser_download_url;
 
-        using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-        if (!response.IsSuccessStatusCode)
+        try
         {
+            using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Information("Failed to download deno from github attempting fallback download.");
+                await TryDownloadDenoFallback(assetName);
+                return;
+            }
+            await using var responseStream = await response.Content.ReadAsStreamAsync();
+            var reader = await ReaderFactory.OpenAsyncReader(responseStream);
+            try
+            {
+                while (await reader.MoveToNextEntryAsync())
+                {
+                    if (reader.Entry.Key == null || reader.Entry.IsDirectory)
+                        continue;
+
+                    Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
+                    var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
+                    await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await using var entryStream = await reader.OpenEntryStreamAsync();
+                    await entryStream.CopyToAsync(outputStream);
+                    FileTools.MarkFileExecutable(path);
+                    Versions.CurrentVersion.Deno = json.tag_name;
+                    Versions.Save();
+                    Log.Information("Deno downloaded and extracted.");
+                    return;
+                }
+            }
+            finally
+            {
+                await reader.DisposeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Backend error: {Message}", ex.Message);
             Log.Information("Failed to download deno from github attempting fallback download.");
             await TryDownloadDenoFallback(assetName);
             return;
-        }
-        await using var responseStream = await response.Content.ReadAsStreamAsync();
-        var reader = await ReaderFactory.OpenAsyncReader(responseStream);
-        try
-        {
-            while (await reader.MoveToNextEntryAsync())
-            {
-                if (reader.Entry.Key == null || reader.Entry.IsDirectory)
-                    continue;
-
-                Log.Debug("Extracting file {Name} ({Size} bytes)", reader.Entry.Key, reader.Entry.Size);
-                var path = Path.Join(Program.UtilsPath, reader.Entry.Key);
-                await using var outputStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                await using var entryStream = await reader.OpenEntryStreamAsync();
-                await entryStream.CopyToAsync(outputStream);
-                FileTools.MarkFileExecutable(path);
-                Versions.CurrentVersion.Deno = json.tag_name;
-                Versions.Save();
-                Log.Information("Deno downloaded and extracted.");
-                return;
-            }
-        }
-        finally
-        {
-            await reader.DisposeAsync();
         }
 
         Log.Error("Failed to extract Deno files.");
