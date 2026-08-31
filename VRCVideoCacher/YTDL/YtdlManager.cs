@@ -217,7 +217,7 @@ public class YtdlManager
         Log.Information("Downloading Deno...");
         var url = assets.First().browser_download_url;
 
-        using var response = await HttpClient.GetAsync(url);
+        using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         if (!response.IsSuccessStatusCode)
         {
             Log.Information("Failed to download deno from github attempting fallback download.");
@@ -264,7 +264,7 @@ public class YtdlManager
         }
         var latestVersion = (await response.Content.ReadAsStringAsync()).Trim();
         var url = $"{DenoFallBackDownloadURL}{latestVersion}/{assetName}";
-        using var downloadResponse = await HttpClient.GetAsync(url);
+        using var downloadResponse = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         if (!downloadResponse.IsSuccessStatusCode)
         {
             Log.Error("Failed to download Deno from fallback URL: {ResponseStatusCode}", downloadResponse.StatusCode);
@@ -377,7 +377,7 @@ public class YtdlManager
         }
         Log.Information("Downloading FFmpeg...");
 
-        using var response = await HttpClient.GetAsync(url);
+        using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         await using var responseStream = await response.Content.ReadAsStreamAsync();
         var reader = await ReaderFactory.OpenAsyncReader(responseStream);
         var success = false;
