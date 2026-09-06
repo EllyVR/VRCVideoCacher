@@ -180,7 +180,7 @@ public class FileTools
         {
             Log.Information("Patching Resonite yt-dlp");
             if (!BackupAndReplaceYtdl(YtdlPathReso, BackupPathReso, OperatingSystem.IsLinux()))
-                Log.Warning("Can't find Resonite data, it may not be installed. {Path}", YtdlPathVrc);
+                Log.Warning("Can't find Resonite data, it may not be installed. {Path}", YtdlPathReso);
         }
     }
 
