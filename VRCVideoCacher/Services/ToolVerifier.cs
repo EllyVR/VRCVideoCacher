@@ -37,7 +37,15 @@ public static class ToolVerifier
 
     public static async Task<ToolCheck> VerifyPotProviderAsync()
     {
-        var ok = await BgUtilPotProvider.IsRespondingAsync();
+        // The provider's Deno server needs a few seconds to bind and warm its BotGuard VM after launch, so a
+        // single ping right after startup races it and reports a false "not working". When SABR is enabled we
+        // own the server's lifecycle, so wait (bounded) for it to become ready — WaitReadyAsync returns the
+        // instant it answers, and bails immediately if provisioning genuinely failed, so this only actually
+        // waits while it's still coming up. With SABR off we don't start it, so a single ping is right (that
+        // path only reports on an externally-managed provider).
+        var ok = ConfigManager.Config.SabrRestreamEnabled
+            ? await BgUtilPotProvider.WaitReadyAsync(TimeSpan.FromSeconds(20))
+            : await BgUtilPotProvider.IsRespondingAsync();
         return new ToolCheck(ok, ok, string.Empty);
     }
 
