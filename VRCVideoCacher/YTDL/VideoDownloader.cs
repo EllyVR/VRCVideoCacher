@@ -57,7 +57,7 @@ public class VideoDownloader
             using var activity = StatusService.Begin(StatusCategory.Downloading,
                 string.Format(Localizer.Get("StatusDownloading"), queueItem.VideoId));
 
-            var success = false;
+            bool success;
             try
             {
                 success = queueItem.UrlType switch
