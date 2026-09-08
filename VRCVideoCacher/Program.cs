@@ -118,6 +118,10 @@ internal sealed class Program
         };
 #endif
 
+        // Clean up before the dashboard can launch any tool verification processes.
+        Directory.CreateDirectory(UtilsPath);
+        BgUtilPotProvider.KillOrphanedInstances();
+
         if (!LaunchArgs.HasGui)
         {
             // Run backend only (console mode)
@@ -151,7 +155,6 @@ internal sealed class Program
 
         OpenVRService.Start(CurrentProcessPath);
 
-        Directory.CreateDirectory(UtilsPath);
         // Surface a fixed-port (9696) conflict up front — with the offending process — before WebServer
         // throws an opaque bind error. Reassignable ports (bgutil) handle themselves when they start.
         PortAudit.CheckWebServerPort();
@@ -188,17 +191,10 @@ internal sealed class Program
             _ = YtdlManager.TryDownloadFfmpeg();
         }
 
-        // Reap any Deno left running by a previous unclean exit (the bgutil server holds the port) before we
-        // start our own. Unconditional: a leftover can exist even if SABR is now disabled. Only kills Deno
-        // launched from our own binary.
-        BgUtilPotProvider.KillOrphanedInstances();
-
-        // Warm the SABR PO token provider now (downloads/installs on first run, then supervises its Deno
-        // server) so it is usually ready by the first SABR playback. Runs in the background; SABR waits on
-        // its readiness and fails cleanly if it never comes up. Deno is provisioned just above.
+        // Readiness checks may have arrived already; only now may they start the provider.
+        BgUtilPotProvider.EnableStartup();
         if (ConfigManager.Config.SabrRestreamEnabled)
         {
-            BgUtilPotProvider.Ensure();
             // SABR hands AVPro Opus-in-MP4, which an out-of-date Windows decodes as silent audio and
             // VRChat then shows as a video that never plays. Nothing in any log says so — hence the
             // explicit check. Runs off the startup path; it costs a decode of a ~1s clip.
