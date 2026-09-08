@@ -21,6 +21,7 @@ internal sealed class Program
     public static readonly string Version =
         typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? "unknown";
+    public const string BgUtilsVersion = "2.0.0";
     public const string Creator_Elly = "Elly";
     public const string Creator_Natsumi = "Natsumi";
     public const string Creator_Haxy = "Haxy";

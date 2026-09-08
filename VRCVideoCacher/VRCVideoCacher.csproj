@@ -147,6 +147,14 @@
              Foundation to prove the machine can actually play what SabrSegmentMuxer produces. -->
         <None Remove="opus_probe.mp4" />
         <EmbeddedResource Include="opus_probe.mp4" />
+        <None Remove="bgutil-pot-server-linux-x64.tar.gz" />
+        <EmbeddedResource Include="bgutil-pot-server-linux-x64.tar.gz">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
+        <None Remove="bgutil-pot-server-win-x64.zip" />
+        <EmbeddedResource Include="bgutil-pot-server-win-x64.zip">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
