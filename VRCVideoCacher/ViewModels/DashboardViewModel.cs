@@ -217,9 +217,7 @@ public partial class DashboardViewModel : ViewModelBase
                 break;
             case ToolVerifier.PotProviderKey:
                 // Required even with SABR streaming off — the legacy yt-dlp path sends the same GVS token.
-                var pot = await ToolVerifier.VerifyPotProviderAsync();
-                _potTool.State = pot.Ok ? ToolState.Ok : ToolState.Failed;
-                _potTool.Detail = pot.Ok ? string.Empty : Localizer.Get("ToolNotWorking");
+                Apply(_potTool, await ToolVerifier.VerifyPotProviderAsync());
                 break;
         }
     }
@@ -230,7 +228,10 @@ public partial class DashboardViewModel : ViewModelBase
         if (tool is null)
             return;
         tool.State = ToolState.Checking;
-        tool.Detail = Localizer.Get("ToolDownloading");
+        if (key == ToolVerifier.PotProviderKey)
+            tool.Detail = "...";
+        else
+            tool.Detail = Localizer.Get("ToolDownloading");
     }
 
     private ToolStatusItem? ToolForKey(string key) => key switch

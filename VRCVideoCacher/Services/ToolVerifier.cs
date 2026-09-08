@@ -46,7 +46,8 @@ public static class ToolVerifier
         var ok = ConfigManager.Config.SabrRestreamEnabled
             ? await BgUtilPotProvider.WaitReadyAsync(TimeSpan.FromSeconds(20))
             : await BgUtilPotProvider.IsRespondingAsync();
-        return new ToolCheck(ok, ok, string.Empty);
+        // A failed health check means "not working", not that the provider is missing.
+        return new ToolCheck(ok, true, $"bgutil-ytdlp-pot-provider {Program.BgUtilsVersion} *:{BgUtilPotProvider.Port}");
     }
 
     private static async Task<ToolCheck> RunVersionAsync(string path, string arg)

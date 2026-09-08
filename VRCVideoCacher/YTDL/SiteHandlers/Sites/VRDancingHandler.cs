@@ -17,10 +17,10 @@ public class VRDancingHandler : ISiteHandler
         var code = url.TrimEnd('/').Split('/').Last();
         var videoId = VideoId.HashUrl(url);
 
-        _ = Task.Run(async () =>
-        {
-            await VRDancingAPIService.DownloadMetadata(code, videoId);
-        });
+        // _ = Task.Run(async () =>
+        // {
+        //     await VRDancingAPIService.DownloadMetadata(code, videoId);
+        // });
 
         return Task.FromResult<VideoInfo?>(new VideoInfo
         {
