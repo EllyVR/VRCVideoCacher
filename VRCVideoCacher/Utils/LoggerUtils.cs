@@ -5,6 +5,7 @@ using Serilog.Core;
 using Serilog.Events;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
+using Tmds.DBus.Protocol;
 using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher.Utils;
@@ -56,6 +57,29 @@ public static class LoggerUtils
 
     public static void LogUnhandledException(Exception ex, string message)
     {
+        // Missing Linux desktop services should not trigger crash reporting
+        IReadOnlyCollection<Exception> exceptions = ex is AggregateException aggregate
+            ? aggregate.Flatten().InnerExceptions
+            : new[] { ex };
+        // Require every leaf to match so mixed aggregates still report unexpected errors.
+        if (OperatingSystem.IsLinux() && LaunchArgs.HasGui && exceptions.Count > 0 &&
+            exceptions.All(exception => exception is DBusErrorReplyException
+            {
+                ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown"
+            }))
+        {
+            try
+            {
+                Program.Logger.Warning(ex,
+                    "A Linux desktop D-Bus service is unavailable; some desktop integration may not work");
+            }
+            catch
+            {
+            }
+
+            return;
+        }
+
         try
         {
             Console.WriteLine($"{message}: " + ex);
@@ -106,6 +130,7 @@ public static class LoggerUtils
         {
         }
     }
+
 
     private static void ConfigureSentryOptions(SentrySerilogOptions o)
     {
