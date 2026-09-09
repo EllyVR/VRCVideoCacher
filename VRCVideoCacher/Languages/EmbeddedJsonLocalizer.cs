@@ -8,6 +8,7 @@ namespace VRCVideoCacher.Languages;
 public class EmbeddedJsonLocalizer : BaseLocalizer
 {
     private FrozenDictionary<string, string> _languageStrings = new Dictionary<string, string>().ToFrozenDictionary();
+    private FrozenDictionary<string, string> _enLanguageStrings = new Dictionary<string, string>().ToFrozenDictionary();
 
     private const string prefix = "VRCVideoCacher.Languages.";
     private const string suffix = ".loc.json";
@@ -15,6 +16,7 @@ public class EmbeddedJsonLocalizer : BaseLocalizer
     public EmbeddedJsonLocalizer()
     {
         Reload();
+        _enLanguageStrings = LoadLanguage(FallbackLanguage);
         OnLanguageChanged();
         FireLanguageChanged();
     }
@@ -37,19 +39,24 @@ public class EmbeddedJsonLocalizer : BaseLocalizer
         UpdateDisplayLanguages();
     }
 
-    protected override void OnLanguageChanged()
+    private FrozenDictionary<string,string> LoadLanguage(string language)
     {
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = assembly.GetManifestResourceNames()
-            .First(r => r.Equals($"{prefix}{_language}{suffix}"));
+            .First(r => r.Equals($"{prefix}{language}{suffix}"));
 
         using var stream = assembly.GetManifestResourceStream(resourceName)!;
         using var reader = new StreamReader(stream);
         var json = JObject.Parse(reader.ReadToEnd());
 
-        _languageStrings = json.Properties()
+        return json.Properties()
             .ToDictionary(k => k.Name, v => v.Value?.ToString() ?? v.Name)
             .ToFrozenDictionary();
+    }
+
+    protected override void OnLanguageChanged()
+    {
+        _languageStrings = LoadLanguage(Language);
     }
 
     public override string Get(string key)
@@ -63,6 +70,13 @@ public class EmbeddedJsonLocalizer : BaseLocalizer
         {
             return value;
         }
+
+#if !DEBUG
+        if (_enLanguageStrings?.TryGetValue(key, out var enValue) == true)
+        {
+            return enValue;
+        }
+#endif
 
         return base.Language + ":" + key;
     }

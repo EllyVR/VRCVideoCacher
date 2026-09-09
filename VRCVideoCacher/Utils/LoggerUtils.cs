@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sentry.Serilog;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
+using Tmds.DBus.Protocol;
 using VRCVideoCacher.Services;
 
 namespace VRCVideoCacher.Utils;
@@ -14,6 +16,7 @@ public static class LoggerUtils
     private const string SentryDsn = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
     private static readonly string LogsPath = Path.Join(Program.DataPath, "Logs");
     private static DateTime? LoggerStartDateTime;
+    private static int _desktopServiceNoticeLogged;
 
     /// <summary>
     /// Controls the live minimum log level for every sink (console, file, UI). Defaults to Information so
@@ -54,8 +57,41 @@ public static class LoggerUtils
         Log.Logger = loggerConfiguration.CreateLogger();
     }
 
+    internal static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        e.SetObserved();
+        ThreadPool.QueueUserWorkItem(static (AggregateException exception) =>
+        {
+            try
+            {
+                LogUnhandledException(exception, "Unobserved task exception");
+            }
+            catch
+            {
+                // Never turn a failure in exception reporting into another unhandled exception.
+            }
+        }, e.Exception, preferLocal: false);
+    }
+
     public static void LogUnhandledException(Exception ex, string message)
     {
+        if (OperatingSystem.IsLinux() && LaunchArgs.HasGui && IsUnavailableDesktopServiceException(ex))
+        {
+            if (Interlocked.Exchange(ref _desktopServiceNoticeLogged, 1) == 0)
+            {
+                try
+                {
+                    Program.Logger.Information(
+                        "A Linux desktop D-Bus service is unavailable; some desktop integration may not work");
+                }
+                catch
+                {
+                }
+            }
+
+            return;
+        }
+
         try
         {
             Console.WriteLine($"{message}: " + ex);
@@ -105,6 +141,30 @@ public static class LoggerUtils
         catch
         {
         }
+    }
+
+    // Keep D-Bus type resolution and aggregate traversal out of non-Linux/headless handling.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static bool IsUnavailableDesktopServiceException(Exception exception)
+    {
+        if (exception is AggregateException aggregate)
+        {
+            var exceptions = aggregate.Flatten().InnerExceptions;
+            if (exceptions.Count == 0)
+                return false;
+
+            foreach (var inner in exceptions)
+            {
+                if (inner is not DBusErrorReplyException
+                    { ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown" })
+                    return false;
+            }
+
+            return true;
+        }
+
+        return exception is DBusErrorReplyException
+            { ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown" };
     }
 
     private static void ConfigureSentryOptions(SentrySerilogOptions o)

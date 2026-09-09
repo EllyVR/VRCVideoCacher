@@ -100,13 +100,7 @@ internal sealed class Program
 
         Logger.Information("VRCVideoCacher version {Version} created by {Elly}, {Natsumi}, {Haxy}, {Hauskaz}, {DubyaDude}", Version, Creator_Elly, Creator_Natsumi, Creator_Haxy, Creator_Hauskaz, Creator_DubyaDude);
 
-        TaskScheduler.UnobservedTaskException += (_, e) =>
-        {
-            if (e.Exception != null && e.Exception is Exception ex)
-            {
-                LoggerUtils.LogUnhandledException(ex, "Unobserved task exception");
-            }
-        };
+        TaskScheduler.UnobservedTaskException += LoggerUtils.OnUnobservedTaskException;
 #if !DEBUG
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
