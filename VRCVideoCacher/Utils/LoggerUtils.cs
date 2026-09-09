@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sentry.Serilog;
 using Serilog;
 using Serilog.Core;
@@ -15,6 +16,7 @@ public static class LoggerUtils
     private const string SentryDsn = "https://233e3c027a6239500a4bb3ba81f99ddd@sentry.ellyvr.dev/19";
     private static readonly string LogsPath = Path.Join(Program.DataPath, "Logs");
     private static DateTime? LoggerStartDateTime;
+    private static int _desktopServiceNoticeLogged;
 
     /// <summary>
     /// Controls the live minimum log level for every sink (console, file, UI). Defaults to Information so
@@ -55,26 +57,36 @@ public static class LoggerUtils
         Log.Logger = loggerConfiguration.CreateLogger();
     }
 
-    public static void LogUnhandledException(Exception ex, string message)
+    internal static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        // Missing Linux desktop services should not trigger crash reporting
-        IReadOnlyCollection<Exception> exceptions = ex is AggregateException aggregate
-            ? aggregate.Flatten().InnerExceptions
-            : new[] { ex };
-        // Require every leaf to match so mixed aggregates still report unexpected errors.
-        if (OperatingSystem.IsLinux() && LaunchArgs.HasGui && exceptions.Count > 0 &&
-            exceptions.All(exception => exception is DBusErrorReplyException
-            {
-                ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown"
-            }))
+        e.SetObserved();
+        ThreadPool.QueueUserWorkItem(static (AggregateException exception) =>
         {
             try
             {
-                Program.Logger.Information(ex,
-                    "A Linux desktop D-Bus service is unavailable; some desktop integration may not work");
+                LogUnhandledException(exception, "Unobserved task exception");
             }
             catch
             {
+                // Never turn a failure in exception reporting into another unhandled exception.
+            }
+        }, e.Exception, preferLocal: false);
+    }
+
+    public static void LogUnhandledException(Exception ex, string message)
+    {
+        if (OperatingSystem.IsLinux() && LaunchArgs.HasGui && IsUnavailableDesktopServiceException(ex))
+        {
+            if (Interlocked.Exchange(ref _desktopServiceNoticeLogged, 1) == 0)
+            {
+                try
+                {
+                    Program.Logger.Information(
+                        "A Linux desktop D-Bus service is unavailable; some desktop integration may not work");
+                }
+                catch
+                {
+                }
             }
 
             return;
@@ -131,6 +143,29 @@ public static class LoggerUtils
         }
     }
 
+    // Keep D-Bus type resolution and aggregate traversal out of non-Linux/headless handling.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static bool IsUnavailableDesktopServiceException(Exception exception)
+    {
+        if (exception is AggregateException aggregate)
+        {
+            var exceptions = aggregate.Flatten().InnerExceptions;
+            if (exceptions.Count == 0)
+                return false;
+
+            foreach (var inner in exceptions)
+            {
+                if (inner is not DBusErrorReplyException
+                    { ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown" })
+                    return false;
+            }
+
+            return true;
+        }
+
+        return exception is DBusErrorReplyException
+            { ErrorName: "org.freedesktop.DBus.Error.ServiceUnknown" };
+    }
 
     private static void ConfigureSentryOptions(SentrySerilogOptions o)
     {
