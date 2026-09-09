@@ -70,7 +70,7 @@ public static class LoggerUtils
         {
             try
             {
-                Program.Logger.Warning(ex,
+                Program.Logger.Information(ex,
                     "A Linux desktop D-Bus service is unavailable; some desktop integration may not work");
             }
             catch
