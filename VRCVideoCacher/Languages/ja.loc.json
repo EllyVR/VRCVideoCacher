@@ -53,7 +53,7 @@
   "StatusUpdatingApp": "VRCVideoCacher を更新中",
   "StatusProviderSetup": "PO トークンプロバイダーを設定中",
   "StatusProviderWaiting": "PO トークンプロバイダーを待機中",
-  "StatusMore": " (ほか {0} 件)",
+  "StatusMore": "(ほか {0} 件)",
  
  "ServerSettings": "サーバーの設定",
   "WebServerUrl": "Web サーバーの URL",
