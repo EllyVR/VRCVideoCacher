@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Serilog;
 using VRCVideoCacher.Models;
 
@@ -20,7 +18,7 @@ public class KaraokeInSyncHandler : ISiteHandler
 
         string[] splitQuery = uri.Query.Split(":", 2);
 
-        if (!url.Contains("Paste the YouTube Link after the colon:") || splitQuery.Length != 2)
+        if (!url.Contains("Paste%20the%20YouTube%20Link%20after%20the%20colon:") || splitQuery.Length != 2)
         {
             Log.Warning("Unknown Karaoke in Sync Custom URL {URL} detected, passing through");
             return Task.FromResult(url);
