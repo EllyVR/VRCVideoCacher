@@ -36,6 +36,7 @@ public static class UnavailableVideoCache
         "Video unavailable",
         "This video is not available",
         "This video is no longer available",
+        "This video is unavailable",
         "no longer available",
         "has been removed",
         "removed by the uploader",
