@@ -81,6 +81,7 @@
   "MaxYouTubeResolution": "YouTube 최대 해상도",
   "MaxVideoLength": "최대 영상 길이 (분)",
   "CachePyPyDanceVideos": "PyPyDance 동영상 캐시",
+  "CacheNicoNicoVideos": "NicoNico 동영상 캐시",
   "CacheVRDancingVideos": "VRDancing 동영상 캐시",
   "OnlyServeCachedVideos": "캐시된 동영상만 제공",
   "GamePatching": "게임 패치",

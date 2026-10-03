@@ -168,6 +168,69 @@ public class ApiController : WebApiController
             return;
         }
 
+        if (videoInfo.UrlType == UrlType.NicoVideo)
+        {
+            if (avPro)
+            {
+                var streamUrl = await NicoRestreamService.GetRestreamUrlAsync(videoInfo);
+                if (!string.IsNullOrEmpty(streamUrl))
+                {
+                    Log.Information("Responding with NicoNico HLS restream URL: {Url}", streamUrl);
+                    await HttpContext.SendStringAsync(streamUrl, "text/plain", Encoding.UTF8);
+
+                    if (!NicoVideoApiService.IsValidLiveId(videoInfo.VideoId) && ConfigManager.Config.CacheNicoVideo)
+                        VideoDownloader.QueueDownload(videoInfo);
+
+                    return;
+                }
+
+                if (!NicoVideoApiService.IsValidLiveId(videoInfo.VideoId))
+                    Log.Warning("NicoNico HLS restream URL resolution failed for {VideoId}, falling back to download.",
+                        videoInfo.VideoId);
+            }
+
+            if (NicoVideoApiService.IsValidLiveId(videoInfo.VideoId))
+            {
+                Log.Warning("Failed to serve NicoNico Live: {VideoId}", videoInfo.VideoId);
+                HttpContext.Response.StatusCode = 500;
+                await HttpContext.SendStringAsync("Failed to load NicoNico Live.", "text/plain", Encoding.UTF8);
+                return;
+            }
+
+            if (ConfigManager.Config.CacheNicoVideo)
+            {
+                Log.Information("NicoNico requested, downloading and waiting for cache for {VideoId}...",
+                    videoInfo.VideoId);
+                var downloaded = await VideoDownloader.DownloadAndWaitAsync(videoInfo, TimeSpan.FromMinutes(2));
+                (isCached, filePath, fileName) = GetCachedFile(videoInfo.VideoId, avPro);
+                if (downloaded && isCached)
+                {
+                    File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
+                    var url = $"{ConfigManager.Config.YtdlpWebServerUrl}/{fileName}";
+                    Log.Information("Responding with Cached NicoNico URL: {Url}", url);
+                    await HttpContext.SendStringAsync(url, "text/plain", Encoding.UTF8);
+                    return;
+                }
+            }
+            else
+            {
+                Log.Information("NicoNico requested with cache disabled, downloading to temporary file for {VideoId}...",
+                    videoInfo.VideoId);
+                var tempUrl = await NicoRestreamService.DownloadTempVideoAsync(videoInfo, TimeSpan.FromMinutes(2));
+                if (!string.IsNullOrEmpty(tempUrl))
+                {
+                    Log.Information("Responding with NicoNico restream URL: {Url}", tempUrl);
+                    await HttpContext.SendStringAsync(tempUrl, "text/plain", Encoding.UTF8);
+                    return;
+                }
+            }
+
+            Log.Warning("Failed to download or serve NicoNico: {VideoId}", videoInfo.VideoId);
+            HttpContext.Response.StatusCode = 500;
+            await HttpContext.SendStringAsync("Failed to load NicoNico.", "text/plain", Encoding.UTF8);
+            return;
+        }
+
         // SABR-first (SabrPreferStreaming): route every AVPro YouTube request through the SABR restream
         // path before trying the legacy direct URL. SABR serves HLS, which only AVPro can play — the Unity
         // built-in player (avpro=false) can't, so it must take the legacy direct-URL path below instead.
@@ -268,7 +331,8 @@ public class ApiController : WebApiController
         if (!isCached && (
                 (videoInfo.UrlType == UrlType.YouTube && ConfigManager.Config.CacheYouTube) ||
                 (videoInfo.UrlType == UrlType.PyPyDance && ConfigManager.Config.CachePyPyDance) ||
-                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVrDancing)))
+                (videoInfo.UrlType == UrlType.VRDancing && ConfigManager.Config.CacheVrDancing) ||
+                (videoInfo.UrlType == UrlType.NicoVideo && ConfigManager.Config.CacheNicoVideo)))
         {
             VideoDownloader.QueueDownload(videoInfo);
         }

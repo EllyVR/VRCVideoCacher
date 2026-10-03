@@ -10,6 +10,7 @@ public static class SiteHandlerRegistry
         new PyPyDanceHandler(),
         new VRDancingHandler(),
         new TwitterHandler(),
+        new NicoVideoHandler(),
         // fallthrough last
         new GenericHandler(),
     ];
@@ -17,7 +18,6 @@ public static class SiteHandlerRegistry
     // Rewriters run first, in order, before handler resolution
     private static readonly List<ISiteHandler> Rewriters =
     [
-        new NicoVideoHandler(),   // rewrites nico.ms → nicovideo.life
         new YTSHandler(),      // rewrites /sr/ → /yt/
         new ThirdPartyYTResolver(), // dmn.moe, u2b.cx etc → real YT url
     ];

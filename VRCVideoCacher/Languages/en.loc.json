@@ -81,6 +81,7 @@
   "MaxYouTubeResolution": "Max YouTube Resolution",
   "MaxVideoLength": "Max Video Length (minutes)",
   "CachePyPyDanceVideos": "Cache PyPyDance Videos",
+  "CacheNicoNicoVideos": "Cache NicoNico Videos",
   "CacheVRDancingVideos": "Cache VRDancing Videos",
   "OnlyServeCachedVideos": "Only Serve Cached Videos",
   "GamePatching": "Game Patching",
