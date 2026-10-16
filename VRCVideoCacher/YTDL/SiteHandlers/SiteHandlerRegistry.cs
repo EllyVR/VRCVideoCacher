@@ -19,6 +19,7 @@ public static class SiteHandlerRegistry
     private static readonly List<ISiteHandler> Rewriters =
     [
         new YTSHandler(),      // rewrites /sr/ → /yt/
+        new KaraokeInSyncHandler(), // skips the Karaoke in Sync youtube workaround
         new ThirdPartyYTResolver(), // dmn.moe, u2b.cx etc → real YT url
     ];
 
