@@ -19,7 +19,7 @@ public partial class HistoryItemViewModel : ViewModelBase
     public string Url { get; init; } = string.Empty;
     public string? Id { get; init; }
     public UrlType Type { get; init; }
-    public string? Author { get; init; }
+    public string? Author { get; set; }
     public bool HasAuthor => !string.IsNullOrEmpty(Author);
 
     private string? _title;
@@ -39,6 +39,7 @@ public partial class HistoryItemViewModel : ViewModelBase
         UrlType.YouTube => "YouTube",
         UrlType.PyPyDance => "PyPyDance",
         UrlType.VRDancing => "VRDancing",
+        UrlType.NicoVideo => "NicoNico",
         _ => "Other"
     };
 
@@ -47,6 +48,7 @@ public partial class HistoryItemViewModel : ViewModelBase
         UrlType.YouTube => new SolidColorBrush(Color.Parse("#CC0000")),
         UrlType.PyPyDance => new SolidColorBrush(Color.Parse("#4A90D9")),
         UrlType.VRDancing => new SolidColorBrush(Color.Parse("#7B68EE")),
+        UrlType.NicoVideo => new SolidColorBrush(Color.Parse("#1B1B1B")),
         _ => new SolidColorBrush(Color.Parse("#555555"))
     };
 
@@ -82,7 +84,12 @@ public partial class HistoryItemViewModel : ViewModelBase
         if (Id != null)
         {
             // Load from DB
-            var videoInfo = await YouTubeMetadataService.GetVideoMetadataAsync(Id);
+            var videoInfo = Type switch
+            {
+                UrlType.YouTube => await YouTubeMetadataService.GetVideoMetadataAsync(Id),
+                UrlType.NicoVideo => await NicoVideoApiService.GetVideoMetadataAsync(Id),
+                _ => null
+            };
 
             if (!string.IsNullOrEmpty(videoInfo?.Title))
             {
@@ -90,10 +97,21 @@ public partial class HistoryItemViewModel : ViewModelBase
                 OnPropertyChanged(nameof(DisplayTitle));
             }
 
+            if (!string.IsNullOrEmpty(videoInfo?.Author))
+            {
+                Author = videoInfo.Author;
+                OnPropertyChanged(nameof(Author));
+            }
+
             // Load thumbnail
             var thumbnailPath = ThumbnailManager.GetThumbnail(Id);
-            if (Id.Length == 11 && string.IsNullOrEmpty(thumbnailPath))
-                thumbnailPath = await YouTubeMetadataService.GetThumbnail(Id);
+            if (string.IsNullOrEmpty(thumbnailPath))
+                thumbnailPath = Type switch
+                {
+                    UrlType.YouTube => await YouTubeMetadataService.GetThumbnail(Id),
+                    UrlType.NicoVideo => await NicoVideoApiService.GetThumbnail(Id),
+                    _ => null
+                };
 
             if (!string.IsNullOrEmpty(thumbnailPath))
             {
