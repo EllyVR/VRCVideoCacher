@@ -7,7 +7,7 @@
 <hr>
 </div>
 
-**语言:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | [Português do Brasil](./README_pt-BR.md) | [Italiano](./README_it-IT.md) | [Русский](./README_ru-RU.md) | **简体中文**
+**语言:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | [Português do Brasil](./README_pt-BR.md) | [Italiano](./README_it-IT.md) | [Русский](./README_ru-RU.md) | **简体中文** | [Norsk (bokmål)](./README_nb-NO.md)
 
 ### Wiki
 - [启动选项](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
