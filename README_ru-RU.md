@@ -7,7 +7,7 @@
 <hr>
 </div>
 
-**Язык:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | [Português do Brasil](./README_pt-BR.md) | [Italiano](./README_it-IT.md) | **Русский** | [简体中文](./README_zh-CN.md)
+**Язык:** [English](./README.md) | [日本語](./README_ja-JP.md) | [Magyar](./README_hu-HU.md) | [한국어](./README_ko-KR.md) | [Português do Brasil](./README_pt-BR.md) | [Italiano](./README_it-IT.md) | **Русский** | [简体中文](./README_zh-CN.md) | [Norsk (bokmål)](./README_nb-NO.md)
 
 ### Wiki
 - [Параметры запуска](https://github.com/EllyVR/VRCVideoCacher/wiki/Launch-Options)
