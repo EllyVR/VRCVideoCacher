@@ -69,7 +69,7 @@ public class YouTubeHandler : ISiteHandler
             if (!ConfigManager.Config.YtdlpAllowAV1)
                 formatFilters += "[vcodec!^=av01]";
 
-            if (!ConfigManager.Config.YtdlpAllowVP9)
+            if (!ConfigManager.Config.AllowVP9)
                 formatFilters += "[vcodec!~='(vp9|vp09)']";
 
             // AVPro

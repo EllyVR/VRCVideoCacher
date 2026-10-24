@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Jeek.Avalonia.Localization;
 using VRCVideoCacher.API;
+using VRCVideoCacher.Utils;
 
 namespace VRCVideoCacher.ViewModels;
 
@@ -42,6 +43,16 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _ytdlDubLanguage = string.Empty;
+
+    [ObservableProperty]
+    private bool _ytdlAllowAV1;
+
+    // ComboBox index: 0 = Auto, 1 = Allow, 2 = Block
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowVp9AmdHint))]
+    private int _ytdlVp9Mode;
+
+    public bool ShowVp9AmdHint => YtdlVp9Mode == 0 && GpuCheck.HasAmdGpu;
 
     // YouTube SABR Options
     [ObservableProperty]
@@ -177,6 +188,8 @@ public partial class SettingsViewModel : ViewModelBase
         YtdlAutoUpdate = config.YtdlpAutoUpdate;
         YtdlAdditionalArgs = config.YtdlpAdditionalArgs;
         YtdlDubLanguage = config.YtdlpDubLanguage;
+        YtdlAllowAV1 = config.YtdlpAllowAV1;
+        YtdlVp9Mode = config.YtdlpAllowVP9 switch { null => 0, true => 1, false => 2 };
         PreferSabrStreaming = config.SabrPreferStreaming;
         SabrMaxResolution = config.SabrMaxResolution;
         SabrFilterDrcAudio = config.SabrFilterDrcAudio;
@@ -261,6 +274,8 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnYtdlAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnYtdlAdditionalArgsChanged(string value) => SetHasChanges();
     partial void OnYtdlDubLanguageChanged(string value) => SetHasChanges();
+    partial void OnYtdlAllowAV1Changed(bool value) => SetHasChanges();
+    partial void OnYtdlVp9ModeChanged(int value) => SetHasChanges();
     partial void OnPreferSabrStreamingChanged(bool value) => SetHasChanges();
     partial void OnSabrMaxResolutionChanged(int value) => SetHasChanges();
     partial void OnSabrFilterDrcAudioChanged(bool value) => SetHasChanges();
@@ -299,6 +314,8 @@ public partial class SettingsViewModel : ViewModelBase
         config.YtdlpAutoUpdate = YtdlAutoUpdate;
         config.YtdlpAdditionalArgs = YtdlAdditionalArgs;
         config.YtdlpDubLanguage = YtdlDubLanguage;
+        config.YtdlpAllowAV1 = YtdlAllowAV1;
+        config.YtdlpAllowVP9 = YtdlVp9Mode switch { 1 => true, 2 => false, _ => null };
         config.SabrPreferStreaming = PreferSabrStreaming;
         config.SabrMaxResolution = SabrMaxResolution;
         config.SabrFilterDrcAudio = SabrFilterDrcAudio;

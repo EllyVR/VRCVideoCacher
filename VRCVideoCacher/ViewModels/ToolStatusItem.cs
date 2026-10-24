@@ -25,7 +25,10 @@ public partial class ToolStatusItem : ObservableObject
     private ToolState _state;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DetailTooltip))]
     private string _detail = string.Empty;
+
+    public string? DetailTooltip => string.IsNullOrEmpty(Detail) ? null : Detail;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasHint))]

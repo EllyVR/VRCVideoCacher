@@ -344,7 +344,7 @@ internal static class SabrExtractor
     private static bool IsAllowedCodec(JToken format) => format["vcodec"]?.Value<string>() switch
     {
         { } v when v.StartsWith("av01", StringComparison.Ordinal) => ConfigManager.Config.YtdlpAllowAV1,
-        { } v when v.StartsWith("vp9", StringComparison.Ordinal) || v.StartsWith("vp09", StringComparison.Ordinal) => ConfigManager.Config.YtdlpAllowVP9,
+        { } v when v.StartsWith("vp9", StringComparison.Ordinal) || v.StartsWith("vp09", StringComparison.Ordinal) => ConfigManager.Config.AllowVP9,
         _ => true,
     };
 

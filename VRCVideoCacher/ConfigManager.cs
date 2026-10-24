@@ -142,7 +142,11 @@ public class ConfigModel
     public bool YtdlpAllowAV1 = true;
     // Allow VP9 videos: disabling this fixes the bug where videos appear corrupted on AMD on Windows
     // might also prevent Premium accounts from getting Enhanced Bitrate streams.
-    public bool YtdlpAllowVP9 = true;
+    // null = auto: blocked when an AMD GPU is detected.
+    public bool? YtdlpAllowVP9 = null;
+
+    [JsonIgnore]
+    public bool AllowVP9 => YtdlpAllowVP9 ?? !GpuCheck.HasAmdGpu;
 
     // SABR restreaming: when an uncached YouTube video can't be direct-played, fetch it over SABR and
     // serve it to AVPro as a seekable HLS VOD instead of returning an unplayable URL.

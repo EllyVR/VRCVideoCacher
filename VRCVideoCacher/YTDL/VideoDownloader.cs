@@ -181,7 +181,7 @@ public class VideoDownloader
             if (ConfigManager.Config.YtdlpAllowAV1)
                 formatString += $"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^av01'][dynamic_range='SDR']{audioArg}/";
 
-            if (ConfigManager.Config.YtdlpAllowVP9)
+            if (ConfigManager.Config.AllowVP9)
                 formatString += $"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^(vp9|vp09)'][dynamic_range='SDR']{audioArg}/";
 
             // Always allow downloading H.264 as a backup. If vp9 is disabled we need this,
