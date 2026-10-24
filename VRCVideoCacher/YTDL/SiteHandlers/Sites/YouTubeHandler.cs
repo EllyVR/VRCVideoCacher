@@ -10,8 +10,10 @@ public class YouTubeHandler : ISiteHandler
     private static readonly ILogger Log = Program.Logger.ForContext<YouTubeHandler>();
     private static readonly string[] Hosts = ["youtube.com", "youtu.be", "www.youtube.com", "m.youtube.com", "music.youtube.com"];
     private static readonly Regex IdRegex = new(@"(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|live\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})");
-    private const string AVProFormat = "(mp4/best)[height<=?1080][height>=?64][width>=?64]";
-    private const string UnityPlayerFormat = "(mp4/best)[vcodec!^=av01][vcodec!^=vp09][vcodec!^=vp9][height<=?1080][height>=?64][width>=?64][protocol^=http]";
+    private static int MaxHeight => Math.Min(ConfigManager.Config.YouTubeMaxResolution, 1080);
+    private static int PotatoMaxHeight => Math.Clamp(ConfigManager.Config.YouTubeMaxResolution, 360, 1080);
+    private static string AVProFormat => $"(mp4/best)[height<=?{MaxHeight}][height>=?64][width>=?64]";
+    private static string UnityPlayerFormat => $"(mp4/best)[vcodec!^=av01][vcodec!^=vp09][vcodec!^=vp9][height<=?{PotatoMaxHeight}][height>=?64][width>=?64][protocol^=http]";
 
     public bool CanHandle(Uri uri) => Hosts.Contains(uri.Host);
 
@@ -82,7 +84,7 @@ public class YouTubeHandler : ISiteHandler
         }
         else
         {
-            // Unity Player
+            // Unity Player (Potato mode)
             args.Add($"-f \"{UnityPlayerFormat}\"");
         }
 

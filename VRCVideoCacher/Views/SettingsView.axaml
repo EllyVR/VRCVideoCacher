@@ -75,19 +75,6 @@
                                   Content="{l:Localize SabrPreferStreaming}"
                                   ToolTip.Tip="{l:Localize SabrPreferStreamingTooltip}"/>
 
-                        <StackPanel Spacing="5">
-                            <TextBlock Text="{l:Localize SabrMaxResolution}"/>
-                            <ComboBox ItemsSource="{Binding ResolutionOptions}"
-                                      SelectedItem="{Binding SabrMaxResolution}"
-                                      ToolTip.Tip="{l:Localize SabrMaxResolutionTooltip}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={x:Static vm:ResolutionLabelConverter.Instance}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
                         <StackPanel Spacing="15" IsVisible="{Binding ShowAdvanced}">
                             <CheckBox IsChecked="{Binding SabrFilterDrcAudio}"
                                       Content="{l:Localize SabrFilterDrcAudio}"
@@ -111,6 +98,19 @@
                 <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="15">
                         <TextBlock Text="{l:Localize FormatPreferences}" FontWeight="SemiBold" FontSize="16"/>
+
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{l:Localize MaxYouTubeResolution}"/>
+                            <ComboBox ItemsSource="{Binding ResolutionOptions}"
+                                      SelectedItem="{Binding YouTubeMaxResolution}"
+                                      ToolTip.Tip="{l:Localize MaxYouTubeResolutionTooltip}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={x:Static vm:ResolutionLabelConverter.Instance}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
 
                         <StackPanel Spacing="5">
                             <TextBlock Text="{l:Localize PreferredDubLanguage}"/>
@@ -152,17 +152,6 @@
                         <CheckBox IsChecked="{Binding CacheYouTube}" Content="{l:Localize CacheYouTubeVideos}"/>
 
                         <StackPanel Spacing="5" Margin="30,0,0,0" IsVisible="{Binding CacheYouTube}">
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="{l:Localize MaxYouTubeResolution}"/>
-                                <ComboBox ItemsSource="{Binding ResolutionOptions}" SelectedItem="{Binding CacheYouTubeMaxResolution}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Converter={x:Static vm:ResolutionLabelConverter.Instance}}"/>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-
                             <StackPanel Spacing="5">
                                 <TextBlock Text="{l:Localize MaxVideoLength}"/>
                                 <NumericUpDown Value="{Binding CacheYouTubeMaxLength}" Minimum="1" Increment="10"/>

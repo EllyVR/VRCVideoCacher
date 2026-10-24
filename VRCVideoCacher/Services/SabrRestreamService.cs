@@ -73,18 +73,14 @@ public static class SabrRestreamService
     public static string HlsRootPath { get; } = Path.Join(Program.DataPath, "hls");
 
     /// <summary>
-    /// Whether the streamed media can double as the cached copy, so the video is fetched once instead of
-    /// twice. Only when the two resolutions agree: <c>SabrMaxResolution</c> governs STREAMING and
-    /// <c>CacheYouTubeMaxResolution</c> governs the CACHE, and they are deliberately separate settings —
-    /// converging when they differ would silently cache at the streaming resolution. When they differ,
-    /// <see cref="YTDL.VideoDownloader"/> downloads the cache copy separately, as before.
+    /// Whether the streamed media doubles as the cached copy, so the video is fetched once instead of twice.
     /// </summary>
     public static bool CacheConverges =>
         ConfigManager.Config is
         {
             SabrRestreamEnabled: true,
             CacheYouTube: true,
-        } && ConfigManager.Config.SabrMaxResolution == ConfigManager.Config.CacheYouTubeMaxResolution;
+        };
 
     static SabrRestreamService()
     {
@@ -191,9 +187,7 @@ public static class SabrRestreamService
     {
         var videoId = videoInfo.VideoId;
 
-        // SabrMaxResolution is the STREAMING knob. CacheYouTubeMaxResolution is for the cache download
-        // only — do not reuse it here.
-        var maxHeight = Math.Max(360, ConfigManager.Config.SabrMaxResolution);
+        var maxHeight = ConfigManager.Config.YouTubeMaxResolution;
         var baseUrl = ConfigManager.Config.YtdlpWebServerUrl.TrimEnd('/');
         var playbackUrl = $"{baseUrl}/hls/{videoId}/{HlsPlaylist.PlaylistName}";
 

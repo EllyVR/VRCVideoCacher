@@ -180,9 +180,8 @@ public class ApiController : WebApiController
             {
                 Log.Information("Responding with forced SABR restream URL: {URL}", forcedUrl);
                 await HttpContext.SendStringAsync(forcedUrl, "text/plain", Encoding.UTF8);
-                // The SABR session fetches the whole video anyway; when it is streaming at the cache's
-                // resolution it writes the cached file itself, so downloading it again would fetch the
-                // same video twice. Only queue a separate download when the resolutions differ.
+                // The SABR session fetches the whole video anyway and writes the cached file itself, so
+                // downloading it again would fetch the same video twice.
                 // Never queue a livestream: it has no end, and the download worker is a single serial
                 // thread, so one live job blocks every other cache download indefinitely.
                 if (ConfigManager.Config.CacheYouTube && !SabrRestreamService.CacheConverges
