@@ -29,10 +29,32 @@ public class VideoTools
         {
             var body = await prefetchResponse.Content.ReadAsStringAsync();
             firstM3U8Url = body.Split('\n').FirstOrDefault(line => Uri.IsWellFormedUriString(line, UriKind.RelativeOrAbsolute));
-        }
+        } else {
+            int videoStatusCode = (int) prefetchResponse.StatusCode;
+            const int videoPrefetchWait = 1500;
+            for (var i = 1; i < maxRetryCount; i++)
+            {
+                if (videoStatusCode >= 400)
+                {
+                    Log.Warning(
+                        "Prefetching video returned status code {status}, retrying... ({attempt}/{limit})",
+                        videoStatusCode, i + 1, maxRetryCount);
+                    await Task.Delay(videoPrefetchWait);
+                    using var videoRequest = new HttpRequestMessage(HttpMethod.Head, videoUrl);
+                    using var videoResponse = await HttpClient.SendAsync(videoRequest);
+                    videoStatusCode = (int) videoResponse.StatusCode;
+                } else {
+                    Log.Information("Prefetching video returned status code {status}, proceeding.", videoStatusCode);
+                    return true;
+                }
 
-        if (firstM3U8Url == null)
-            return true;
+            }
+
+            Log.Error(
+                "Prefetching Video failed after {limit} attempts, status code {status}. Video may not play.",
+                maxRetryCount, (int)prefetchResponse.StatusCode);
+            return false;
+        }
 
         // If we have an M3U8 URL, perform HEAD requests to validate accessibility
         var statusCode = 0;
