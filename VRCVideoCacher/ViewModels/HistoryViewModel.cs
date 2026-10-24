@@ -170,8 +170,6 @@ public partial class HistoryViewModel : ViewModelBase
 
         ConfigManager.Config.HistoryMaxSize = value;
         ConfigManager.TrySaveConfig();
-        // Apply the new cap immediately (trims the DB if it was lowered), then reload the list.
-        DatabaseManager.TrimPlayHistory(value);
         Refresh();
     }
 
