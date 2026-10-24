@@ -52,10 +52,12 @@ public class YouTubeHandler : ISiteHandler
 
         if (avPro)
         {
-            // Using the Safari impersonation with the web client gets us the muxed m3u8's that aren't normally available otherwise.
+            // Using the web_embedded client gets us the muxed m3u8's that aren't normally available otherwise.
             // These are the only streams that are compatible with AVPro currently due to WMF being unmaintained garbage.
-            args.Add("--impersonate=\"safari\"");
-            args.Add("--extractor-args=\"youtube:player_client=web\"");
+            //
+            // We leave the default yt-dlp clients in place for videos that aren't embeddable to at least get the 360p legacy format 18
+            // "default" unfortunately cannot be replaced with the web client otherwise this will always fail if the video isn't embeddable.
+            args.Add("--extractor-args=\"youtube:player_client=default,web_embedded\"");
 
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
