@@ -63,27 +63,22 @@ public class YouTubeHandler : ISiteHandler
             // "default" unfortunately cannot be replaced with the web client otherwise this will always fail if the video isn't embeddable.
             args.Add("--extractor-args=\"youtube:player_client=default,web_embedded\"");
 
-            var formatFilters="";
-
-
-            // Unsure as to whether YouTube has ever or will ever offer merged formats with anything other than H.264
+            // Unsure as to whether YouTube has or will ever offer merged formats with anything other than H.264
             // but we should respect these options anyways.
+            var formatFilters = "";
             if (!ConfigManager.Config.YtdlpAllowAV1)
-            {
                 formatFilters += "[vcodec!^=av01]";
-            }
 
             if (!ConfigManager.Config.YtdlpAllowVP9)
-            {
-                formatFilters += "[vcodec!~=(vp9|vp09)]";
-            }
+                formatFilters += "[vcodec!~='(vp9|vp09)']";
 
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
             // If dub language is set, attempt to fetch, else use defaults.
-            args.Add(!string.IsNullOrEmpty(lang)
-                ? $"-f \"{AVProFormat}{formatFilters}[language={lang}]/{AVProFormat}{formatFilters}\""
-                : $"-f \"{AVProFormat}{formatFilters}\"");
+            var format = !string.IsNullOrEmpty(lang)
+                ? $"({AVProFormat}[language={lang}]/{AVProFormat})"
+                : AVProFormat;
+            args.Add($"-f \"{format}{formatFilters}\"");
         }
         else
         {
