@@ -173,8 +173,8 @@ public class VideoDownloader
         {
             // process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" -f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec!=av01][vcodec!=vp9.2][protocol^=http]\" --remux-video mp4 {additionalArgs} -- \"{videoId}\"";
             var audioArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
-                ? "+ba"
-                : $"+(ba[language={ConfigManager.Config.YtdlpDubLanguage}]/ba)";
+                ? "+ba[acodec~='^(mp4a|opus)']"
+                : $"+(ba[language={ConfigManager.Config.YtdlpDubLanguage}]/ba)[acodec~='^(mp4a|opus)']";
 
             var formatString = "";
 
