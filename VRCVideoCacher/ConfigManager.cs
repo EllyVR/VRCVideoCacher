@@ -136,6 +136,14 @@ public class ConfigModel
     public string YtdlpAdditionalArgs = string.Empty;
     public string YtdlpDubLanguage = string.Empty;
 
+    // codec filters
+
+    // Allow AV1 videos
+    public bool YtdlpAllowAV1 = true;
+    // Allow VP9 videos: disabling this fixes the bug where videos appear corrupted on AMD on Windows
+    // might also prevent Premium accounts from getting Enhanced Bitrate streams.
+    public bool YtdlpAllowVP9 = true;
+
     // SABR restreaming: when an uncached YouTube video can't be direct-played, fetch it over SABR and
     // serve it to AVPro as a seekable HLS VOD instead of returning an unplayable URL.
     public bool SabrRestreamEnabled = true;
