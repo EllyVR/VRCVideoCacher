@@ -52,6 +52,10 @@ public class YouTubeHandler : ISiteHandler
 
         if (avPro)
         {
+            // Old method
+            // args.Add("--impersonate=\"safari\"");
+            // args.Add("--extractor-args=\"youtube:player_client=web\"");
+
             // Using the web_embedded client gets us the muxed m3u8's that aren't normally available otherwise.
             // These are the only streams that are compatible with AVPro currently due to WMF being unmaintained garbage.
             //
