@@ -191,6 +191,7 @@ public class ConfigModel
     public int CacheYouTubeMaxLength = 120;
     public bool CachePyPyDance = false;
     public bool CacheVrDancing = false;
+    public bool CacheGeneric = false;
     public bool CacheOnly = false;
 
     // Play history retention: keep only the newest this-many play records; older ones are trimmed as new
