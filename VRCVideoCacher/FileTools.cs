@@ -124,10 +124,9 @@ public class FileTools
         {
             var stream = File.OpenRead(vdfPath);
             KVObject data = KVSerializer.Create(KVSerializationFormat.KeyValues1Text).Deserialize(stream);
-            foreach (var folder in data)
+            foreach (var (_, folder) in data)
             {
-                var apps = (IEnumerable<KVObject>)folder["apps"];
-                if (apps.Any(app => app.Name == appid))
+                if (folder["apps"].ContainsKey(appid))
                     libraryPaths.Add(folder["path"].ToString(CultureInfo.InvariantCulture));
             }
         }
