@@ -68,7 +68,6 @@ internal sealed class SabrHlsSession : ISabrSession
     private volatile bool _isFetching = true;
     private int _fillGeneration;
 
-    public string PlaybackUrl { get; }
     public string VideoId => _videoId;
     public TimeSpan IdleFor => DateTime.UtcNow - _lastAccess;
     public long DurationMs => _videoIndex.TotalDurationMs;
@@ -84,7 +83,7 @@ internal sealed class SabrHlsSession : ISabrSession
 
     public void Touch() => _lastAccess = DateTime.UtcNow;
 
-    private SabrHlsSession(string videoId, string dir, string playbackUrl, SegmentIndex videoIndex,
+    private SabrHlsSession(string videoId, string dir, SegmentIndex videoIndex,
         SegmentIndex audioIndex, SabrSource source, Func<CancellationToken, Task<SabrSource>> reload,
         SabrSegmentMuxer muxer, ILogger log)
     {
@@ -96,11 +95,10 @@ internal sealed class SabrHlsSession : ISabrSession
         _reload = reload;
         _muxer = muxer;
         _log = log;
-        PlaybackUrl = playbackUrl;
     }
 
     public static async Task<SabrHlsSession> StartAsync(string videoId, string videoUrl, int maxHeight,
-        string rootDir, string playbackUrl, string ytdlpPath, string ffmpegPath, string? cookiesPath, ILogger log,
+        string rootDir, string ytdlpPath, string ffmpegPath, string? cookiesPath, ILogger log,
         SabrSource? preExtracted = null)
     {
         var dir = Path.Combine(rootDir, videoId);
@@ -122,7 +120,7 @@ internal sealed class SabrHlsSession : ISabrSession
         // is known before any media is fetched.
         var (videoIndex, audioIndex) = await ProbeIndexesAsync(source, Extract, log);
 
-        var session = new SabrHlsSession(videoId, dir, playbackUrl, videoIndex, audioIndex, source, Extract,
+        var session = new SabrHlsSession(videoId, dir, videoIndex, audioIndex, source, Extract,
             new SabrSegmentMuxer(ffmpegPath, log), log);
 
         await File.WriteAllTextAsync(Path.Combine(dir, HlsPlaylist.PlaylistName), HlsPlaylist.Build(videoIndex));

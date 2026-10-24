@@ -128,7 +128,7 @@ public static class SabrRestreamService
         if (Sessions.TryGetValue(videoId, out var existing))
         {
             existing.Touch();
-            return existing.PlaybackUrl;
+            return PlaybackUrlFor(videoId);
         }
 
         var starter = Starting.GetOrAdd(videoId, _ => new Lazy<Task<ISabrSession?>>(
@@ -150,7 +150,7 @@ public static class SabrRestreamService
                 if (!StreamActivities.TryAdd(videoId, activity))
                     activity.Dispose();
             }
-            return session.PlaybackUrl;
+            return PlaybackUrlFor(videoId);
         }
         catch (Exception ex)
         {
@@ -183,13 +183,14 @@ public static class SabrRestreamService
     public static bool IsLiveSession(string videoId) =>
         Sessions.TryGetValue(videoId, out var session) && session is SabrLiveSession;
 
+    private static string PlaybackUrlFor(string videoId) =>
+        $"{ConfigManager.Config.YtdlpWebServerUrl.TrimEnd('/')}/hls/{videoId}/{HlsPlaylist.PlaylistName}";
+
     private static async Task<ISabrSession?> StartSessionAsync(VideoInfo videoInfo)
     {
         var videoId = videoInfo.VideoId;
 
         var maxHeight = ConfigManager.Config.YouTubeMaxResolution;
-        var baseUrl = ConfigManager.Config.YtdlpWebServerUrl.TrimEnd('/');
-        var playbackUrl = $"{baseUrl}/hls/{videoId}/{HlsPlaylist.PlaylistName}";
 
         var cookies = ConfigManager.Config.YtdlpUseCookies && File.Exists(YtdlManager.CookiesPath)
             ? YtdlManager.CookiesPath
@@ -211,12 +212,12 @@ public static class SabrRestreamService
                 return null;
             }
 
-            return await SabrLiveSession.StartAsync(videoId, source, HlsRootPath, playbackUrl,
+            return await SabrLiveSession.StartAsync(videoId, source, HlsRootPath,
                 YtdlManager.FfmpegPath, Log);
         }
 
         var session = await SabrHlsSession.StartAsync(videoId, videoInfo.VideoUrl, maxHeight, HlsRootPath,
-            playbackUrl, YtdlManager.YtdlPath, YtdlManager.FfmpegPath, cookies, Log, source);
+            YtdlManager.YtdlPath, YtdlManager.FfmpegPath, cookies, Log, source);
 
         if (CacheConverges)
             session.OnFullyFetched = WriteCacheFileAsync;
