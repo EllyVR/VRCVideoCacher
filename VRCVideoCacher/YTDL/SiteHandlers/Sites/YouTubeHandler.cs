@@ -40,7 +40,7 @@ public class YouTubeHandler : ISiteHandler
             VideoUrl = url,
             VideoId = videoId,
             UrlType = UrlType.YouTube,
-            DownloadFormat = avPro ? DownloadFormat.Webm : DownloadFormat.MP4
+            DownloadFormat = avPro ? DownloadFormat.MKV : DownloadFormat.MP4
         });
     }
 
@@ -57,12 +57,27 @@ public class YouTubeHandler : ISiteHandler
             args.Add("--impersonate=\"safari\"");
             args.Add("--extractor-args=\"youtube:player_client=web\"");
 
+            var formatFilters="";
+
+
+            // Unsure as to whether YouTube has ever or will ever offer merged formats with anything other than H.264
+            // but we should respect these options anyways.
+            if (!ConfigManager.Config.YtdlpAllowAV1)
+            {
+                formatFilters += "[vcodec!^=av01]";
+            }
+
+            if (!ConfigManager.Config.YtdlpAllowVP9)
+            {
+                formatFilters += "[vcodec!~=(vp9|vp09)]";
+            }
+
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
             // If dub language is set, attempt to fetch, else use defaults.
             args.Add(!string.IsNullOrEmpty(lang)
-                ? $"-f \"[language={lang}]/{AVProFormat}\""
-                : $"-f \"{AVProFormat}\"");
+                ? $"-f \"{AVProFormat}{formatFilters}[language={lang}]/{AVProFormat}{formatFilters}\""
+                : $"-f \"{AVProFormat}{formatFilters}\"");
         }
         else
         {

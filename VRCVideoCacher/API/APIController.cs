@@ -288,16 +288,24 @@ public class ApiController : WebApiController
 
     private static (bool isCached, string filePath, string fileName) GetCachedFile(string videoId, bool avPro)
     {
-        var ext = avPro ? "webm" : "mp4";
+        var ext = avPro ? "mkv" : "mp4";
         var fileName = $"{videoId}.{ext}";
         var filePath = Path.Join(CacheManager.CachePath, fileName);
         var isCached = File.Exists(filePath);
         if (avPro && !isCached)
         {
-            // retry with .mp4
-            fileName = $"{videoId}.mp4";
+            // retry with .webm
+            fileName = $"{videoId}.webm";
             filePath = Path.Join(CacheManager.CachePath, fileName);
             isCached = File.Exists(filePath);
+
+            if (!isCached)
+            {
+                // retry with .mp4
+                fileName = $"{videoId}.mp4";
+                filePath = Path.Join(CacheManager.CachePath, fileName);
+                isCached = File.Exists(filePath);
+            }
         }
         return (isCached, filePath, fileName);
     }
