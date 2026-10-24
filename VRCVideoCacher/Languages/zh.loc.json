@@ -81,6 +81,7 @@
   "MaxYouTubeResolution": "YouTube 最高分辨率",
   "MaxVideoLength": "最大视频时长（分钟）",
   "CachePyPyDanceVideos": "缓存 PyPyDance 视频",
+  "CacheNicoNicoVideos": "缓存 NicoNico 视频",
   "CacheVRDancingVideos": "缓存 VRDancing 视频",
   "OnlyServeCachedVideos": "仅提供已缓存的视频",
   "GamePatching": "游戏补丁",

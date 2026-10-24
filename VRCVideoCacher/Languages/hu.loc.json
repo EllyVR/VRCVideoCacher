@@ -82,6 +82,7 @@
   "MaxYouTubeResolution": "Maximális YouTube Felbontás",
   "MaxVideoLength": "Maximális Videó Hossza (perc)",
   "CachePyPyDanceVideos": "PyPyDance Videók Gyorsítótár",
+  "CacheNicoNicoVideos": "NicoNico Videók Gyorsítótár",
   "CacheVRDancingVideos": "VRDancing Videók Gyorsítótár",
   "OnlyServeCachedVideos": "Csak Gyorsítótárazott Videókat Szolgáljon Ki",
   "GamePatching": "Játék Javítások",
