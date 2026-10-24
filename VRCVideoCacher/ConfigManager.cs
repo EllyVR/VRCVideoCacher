@@ -233,6 +233,8 @@ public class ConfigModel
     public bool PatchResonite = false;
     public string ResonitePath = "";
     public bool PatchVrChat = true;
+    // VRChat data folder containing Tools\yt-dlp.exe, e.g. %LocalAppData%Low\VRChat\VRChat. Empty = auto-detect.
+    public string VrChatPath = "";
 
     // Video Cacher
     public bool AutoUpdateVrcVideoCacher = true;
