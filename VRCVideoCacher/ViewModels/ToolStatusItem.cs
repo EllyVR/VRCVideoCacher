@@ -27,6 +27,12 @@ public partial class ToolStatusItem : ObservableObject
     [ObservableProperty]
     private string _detail = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasHint))]
+    private string _hint = string.Empty;
+
+    public bool HasHint => !string.IsNullOrEmpty(Hint);
+
     public ToolStatusItem(string name, ToolState state = ToolState.Checking)
     {
         Name = name;

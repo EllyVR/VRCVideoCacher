@@ -288,6 +288,7 @@ public partial class DashboardViewModel : ViewModelBase
         // finished populating yet — that was the "N/A until reverify" glitch.
         await OpusMp4Check.EnsureAsync();
 
+        _opusTool.Hint = string.Empty;
         switch (OpusMp4Check.Supported)
         {
             case true:
@@ -298,6 +299,13 @@ public partial class DashboardViewModel : ViewModelBase
                 // Soft fallback: playback still works via AAC, so this is a warning, not a hard failure.
                 _opusTool.State = ToolState.Warning;
                 _opusTool.Detail = Localizer.Get("ToolAacFallback");
+                _opusTool.Hint = Localizer.Get(OpusMp4Check.Reason() switch
+                {
+                    OpusUnsupportedReason.Windows10 => "OpusReasonWindows10",
+                    OpusUnsupportedReason.UpdateMissing => "OpusReasonUpdateMissing",
+                    OpusUnsupportedReason.RolloutPending => "OpusReasonRolloutPending",
+                    _ => "OpusReasonUnknown",
+                });
                 break;
             default:
                 _opusTool.State = ToolState.NotApplicable;
