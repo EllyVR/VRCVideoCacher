@@ -181,7 +181,7 @@ public class VideoId
         if (error.Contains(
             "Requested format is not available. Use --list-formats for a list of available formats") && avPro)
         {
-            Log.Warning("AVPro format request failed retrying for 360p.");
+            Log.Warning("AVPro format request failed, retrying with the Unity Player format.");
             return await GetUrl(videoInfo, false);
         }
         return new Tuple<string, bool>(error, false);

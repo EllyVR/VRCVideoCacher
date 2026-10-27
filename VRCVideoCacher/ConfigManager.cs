@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.Serialization;
 using Jeek.Avalonia.Localization;
 using Newtonsoft.Json;
 using Serilog;
@@ -97,7 +98,7 @@ public class ConfigManager
             if (Config.CacheYouTube)
             {
                 var maxResolution = GetUserConfirmation("Would you like to cache/download Youtube videos in 4k?", true);
-                Config.CacheYouTubeMaxResolution = maxResolution ? 2160 : 1080;
+                Config.YouTubeMaxResolution = maxResolution ? 2160 : 1080;
             }
 
             var vrDancingPyPyChoice = GetUserConfirmation("Would you like to cache/download VRDancing & PyPyDance videos?", true);
@@ -135,13 +136,40 @@ public class ConfigModel
     public bool YtdlpAutoUpdate = true;
     public string YtdlpAdditionalArgs = string.Empty;
     public string YtdlpDubLanguage = string.Empty;
+    public int YouTubeMaxResolution = 1080;
+
+    #region Legacy Settings
+
+    [JsonProperty("SabrMaxResolution", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _legacySabrMaxResolution;
+    [JsonProperty("CacheYouTubeMaxResolution", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _legacyCacheYouTubeMaxResolution;
+
+    [OnDeserialized]
+    private void MigrateLegacySettings(StreamingContext context)
+    {
+        YouTubeMaxResolution = _legacySabrMaxResolution ?? _legacyCacheYouTubeMaxResolution ?? YouTubeMaxResolution;
+        _legacySabrMaxResolution = null;
+        _legacyCacheYouTubeMaxResolution = null;
+    }
+
+    #endregion
+
+    // codec filters
+
+    // Allow AV1 videos
+    public bool YtdlpAllowAV1 = true;
+    // Allow VP9 videos: disabling this fixes the bug where videos appear corrupted on AMD on Windows
+    // might also prevent Premium accounts from getting Enhanced Bitrate streams.
+    // null = auto: blocked when an AMD GPU is detected.
+    public bool? YtdlpAllowVP9 = null;
+
+    [JsonIgnore]
+    public bool AllowVP9 => YtdlpAllowVP9 ?? !GpuCheck.HasAmdGpu;
 
     // SABR restreaming: when an uncached YouTube video can't be direct-played, fetch it over SABR and
     // serve it to AVPro as a seekable HLS VOD instead of returning an unplayable URL.
     public bool SabrRestreamEnabled = true;
-    // Max resolution for SABR STREAMING. Deliberately separate from CacheYouTubeMaxResolution, which
-    // governs the cache download only.
-    public int SabrMaxResolution = 1080;
     // YouTube delivery mode. When true (default), every uncached AVPro YouTube video goes through the
     // SABR restream path first (seekable HLS, 4K, ad-free on Premium); legacy direct-URL is only a
     // fallback. When false ("legacy-first"), the fast legacy direct URL is tried first and SABR is used
@@ -187,7 +215,6 @@ public class ConfigModel
     public string CachedAssetPath = "";
     public float CacheMaxSizeInGb = 10f;
     public bool CacheYouTube = false;
-    public int CacheYouTubeMaxResolution = 1080;
     public int CacheYouTubeMaxLength = 120;
     public bool CachePyPyDance = false;
     public bool CacheVrDancing = false;
@@ -207,6 +234,8 @@ public class ConfigModel
     public bool PatchResonite = false;
     public string ResonitePath = "";
     public bool PatchVrChat = true;
+    // VRChat data folder containing Tools\yt-dlp.exe, e.g. %LocalAppData%Low\VRChat\VRChat. Empty = auto-detect.
+    public string VrChatPath = "";
 
     // Video Cacher
     public bool AutoUpdateVrcVideoCacher = true;

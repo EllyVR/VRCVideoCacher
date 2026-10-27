@@ -142,13 +142,16 @@
                     <ItemsControl ItemsSource="{Binding Tools}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ToolStatusItem">
-                                <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,4">
+                                <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto" Margin="0,4">
                                     <mi:MaterialIcon Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center"
                                                      Kind="{Binding IconKind}" Foreground="{Binding StatusBrush}"/>
                                     <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" Foreground="#888888"
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" ToolTip.Tip="{Binding DetailTooltip}" Foreground="#888888"
                                                FontSize="12" VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis" MaxWidth="260"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Hint}"
+                                               IsVisible="{Binding HasHint}" Foreground="{Binding StatusBrush}"
+                                               FontSize="12" TextWrapping="Wrap" Margin="10,4,0,0"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
