@@ -152,8 +152,10 @@ public class VideoDownloader
         if (File.Exists(filePath))
             return true;
 
-        if (videoInfo.DownloadFormat == DownloadFormat.Webm)
+        if (videoInfo.DownloadFormat != DownloadFormat.MP4)
         {
+            // Another container is already cached (e.g. the MP4 written by SABR cache convergence),
+            // and GetCachedFile serves it for AVPro too, so there is nothing left to download.
             var mp4Path = Path.Join(CacheManager.CachePath, $"{videoInfo.VideoId}.mp4");
             if (File.Exists(mp4Path))
                 return true;
@@ -483,8 +485,7 @@ public class VideoDownloader
     private static async Task<bool> DownloadNicoVideo(VideoInfo videoInfo)
     {
         using var tempDir = new TempDir();
-        var isWebm = videoInfo.DownloadFormat == DownloadFormat.Webm;
-        var tempDownloadPath = Path.Join(tempDir.FullName, isWebm ? TempDownloadWebmName : TempDownloadMp4Name);
+        var tempDownloadPath = Path.Join(tempDir.FullName, TempDownloadMp4Name);
 
         var url = videoInfo.VideoUrl;
         using var process = new Process();
@@ -497,9 +498,8 @@ public class VideoDownloader
             CreateNoWindow = true,
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
-            Arguments = isWebm
-                ? $"-q -o \"{tempDownloadPath}\" --recode-video webm \"{url}\""
-                : $"-q -o \"{tempDownloadPath}\" --remux-video mp4 \"{url}\""
+            // NicoVideo playback only supports MP4.
+            Arguments = $"-q -o \"{tempDownloadPath}\" --remux-video mp4 \"{url}\""
         };
 
         Log.Information("Downloading NicoNico Video: {Args}", process.StartInfo.Arguments);
