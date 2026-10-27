@@ -47,7 +47,6 @@ internal sealed class SabrLiveSession : ISabrSession
     private DateTime _lastAccess = DateTime.UtcNow;
     private Task? _fill;
 
-    public string PlaybackUrl { get; }
     public TimeSpan IdleFor => DateTime.UtcNow - _lastAccess;
     public bool Ended { get; private set; }
 
@@ -66,7 +65,7 @@ internal sealed class SabrLiveSession : ISabrSession
 
     public void Touch() => _lastAccess = DateTime.UtcNow;
 
-    private SabrLiveSession(string videoId, string dir, string playbackUrl, SabrSource source,
+    private SabrLiveSession(string videoId, string dir, SabrSource source,
         SabrSegmentMuxer muxer, ILogger log)
     {
         _videoId = videoId;
@@ -74,11 +73,10 @@ internal sealed class SabrLiveSession : ISabrSession
         _source = source;
         _muxer = muxer;
         _log = log;
-        PlaybackUrl = playbackUrl;
     }
 
     public static async Task<SabrLiveSession> StartAsync(string videoId, SabrSource source, string rootDir,
-        string playbackUrl, string ffmpegPath, ILogger log)
+        string ffmpegPath, ILogger log)
     {
         var dir = Path.Combine(rootDir, videoId);
         if (Directory.Exists(dir))
@@ -86,7 +84,7 @@ internal sealed class SabrLiveSession : ISabrSession
         Directory.CreateDirectory(Path.Combine(dir, RawVideoDir));
         Directory.CreateDirectory(Path.Combine(dir, RawAudioDir));
 
-        var session = new SabrLiveSession(videoId, dir, playbackUrl, source,
+        var session = new SabrLiveSession(videoId, dir, source,
             new SabrSegmentMuxer(ffmpegPath, log), log);
 
         var sw = Stopwatch.StartNew();

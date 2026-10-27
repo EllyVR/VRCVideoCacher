@@ -9,9 +9,6 @@ namespace VRCVideoCacher.Services.Sabr;
 /// </summary>
 internal interface ISabrSession : IDisposable
 {
-    /// <summary>The playlist URL handed to the game.</summary>
-    string PlaybackUrl { get; }
-
     /// <summary>How long since a request last touched this session — what the idle reaper reads.</summary>
     TimeSpan IdleFor { get; }
 

@@ -13,7 +13,7 @@ namespace VRCVideoCacher.YTDL;
 public class VideoDownloader
 {
     private const string TempDownloadMp4Name = "_tempVideo.mp4";
-    private const string TempDownloadWebmName = "_tempVideo.webm";
+    private const string TempDownloadMkvName = "_tempVideo.mkv";
     private static readonly ILogger Log = Program.Logger.ForContext<VideoDownloader>();
     private static readonly HttpClient HttpClient = new()
     {
@@ -252,7 +252,7 @@ public class VideoDownloader
 
         using var tempDir = new TempDir();
         var tempDownloadMp4Path = Path.Join(tempDir.FullName, TempDownloadMp4Name);
-        var tempDownloadWebmPath = Path.Join(tempDir.FullName, TempDownloadWebmName);
+        var tempDownloadMkvPath = Path.Join(tempDir.FullName, TempDownloadMkvName);
 
         var args = new List<string>();
         args.Add("-q");
@@ -271,14 +271,32 @@ public class VideoDownloader
             }
         };
 
-        if (videoInfo.DownloadFormat == DownloadFormat.Webm)
+        var maxHeight = ConfigManager.Config.YouTubeMaxResolution;
+
+        if (videoInfo.DownloadFormat == DownloadFormat.MKV)
         {
-            // process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" -f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec!=av01][vcodec!=vp9.2][protocol^=http]\" --remux-video mp4 {additionalArgs} -- \"{videoId}\"";
+            // process.StartInfo.Arguments = $"-q -o \"{TempDownloadMp4Path}\" -f \"bv*[height<={maxHeight}][vcodec~='^(avc|h264)']+ba[ext=m4a]/bv*[height<={maxHeight}][vcodec!=av01][vcodec!=vp9.2][protocol^=http]\" --remux-video mp4 {additionalArgs} -- \"{videoId}\"";
             var audioArg = string.IsNullOrEmpty(ConfigManager.Config.YtdlpDubLanguage)
-                ? "+ba[acodec=opus][ext=webm]"
-                : $"+(ba[acodec=opus][ext=webm][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[acodec=opus][ext=webm])";
-            args.Add($"-o \"{tempDownloadWebmPath}\"");
-            args.Add($"-f \"bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='^av01'][ext=mp4][dynamic_range='SDR']{audioArg}/bv*[height<={ConfigManager.Config.CacheYouTubeMaxResolution}][vcodec~='vp9'][ext=webm][dynamic_range='SDR']{audioArg}\"");
+                ? "+ba[acodec~='^(mp4a|opus)']"
+                : $"+(ba[language={ConfigManager.Config.YtdlpDubLanguage}]/ba)[acodec~='^(mp4a|opus)']";
+
+            var formatString = "";
+
+            if (ConfigManager.Config.YtdlpAllowAV1)
+                formatString += $"bv*[height<={maxHeight}][vcodec~='^av01'][dynamic_range='SDR']{audioArg}/";
+
+            if (ConfigManager.Config.AllowVP9)
+                formatString += $"bv*[height<={maxHeight}][vcodec~='^(vp9|vp09)'][dynamic_range='SDR']{audioArg}/";
+
+            // Always allow downloading H.264 as a backup. If vp9 is disabled we need this,
+            // otherwise we might not be able to download videos without AV1 formats
+            // For the SABR branch of yt-dlp, we don't need a trailing /b here, as we should
+            // always be able to use SABR to download a preferable split format.
+            formatString += $"bv*[height<={maxHeight}][vcodec~='^(h264|avc1)'][dynamic_range='SDR']{audioArg}";
+            
+            args.Add($"-o \"{tempDownloadMkvPath}\"");
+            args.Add($"-f \"{formatString}\"");
+            args.Add($"--remux-video mkv");
         }
         else
         {
@@ -287,7 +305,8 @@ public class VideoDownloader
                 ? "+ba[ext=m4a]"
                 : $"+(ba[ext=m4a][language={ConfigManager.Config.YtdlpDubLanguage}]/ba[ext=m4a])";
             args.Add($"-o \"{tempDownloadMp4Path}\"");
-            args.Add($"-f \"bv*[height<=1080][vcodec~='^(avc|h264)']{audioArgPotato}/bv*[height<=1080][vcodec~='^av01'][dynamic_range='SDR']\"");
+            var potatoMaxHeight = Math.Clamp(maxHeight, 360, 1080);
+            args.Add($"-f \"bv*[height<={potatoMaxHeight}][vcodec~='^(avc|h264)']{audioArgPotato}/bv*[height<={potatoMaxHeight}][vcodec~='^av01'][dynamic_range='SDR']{audioArgPotato}\"");
             args.Add("--remux-video mp4");
             // $@"-f best/bestvideo[height<=?720]+bestaudio {url} " %(id)s.%(ext)s
         }
@@ -324,8 +343,8 @@ public class VideoDownloader
             {
                 if (File.Exists(tempDownloadMp4Path))
                     File.Delete(tempDownloadMp4Path);
-                if (File.Exists(tempDownloadWebmPath))
-                    File.Delete(tempDownloadWebmPath);
+                if (File.Exists(tempDownloadMkvPath))
+                    File.Delete(tempDownloadMkvPath);
             }
             catch (Exception ex)
             {
@@ -338,9 +357,9 @@ public class VideoDownloader
         {
             File.Move(tempDownloadMp4Path, filePath);
         }
-        else if (File.Exists(tempDownloadWebmPath))
+        else if (File.Exists(tempDownloadMkvPath))
         {
-            File.Move(tempDownloadWebmPath, filePath);
+            File.Move(tempDownloadMkvPath, filePath);
         }
         else
         {
