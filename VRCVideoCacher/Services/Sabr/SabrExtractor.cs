@@ -280,6 +280,7 @@ internal static class SabrExtractor
     {
         var candidates = formats
             .Where(f => f["vcodec"]?.Value<string>() is { } v && v != "none")
+            .Where(IsAllowedCodec)
             .Where(f => !fmp4Only || IsH264(f)) // VP9/AV1 are WebM-only; HLS can't carry them natively
             .Where(f => (f["height"]?.Value<int>() ?? 0) <= maxHeight)
             .ToList();
@@ -338,6 +339,13 @@ internal static class SabrExtractor
         { } v when v.StartsWith("avc1", StringComparison.Ordinal) => 0,
         { } v when v.StartsWith("vp9", StringComparison.Ordinal) || v.StartsWith("vp09", StringComparison.Ordinal) => 1,
         _ => 2,
+    };
+
+    private static bool IsAllowedCodec(JToken format) => format["vcodec"]?.Value<string>() switch
+    {
+        { } v when v.StartsWith("av01", StringComparison.Ordinal) => ConfigManager.Config.YtdlpAllowAV1,
+        { } v when v.StartsWith("vp9", StringComparison.Ordinal) || v.StartsWith("vp09", StringComparison.Ordinal) => ConfigManager.Config.AllowVP9,
+        _ => true,
     };
 
     private static long Bitrate(JToken format) => format["tbr"]?.Value<long?>() ?? format["filesize"]?.Value<long?>() ?? 0;

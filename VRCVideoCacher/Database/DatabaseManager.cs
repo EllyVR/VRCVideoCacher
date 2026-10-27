@@ -42,7 +42,6 @@ public static class DatabaseManager
         using var db = ContextFactory.CreateDbContext();
         db.PlayHistory.Add(history);
         db.SaveChanges();
-        TrimPlayHistory(ConfigManager.Config.HistoryMaxSize, db);
         OnPlayHistoryAdded?.Invoke();
     }
 
@@ -67,37 +66,6 @@ public static class DatabaseManager
         using var db = ContextFactory.CreateDbContext();
         db.PlayHistory.ExecuteDelete();
         OnPlayHistoryChanged?.Invoke();
-    }
-
-    /// <summary>
-    /// Enforces the retention cap: keeps the newest <paramref name="max"/> play records and deletes the
-    /// rest. Called after each insert (silently) and when the History max-size setting is lowered.
-    /// </summary>
-    public static void TrimPlayHistory(int max, Database? existing = null)
-    {
-        if (max <= 0)
-            return;
-
-        var db = existing ?? ContextFactory.CreateDbContext();
-        try
-        {
-            // Find the Timestamp of the Nth-newest row; anything strictly older is deleted. Delete by that
-            // boundary rather than materialising ids, so it stays one round-trip regardless of table size.
-            var cutoff = db.PlayHistory
-                .OrderByDescending(h => h.Timestamp)
-                .Skip(max)
-                .Select(h => (DateTime?)h.Timestamp)
-                .FirstOrDefault();
-            if (cutoff is null)
-                return; // fewer than max rows; nothing to trim
-
-            db.PlayHistory.Where(h => h.Timestamp <= cutoff.Value).ExecuteDelete();
-        }
-        finally
-        {
-            if (existing is null)
-                db.Dispose();
-        }
     }
 
     public static void AddVideoInfoCache(VideoInfoCache videoInfoCache)

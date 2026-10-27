@@ -22,6 +22,14 @@ namespace VRCVideoCacher.Utils;
 /// VRChat's — shows nothing but healthy requests, so there is no way to tell it apart from a network
 /// or extraction problem. Diagnosing it from scratch took hours; this turns it into one line at startup.
 /// </summary>
+public enum OpusUnsupportedReason
+{
+    Unknown,
+    Windows10,
+    UpdateMissing,
+    RolloutPending,
+}
+
 [SupportedOSPlatform("windows")]
 internal static class OpusMp4Check
 {
@@ -30,6 +38,8 @@ internal static class OpusMp4Check
     // The build that first carries Opus-in-MP4 support, used only to tell "your Windows is too old"
     // apart from "you have it but the rollout hasn't reached you". Never used to decide pass/fail.
     private const int SupportedBuildRevision = 8524;
+
+    private const int Windows11FirstBuild = 22000;
 
     private const string ProbeResourceName = "VRCVideoCacher.opus_probe.mp4";
 
@@ -95,19 +105,36 @@ internal static class OpusMp4Check
             Advice(), Mp4SourceVersion() ?? "unknown");
     }
 
-    /// <summary>Below .8524 the code isn't there at all; at or above, it's the rollout gate.</summary>
-    private static string Advice()
+    /// <summary>
+    /// Why Opus-in-MP4 doesn't decode here. Windows 10 never got the fix; on Windows 11, below .8524 the
+    /// code isn't there at all, and at or above it's the rollout gate.
+    /// </summary>
+    public static OpusUnsupportedReason Reason()
     {
+        if (Environment.OSVersion.Version.Build < Windows11FirstBuild)
+            return OpusUnsupportedReason.Windows10;
+
         var revision = Mp4SourceRevision();
         if (revision is null)
-            return "Please install the latest Windows updates and restart.";
+            return OpusUnsupportedReason.Unknown;
 
         return revision < SupportedBuildRevision
-            ? "Your Windows is missing the update that adds this (KB5089573). " +
-              "Please install all pending Windows updates and restart your PC."
-            : "Your Windows has the update, but Microsoft enables this feature gradually and it has " +
-              "not reached this PC yet. Install any pending Windows updates and try again later.";
+            ? OpusUnsupportedReason.UpdateMissing
+            : OpusUnsupportedReason.RolloutPending;
     }
+
+    private static string Advice() => Reason() switch
+    {
+        OpusUnsupportedReason.Windows10 =>
+            "Windows 10 does not support Opus audio in MP4; Windows 11 is required.",
+        OpusUnsupportedReason.UpdateMissing =>
+            "Your Windows is missing the update that adds this (KB5089573). " +
+            "Please install all pending Windows updates and restart your PC.",
+        OpusUnsupportedReason.RolloutPending =>
+            "Your Windows has the update, but Microsoft enables this feature gradually and it has " +
+            "not reached this PC yet. Install any pending Windows updates and try again later.",
+        _ => "Please install the latest Windows updates and restart.",
+    };
 
     private static string? Mp4SourceVersion()
     {

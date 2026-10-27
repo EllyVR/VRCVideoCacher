@@ -10,8 +10,10 @@ public class YouTubeHandler : ISiteHandler
     private static readonly ILogger Log = Program.Logger.ForContext<YouTubeHandler>();
     private static readonly string[] Hosts = ["youtube.com", "youtu.be", "www.youtube.com", "m.youtube.com", "music.youtube.com"];
     private static readonly Regex IdRegex = new(@"(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|live\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})");
-    private const string AVProFormat = "(mp4/best)[height<=?1080][height>=?64][width>=?64]";
-    private const string UnityPlayerFormat = "(mp4/best)[vcodec!^=av01][vcodec!^=vp09][vcodec!^=vp9][height<=?1080][height>=?64][width>=?64][protocol^=http]";
+    private static int MaxHeight => Math.Min(ConfigManager.Config.YouTubeMaxResolution, 1080);
+    private static int PotatoMaxHeight => Math.Clamp(ConfigManager.Config.YouTubeMaxResolution, 360, 1080);
+    private static string AVProFormat => $"(mp4/best)[height<=?{MaxHeight}][height>=?64][width>=?64]";
+    private static string UnityPlayerFormat => $"(mp4/best)[vcodec!^=av01][vcodec!^=vp09][vcodec!^=vp9][height<=?{PotatoMaxHeight}][height>=?64][width>=?64][protocol^=http]";
 
     public bool CanHandle(Uri uri) => Hosts.Contains(uri.Host);
 
@@ -40,7 +42,7 @@ public class YouTubeHandler : ISiteHandler
             VideoUrl = url,
             VideoId = videoId,
             UrlType = UrlType.YouTube,
-            DownloadFormat = avPro ? DownloadFormat.Webm : DownloadFormat.MP4
+            DownloadFormat = avPro ? DownloadFormat.MKV : DownloadFormat.MP4
         });
     }
 
@@ -52,21 +54,37 @@ public class YouTubeHandler : ISiteHandler
 
         if (avPro)
         {
-            // Using the Safari impersonation with the web client gets us the muxed m3u8's that aren't normally available otherwise.
+            // Old method
+            // args.Add("--impersonate=\"safari\"");
+            // args.Add("--extractor-args=\"youtube:player_client=web\"");
+
+            // Using the web_embedded client gets us the muxed m3u8's that aren't normally available otherwise.
             // These are the only streams that are compatible with AVPro currently due to WMF being unmaintained garbage.
-            args.Add("--impersonate=\"safari\"");
-            args.Add("--extractor-args=\"youtube:player_client=web\"");
+            //
+            // We leave the default yt-dlp clients in place for videos that aren't embeddable to at least get the 360p legacy format 18
+            // "default" unfortunately cannot be replaced with the web client otherwise this will always fail if the video isn't embeddable.
+            args.Add("--extractor-args=\"youtube:player_client=default,web_embedded\"");
+
+            // Unsure as to whether YouTube has or will ever offer merged formats with anything other than H.264
+            // but we should respect these options anyways.
+            var formatFilters = "";
+            if (!ConfigManager.Config.YtdlpAllowAV1)
+                formatFilters += "[vcodec!^=av01]";
+
+            if (!ConfigManager.Config.AllowVP9)
+                formatFilters += "[vcodec!~='(vp9|vp09)']";
 
             // AVPro
             var lang = ConfigManager.Config.YtdlpDubLanguage;
             // If dub language is set, attempt to fetch, else use defaults.
-            args.Add(!string.IsNullOrEmpty(lang)
-                ? $"-f \"[language={lang}]/{AVProFormat}\""
-                : $"-f \"{AVProFormat}\"");
+            var format = !string.IsNullOrEmpty(lang)
+                ? $"({AVProFormat}[language={lang}]/{AVProFormat})"
+                : AVProFormat;
+            args.Add($"-f \"{format}{formatFilters}\"");
         }
         else
         {
-            // Unity Player
+            // Unity Player (Potato mode)
             args.Add($"-f \"{UnityPlayerFormat}\"");
         }
 

@@ -180,9 +180,8 @@ public class ApiController : WebApiController
             {
                 Log.Information("Responding with forced SABR restream URL: {URL}", forcedUrl);
                 await HttpContext.SendStringAsync(forcedUrl, "text/plain", Encoding.UTF8);
-                // The SABR session fetches the whole video anyway; when it is streaming at the cache's
-                // resolution it writes the cached file itself, so downloading it again would fetch the
-                // same video twice. Only queue a separate download when the resolutions differ.
+                // The SABR session fetches the whole video anyway and writes the cached file itself, so
+                // downloading it again would fetch the same video twice.
                 // Never queue a livestream: it has no end, and the download worker is a single serial
                 // thread, so one live job blocks every other cache download indefinitely.
                 if (ConfigManager.Config.CacheYouTube && !SabrRestreamService.CacheConverges
@@ -288,17 +287,21 @@ public class ApiController : WebApiController
 
     private static (bool isCached, string filePath, string fileName) GetCachedFile(string videoId, bool avPro)
     {
-        var ext = avPro ? "webm" : "mp4";
-        var fileName = $"{videoId}.{ext}";
-        var filePath = Path.Join(CacheManager.CachePath, fileName);
-        var isCached = File.Exists(filePath);
-        if (avPro && !isCached)
+        if (avPro)
         {
-            // retry with .mp4
-            fileName = $"{videoId}.mp4";
-            filePath = Path.Join(CacheManager.CachePath, fileName);
-            isCached = File.Exists(filePath);
+            var mkvName = $"{videoId}.mkv";
+            var mkvPath = Path.Join(CacheManager.CachePath, mkvName);
+            if (File.Exists(mkvPath))
+                return (true, mkvPath, mkvName);
+
+            var webmName = $"{videoId}.webm";
+            var webmPath = Path.Join(CacheManager.CachePath, webmName);
+            if (File.Exists(webmPath))
+                return (true, webmPath, webmName);
         }
-        return (isCached, filePath, fileName);
+
+        var mp4Name = $"{videoId}.mp4";
+        var mp4Path = Path.Join(CacheManager.CachePath, mp4Name);
+        return (File.Exists(mp4Path), mp4Path, mp4Name);
     }
 }
