@@ -216,6 +216,8 @@ public partial class App : Application
         };
 
         _trayIcon.Clicked += (_, _) => ShowMainWindow();
+
+        TrayIcon.SetIcons(this, new TrayIcons { _trayIcon });
     }
 
     private void ShowMainWindow()
