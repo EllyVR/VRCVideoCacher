@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Jeek.Avalonia.Localization;
 using VRCVideoCacher.Languages;
@@ -15,7 +16,6 @@ namespace VRCVideoCacher;
 
 public partial class App : Application
 {
-    private TrayIcon? _trayIcon;
     public static MainWindow? MainWindow;
 
     public override void Initialize()
@@ -78,12 +78,7 @@ public partial class App : Application
             MainWindow.Opened += OnMainWindowOpened;
 
             // Allow the app to exit cleanly on OS shutdown/logoff
-            desktop.ShutdownRequested += (_, _) =>
-            {
-                _isExiting = true;
-                _trayIcon?.Dispose();
-                _trayIcon = null;
-            };
+            desktop.ShutdownRequested += (_, _) => _isExiting = true;
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -130,8 +125,6 @@ public partial class App : Application
         if (msg == WmClose && !_isExiting)
         {
             _isExiting = true;
-            _trayIcon?.Dispose();
-            _trayIcon = null;
             _desktop?.Shutdown();
             handled = true;
         }
@@ -159,8 +152,6 @@ public partial class App : Application
                 Dispatcher.UIThread.Post(() =>
                 {
                     _isExiting = true;
-                    _trayIcon?.Dispose();
-                    _trayIcon = null;
                     _desktop?.Shutdown();
                 });
             });
@@ -172,8 +163,6 @@ public partial class App : Application
                     return;
 
                 _isExiting = true;
-                _trayIcon?.Dispose();
-                _trayIcon = null;
                 _desktop?.Shutdown();
             };
         }
@@ -207,15 +196,17 @@ public partial class App : Application
             _exitItem
         };
 
-        _trayIcon = new TrayIcon
+        var trayIcon = new TrayIcon
         {
             ToolTipText = "VRCVideoCacher",
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://VRCVideoCacher/Assets/icon.ico"))),
+            Icon = new(AssetLoader.Open(new("avares://VRCVideoCacher/Assets/icon.ico"))),
             Menu = menu,
             IsVisible = true
         };
 
-        _trayIcon.Clicked += (_, _) => ShowMainWindow();
+        trayIcon.Clicked += (_, _) => ShowMainWindow();
+
+        TrayIcon.SetIcons(this, [trayIcon]);
     }
 
     private void ShowMainWindow()
