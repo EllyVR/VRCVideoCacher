@@ -11,6 +11,7 @@ public class LaunchArgs
     private const string NoSteamArg = "--no-steam";
     private const string NoOvrArg = "--no-ovr";
     private const string CloseWithSteamVrArg = "--close-with-steamvr";
+    private const string UninstallArg = "--uninstall";
 
     public static bool IsBypassArgumentPresent;
     public static bool HasGui = true;
@@ -21,6 +22,7 @@ public class LaunchArgs
     public static bool SteamSdk = true;
     public static bool OVR = true;
     public static bool CloseWithSteamVr = false;
+    public static bool Uninstall = false;
 
     public static void SetupArguments(params string[] args)
     {
@@ -58,6 +60,9 @@ public class LaunchArgs
 
             if (arg.Equals(CloseWithSteamVrArg, StringComparison.OrdinalIgnoreCase))
                 CloseWithSteamVr = true;
+
+            if (arg.Equals(UninstallArg, StringComparison.OrdinalIgnoreCase))
+                Uninstall = true;
         }
     }
 

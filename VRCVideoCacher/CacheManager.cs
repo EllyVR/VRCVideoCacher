@@ -25,7 +25,7 @@ public class CacheManager
     static CacheManager()
     {
         if (string.IsNullOrEmpty(ConfigManager.Config.CachedAssetPath))
-            CachePath = Path.Join(GetSystemCacheFolder(), "CachedAssets");
+            CachePath = Program.DefaultCachePath;
         else if (Path.IsPathRooted(ConfigManager.Config.CachedAssetPath))
             CachePath = ConfigManager.Config.CachedAssetPath;
         else
@@ -33,18 +33,6 @@ public class CacheManager
 
         Log.Debug("Using cache path {CachePath}", CachePath);
         BuildCache();
-    }
-
-    private static string GetSystemCacheFolder()
-    {
-        if (OperatingSystem.IsWindows())
-            return Program.DataPath;
-
-        var cachePath = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
-        if (string.IsNullOrEmpty(cachePath))
-            cachePath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
-
-        return Path.Join(cachePath, "VRCVideoCacher");
     }
 
     public static void Init()

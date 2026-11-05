@@ -95,6 +95,22 @@ public class AutoStartShortcut
         }
     }
 
+    public static void RemoveShortcuts()
+    {
+        var shortcutPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX", "startup");
+        if (!Directory.Exists(shortcutPath))
+            return;
+
+        foreach (var shortCut in FindShortcutFiles(shortcutPath))
+        {
+            if (!Path.GetFileName(shortCut).Contains(ShortcutName))
+                continue;
+
+            Log.Information("Removing shortcut {ShortCut}", shortCut);
+            File.Delete(shortCut);
+        }
+    }
+
     [SupportedOSPlatform("windows")]
     private static void RemoveLegacyShortcut(bool createIfAnyFound)
     {

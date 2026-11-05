@@ -53,7 +53,7 @@ public class HostsManager
             $"{Header}127.0.0.1 localhost.youtube.com{Footer}");
     }
 
-    private static void Remove()
+    public static void Remove()
     {
         CreateHostsIfNotExists();
         var hostsFile = File.ReadAllText(HostsPath);

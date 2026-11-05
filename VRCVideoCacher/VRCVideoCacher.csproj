@@ -87,6 +87,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Remove="installscript.vdf" />
+        <None Include="installscript.vdf" Condition="'$(Configuration)' == 'SteamRelease' And $(RuntimeIdentifier.StartsWith('win'))">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.4" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />

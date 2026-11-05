@@ -12,8 +12,11 @@ namespace VRCVideoCacher.Services;
 public class OpenVRService
 {
     private static readonly ILogger Logger = Program.Logger.ForContext<OpenVRService>();
+    public const string AppKey = "com.github.ellyvr.vrcvideocacher";
+    private const string ManifestFileName = "VRCVideoCacher.manifest.vrmanifest";
+    public static readonly string ManifestPath = Path.Combine(Program.CurrentProcessPath, ManifestFileName);
 
-    public static void Start(string dataPath)
+    public static void Start()
     {
         if (!LaunchArgs.OVR)
             return;
@@ -33,23 +36,22 @@ public class OpenVRService
                     switch (initError)
                     {
                         case EVRInitError.None:
-                            var manifestPath = Path.Combine(dataPath, "manifest.vrmanifest");
-                            await using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("VRCVideoCacher.manifest.vrmanifest")!)
-                            await using (var file = File.Create(manifestPath))
+                            await using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ManifestFileName)!)
+                            await using (var file = File.Create(ManifestPath))
                                 await stream.CopyToAsync(file);
-                            var manifestError = OpenVR.Applications.AddApplicationManifest(manifestPath, false);
+                            var manifestError = OpenVR.Applications.AddApplicationManifest(ManifestPath, false);
                             if (manifestError != EVRApplicationError.None)
                             {
                                 Logger.Warning("Failed to register startup manifest: {Error}", manifestError);
                             }
                             else
                             {
-                                if (OpenVR.Applications.IsApplicationInstalled("com.github.ellyvr.vrcvideocacher"))
+                                if (OpenVR.Applications.IsApplicationInstalled(AppKey))
                                 {
                                     Logger.Information("Startup manifest registered successfully");
 
                                     Logger.Information("{AutoLaunchState} steamvr auto-launch", ConfigManager.Config.StartWithSteamVr ? "Enabling" : "Disabling");
-                                    OpenVR.Applications.SetApplicationAutoLaunch("com.github.ellyvr.vrcvideocacher", ConfigManager.Config.StartWithSteamVr);
+                                    OpenVR.Applications.SetApplicationAutoLaunch(AppKey, ConfigManager.Config.StartWithSteamVr);
                                 }
                                 else
                                 {
@@ -88,6 +90,46 @@ public class OpenVRService
                 }
             }
         });
+    }
+
+    public static bool TryRemoveManifest()
+    {
+        var initError = EVRInitError.None;
+        try
+        {
+            OpenVR.Init(ref initError, EVRApplicationType.VRApplication_Utility);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Failed to load OpenVR: {Msg}", ex.Message);
+            return false;
+        }
+
+        if (initError != EVRInitError.None)
+        {
+            Logger.Information("SteamVR not available ({Error}), falling back to appconfig.json", initError);
+            return false;
+        }
+
+        try
+        {
+            if (OpenVR.Applications.IsApplicationInstalled(AppKey))
+                OpenVR.Applications.SetApplicationAutoLaunch(AppKey, false);
+
+            var error = OpenVR.Applications.RemoveApplicationManifest(ManifestPath);
+            if (error != EVRApplicationError.None && error != EVRApplicationError.UnknownApplication)
+            {
+                Logger.Warning("Failed to remove SteamVR manifest: {Error}", error);
+                return false;
+            }
+
+            Logger.Information("Unregistered from SteamVR");
+            return true;
+        }
+        finally
+        {
+            OpenVR.Shutdown();
+        }
     }
 
     private static async Task PollEventsUntilQuit()

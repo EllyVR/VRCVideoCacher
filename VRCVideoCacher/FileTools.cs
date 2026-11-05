@@ -79,51 +79,35 @@ public class FileTools
         throw new NotImplementedException("Unknown platform");
     }
 
-    private static List<string>? GetAppLibraryPath(string appid, bool isEnabled)
+    public static List<string> GetSteamInstallPaths()
     {
-        string vdfPath;
         if (OperatingSystem.IsWindows())
         {
-            string? steamInstallPath = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", "");
-            if (string.IsNullOrEmpty(steamInstallPath))
-            {
-                if (isEnabled)
-                {
-                    Log.Error("GetAppLibraryPath: Unable to find Steam installation directory");
-                }
-                else
-                {
-                    Log.Warning("GetAppLibraryPath: Unable to find Steam installation directory");
-                }
-                return null;
-            }
-            vdfPath = Path.Join(steamInstallPath, "steamapps", "libraryfolders.vdf");
+            var installPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+            return string.IsNullOrEmpty(installPath) ? [] : [installPath];
         }
-        else if (OperatingSystem.IsLinux())
-        {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-            var vdfPaths = SteamPaths
-                .Select(path => Path.Join(home, path, "steamapps", "libraryfolders.vdf"))
-                .Where(Path.Exists);
-            if (vdfPaths.Count() == 0)
+        var homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return SteamPaths
+            .Select(steamPath => Path.Join(homePath, steamPath))
+            .ToList();
+    }
+
+    private static List<string>? GetAppLibraryPath(string appid, bool isEnabled)
+    {
+        var vdfPath = GetSteamInstallPaths()
+            .Select(path => Path.Join(path, "steamapps", "libraryfolders.vdf"))
+            .FirstOrDefault(File.Exists);
+        if (vdfPath == null)
+        {
+            if (isEnabled)
             {
-                if (isEnabled)
-                {
-                    Log.Error("GetAppLibraryPath: Couldn't find libraryfolders.vdf!");
-                }
-                else
-                {
-                    Log.Warning("GetAppLibraryPath: Couldn't find libraryfolders.vdf!");
-                }
-                return null;
+                Log.Error("GetAppLibraryPath: Couldn't find libraryfolders.vdf!");
             }
-
-            vdfPath = vdfPaths.First();
-        }
-        else
-        {
-            Log.Error("GetAppLibraryPath: Unsupported operating system {OperatingSystem}", Environment.OSVersion.Platform);
+            else
+            {
+                Log.Warning("GetAppLibraryPath: Couldn't find libraryfolders.vdf!");
+            }
             return null;
         }
 

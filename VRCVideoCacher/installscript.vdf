@@ -1,0 +1,11 @@
+"InstallScript"
+{
+	"Run Process On Uninstall"
+	{
+		"VRCVideoCacher Uninstall"
+		{
+			"process 1"	"%INSTALLDIR%\\VRCVideoCacher.exe"
+			"command 1"	"--uninstall"
+		}
+	}
+}

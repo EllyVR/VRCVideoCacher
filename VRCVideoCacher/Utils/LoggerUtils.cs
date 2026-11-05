@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Sentry.Serilog;
 using Serilog;
 using Serilog.Core;
@@ -24,6 +25,15 @@ public static class LoggerUtils
     /// to <see cref="LogEventLevel.Debug"/> at runtime to bring it back.
     /// </summary>
     public static readonly LoggingLevelSwitch LevelSwitch = new(LogEventLevel.Information);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool AttachConsole(int dwProcessId);
+
+    public static void AttachParentConsole()
+    {
+        if (OperatingSystem.IsWindows())
+            AttachConsole(-1);
+    }
 
     public static void InitializeLogger()
     {
