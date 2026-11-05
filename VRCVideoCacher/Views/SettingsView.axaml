@@ -247,6 +247,22 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <!-- Uninstall -->
+                <Border Background="#2d2d2d" CornerRadius="8" Padding="20">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Spacing="5" Margin="0,0,15,0">
+                            <TextBlock Text="{l:Localize Uninstall}" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{l:Localize UninstallDescription}" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding UninstallCommand}" Classes="danger" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="DeleteForever" Width="16" Height="16"/>
+                                <TextBlock Text="{l:Localize Uninstall}"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>
@@ -254,6 +270,10 @@
     <UserControl.Styles>
         <Style Selector="Button.accent">
             <Setter Property="Background" Value="#1DB954"/>
+        </Style>
+
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="#E57373"/>
         </Style>
 
         <!-- Unsaved changes -> pulse the Save button so it's impossible to miss. Opacity animation per the

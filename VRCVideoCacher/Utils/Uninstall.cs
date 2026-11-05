@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -9,9 +10,21 @@ public class Uninstall
 {
     private static readonly ILogger Log = Program.Logger.ForContext<Uninstall>();
 
+    public static void StartDetached()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = Environment.ProcessPath,
+            Arguments = "--uninstall",
+            UseShellExecute = false
+        });
+    }
+
     public static void Run()
     {
         Log.Information("Uninstalling VRCVideoCacher...");
+
+        WaitForOtherInstances();
 
         if (OperatingSystem.IsWindows())
             TryRun("remove VRCX startup shortcut", AutoStartShortcut.RemoveShortcuts);
@@ -32,6 +45,22 @@ public class Uninstall
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to {Description}", description);
+        }
+    }
+
+    private static void WaitForOtherInstances()
+    {
+        using var current = Process.GetCurrentProcess();
+        foreach (var process in Process.GetProcessesByName(current.ProcessName))
+        {
+            using (process)
+            {
+                if (process.Id == current.Id)
+                    continue;
+
+                if (!process.WaitForExit(TimeSpan.FromSeconds(30)))
+                    Log.Warning("VRCVideoCacher (PID {Pid}) is still running", process.Id);
+            }
         }
     }
 
