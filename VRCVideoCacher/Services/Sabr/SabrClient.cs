@@ -348,6 +348,7 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
         var newSegments = false;
         string? redirect = null;
         var reload = false;
+        var attestationRequired = false;
         // Reflects only THIS response's NextRequestPolicy; the ad-wait decision reads it after the loop.
         _pendingBackoffMs = 0;
 
@@ -424,11 +425,9 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
                 case UmpPartId.StreamProtectionStatus:
                     // 3 = ATTESTATION_REQUIRED. We send the web client's PO token on every request, so this
                     // means the token the bgutil provider minted was rejected or has expired — not that one
-                    // was missing.
+                    // was missing. Recover like a reload, but with a freshly minted token.
                     if (SabrResponse.DecodeProtectionStatus(part.Payload) == 3)
-                        throw new SabrException(
-                            "YouTube rejected our PO token (attestation required). The bgutil-minted token " +
-                            "may be invalid or expired.");
+                        attestationRequired = true;
                     break;
 
                 case UmpPartId.SabrError:
@@ -466,8 +465,8 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
             _url = redirect;
         }
 
-        if (reload)
-            await ReloadAsync(ct);
+        if (reload || attestationRequired)
+            await ReloadAsync(attestationRequired, ct);
 
         return newSegments;
     }
@@ -477,15 +476,25 @@ internal sealed class SabrClient(HttpClient http, SabrSource source, ILogger log
     /// range: the server only invalidated how we address the session, not what we already hold — so
     /// the next request picks up exactly where we left off.
     /// </summary>
-    private async Task ReloadAsync(CancellationToken ct)
+    /// <param name="attestationRequired">
+    /// The PO token was rejected. bgutil caches minted tokens, so flush that cache first or the
+    /// re-extraction just hands back the same rejected token.
+    /// </param>
+    private async Task ReloadAsync(bool attestationRequired, CancellationToken ct)
     {
+        var reason = attestationRequired
+            ? "YouTube rejected our PO token (attestation required)"
+            : "Server demanded a player-response reload";
         if (reloadAsync is null)
-            throw new SabrException("Server demanded a player-response reload, but no reload callback was supplied");
+            throw new SabrException($"{reason}, but no reload callback was supplied");
         if (++_reloads > MaxReloads)
-            throw new SabrException($"Server demanded more than {MaxReloads} player-response reloads; giving up");
+            throw new SabrException($"{reason} more than {MaxReloads} times; giving up");
 
-        log.Information("Reloading SABR player response ({Reload}/{Max}) at {PlayerTime}ms",
-            _reloads, MaxReloads, _playerTimeMs);
+        log.Information("{Reason}; reloading SABR player response ({Reload}/{Max}) at {PlayerTime}ms",
+            reason, _reloads, MaxReloads, _playerTimeMs);
+
+        if (attestationRequired)
+            await BgUtilPotProvider.InvalidateCachesAsync(ct);
 
         var refreshed = await reloadAsync(ct);
         _url = refreshed.AbrStreamingUrl;

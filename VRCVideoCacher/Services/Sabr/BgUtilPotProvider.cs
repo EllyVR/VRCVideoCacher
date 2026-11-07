@@ -393,6 +393,28 @@ internal static class BgUtilPotProvider
         }
     }
 
+    /// <summary>
+    /// Drops the provider's cached PO tokens so the next extraction mints a fresh one. Best effort: a
+    /// failure here just means the retry may reuse the rejected token.
+    /// </summary>
+    public static async Task InvalidateCachesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+            using var response = await HttpClient.PostAsync($"{_baseUrl}/invalidate_caches", null, cts.Token);
+            if (response.IsSuccessStatusCode)
+                Log.Information("Invalidated bgutil PO token cache");
+            else
+                Log.Warning("bgutil cache invalidation returned {Status}", (int)response.StatusCode);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            Log.Warning("Failed to invalidate bgutil PO token cache: {Error}", ex.Message);
+        }
+    }
+
     private static async Task<(int exitCode, string output)> RunProcessAsync(
         string fileName, string arguments, string workingDirectory, TimeSpan timeout)
     {
