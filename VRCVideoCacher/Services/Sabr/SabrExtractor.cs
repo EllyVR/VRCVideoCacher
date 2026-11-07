@@ -432,7 +432,7 @@ internal static class SabrExtractor
         await process.WaitForExitAsync(ct);
 
         if (process.ExitCode != 0)
-            throw new SabrException($"yt-dlp extraction failed: {(await stderr).Trim()}");
+            throw new SabrException($"yt-dlp extraction failed: {stdout} {stderr}");
 
         return JObject.Parse(await stdout);
     }

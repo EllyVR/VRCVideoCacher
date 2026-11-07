@@ -57,11 +57,11 @@ public class VideoId
 
         Log.Information("Starting yt-dlp with args: {args:l}", ytdlpProcess.StartInfo.Arguments);
         ytdlpProcess.Start();
-        var output = await ytdlpProcess.StandardOutput.ReadToEndAsync();
-        var error = await ytdlpProcess.StandardError.ReadToEndAsync();
+        var output = ytdlpProcess.StandardOutput.ReadToEndAsync();
+        var error = ytdlpProcess.StandardError.ReadToEndAsync();
         await ytdlpProcess.WaitForExitAsync();
         Log.Information("Finished yt-dlp");
-        return (output.Trim(), error.Trim(), ytdlpProcess.ExitCode);
+        return ((await output).Trim(), (await error).Trim(), ytdlpProcess.ExitCode);
     }
 
     public static async Task<VideoInfo?> GetVideoId(string url, bool avPro)

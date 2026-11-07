@@ -218,8 +218,9 @@ public class VideoDownloader
         using (await YtdlCookieJar.AcquireAsync())
         {
             process.Start();
+            var stderr = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
-            error = (await process.StandardError.ReadToEndAsync()).Trim();
+            error = (await stderr).Trim();
         }
 
         if (process.ExitCode != 0)
