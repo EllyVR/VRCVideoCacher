@@ -192,9 +192,7 @@ public static class SabrRestreamService
 
         var maxHeight = ConfigManager.Config.YouTubeMaxResolution;
 
-        var cookies = ConfigManager.Config.YtdlpUseCookies && File.Exists(YtdlManager.CookiesPath)
-            ? YtdlManager.CookiesPath
-            : null;
+        var cookies = Program.IsCookiesEnabledAndValid() ? YtdlManager.CookiesPath : null;
 
         // Extract once, here, because liveness is only knowable from the extraction — and a live
         // broadcast needs an entirely different session. The result is handed to whichever session we
