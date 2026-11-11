@@ -2,6 +2,9 @@ using EmbedIO;
 using EmbedIO.Files;
 using EmbedIO.WebApi;
 using Swan.Logging;
+using VRCVideoCacher.Services;
+using VRCVideoCacher.Services.Nico;
+using VRCVideoCacher.Services.Sabr;
 using ILogger = Serilog.ILogger;
 
 namespace VRCVideoCacher.API;
@@ -45,6 +48,10 @@ public class WebServer
             // First, we will configure our web server by adding Modules.
             .WithWebApi("/api", m => m
                 .WithController<ApiController>())
+            // NicoNico HLS sessions and temp video streaming.
+            .WithModule(new NicoHlsModule("/nico"))
+            .WithStaticFolder("/nico", NicoRestreamService.HlsRootPath, false, m => m
+                .WithContentCaching(false))
             // SABR HLS sessions. The module runs first and falls through to the static file module:
             // it builds the requested segment on demand (fetching or seeking as needed) so the file
             // exists by the time the static module sends it. It is also the session's only liveness
@@ -74,32 +81,5 @@ public class WebServer
     {
         Log.Information(exception, "OnUnhandledException Error Occured");
         return Task.CompletedTask;
-    }
-}
-
-/// <summary>
-/// Materialises the requested SABR HLS file, then lets the static file module actually serve it
-/// (<see cref="IsFinalHandler"/> is false, so routing continues).
-/// </summary>
-internal sealed class SabrHlsModule(string baseRoute) : WebModuleBase(baseRoute)
-{
-    public override bool IsFinalHandler => false;
-
-    protected override async Task OnRequestAsync(IHttpContext context)
-    {
-        // A LIVE playlist is answered here rather than falling through to the static file module: that
-        // module would attach an ETag and honour If-None-Match, and a playlist that changes every couple
-        // of seconds must never be answered 304. Everything else (segments, init, VOD playlists) falls
-        // through as before.
-        if (await Services.SabrRestreamService.TryGetLivePlaylistAsync(context.RequestedPath) is { } playlist)
-        {
-            context.Response.ContentType = "application/vnd.apple.mpegurl";
-            context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
-            await context.SendStringAsync(playlist, "application/vnd.apple.mpegurl", System.Text.Encoding.UTF8);
-            context.SetHandled();
-            return;
-        }
-
-        await Services.SabrRestreamService.EnsureAsync(context.RequestedPath);
     }
 }
