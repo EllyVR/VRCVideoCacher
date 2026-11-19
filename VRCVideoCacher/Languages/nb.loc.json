@@ -113,7 +113,10 @@
   "SettingsSaved": "Innstillinger lagret!",
   "SettingsReset": "Innstillinger tilbakestilt til sist lagrede verdier.",
   "SettingsUnsavedChanges": "Du har ulagrede endringer.",
-  "RedirectVRDancing": "Omdiriger EU VRDancing til NA",
+  "RedirectVRDancing": "Omdiriger VRDancing",
+  "RedirectVRDancingDestination": "Foretrukket server",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Åpne mappe",
   "DeleteAllCache": "Slett all hurtigbuffer",

@@ -113,7 +113,10 @@
   "SettingsSaved": "Impostazioni salvate!",
   "SettingsReset": "Impostazioni ripristinate ai valori salvati l'ultima volta.",
   "SettingsUnsavedChanges": "Hai modifiche non salvate.",
-  "RedirectVRDancing": "Reindirizza EU VRDancing a NA",
+  "RedirectVRDancing": "Reindirizza VRDancing",
+  "RedirectVRDancingDestination": "Server preferito",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Apri Cartella",
   "DeleteAllCache": "Elimina tutta la cache",

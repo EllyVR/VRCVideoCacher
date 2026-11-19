@@ -108,6 +108,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _redirectVRDancing;
 
+    [ObservableProperty]
+    private int _redirectVRDancingDestination;
+
     // Updates
     [ObservableProperty]
     private bool _autoUpdate;
@@ -208,6 +211,7 @@ public partial class SettingsViewModel : ViewModelBase
         StartWithSteamVr = config.StartWithSteamVr;
         ErrorPopups = config.ErrorPopups;
         RedirectVRDancing = config.RedirectVRDancing;
+        RedirectVRDancingDestination = config.RedirectVRDancingDestination;
         BlockedUrls.Clear();
         foreach (var url in config.BlockedUrls)
         {
@@ -287,6 +291,8 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnCacheOnlyChanged(bool value) => SetHasChanges();
     partial void OnPatchResoniteChanged(bool value) => SetHasChanges();
     partial void OnPatchVRCChanged(bool value) => SetHasChanges();
+    partial void OnRedirectVRDancingChanged(bool value) => SetHasChanges();
+    partial void OnRedirectVRDancingDestinationChanged(int value) => SetHasChanges();
     partial void OnAutoUpdateChanged(bool value) => SetHasChanges();
     partial void OnCloseToTrayChanged(bool value) => SetHasChanges();
     partial void OnStartMinimizedChanged(bool value) => SetHasChanges();
@@ -336,6 +342,7 @@ public partial class SettingsViewModel : ViewModelBase
             .ToArray();
         config.BlockRedirect = BlockRedirect;
         config.RedirectVRDancing = RedirectVRDancing;
+        config.RedirectVRDancingDestination = RedirectVRDancingDestination;
         ConfigManager.TrySaveConfig();
         HasChanges = false;
         StatusMessage = Localizer.Get("SettingsSaved");

@@ -113,7 +113,10 @@
   "SettingsSaved": "Paramètres enregistrés !",
   "SettingsReset": "Les dernières valeurs enregistrées des paramètres ont été restaurées.",
   "SettingsUnsavedChanges": "Vous avez des modifications non enregistrées.",
-  "RedirectVRDancing": "Rediriger VRDancing de l’Europe vers l’Amérique du Nord",
+  "RedirectVRDancing": "Rediriger VRDancing",
+  "RedirectVRDancingDestination": "Serveur préféré",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Ouvrir le dossier",
   "DeleteAllCache": "Vider tout le cache",

@@ -113,6 +113,10 @@
   "SettingsSaved": "Настройки сохранены!",
   "SettingsReset": "Настройки сброшенны до последнего сохранения",
   "SettingsUnsavedChanges": "У вас есть несохраненные изменения!",
+  "RedirectVRDancing": "Перенаправление VRDancing",
+  "RedirectVRDancingDestination": "Предпочитаемый сервер",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Открыть папку..",
   "DeleteAllCache": "Удалить весь кэш",
