@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using EmbedIO;
 using EmbedIO.Routing;
 using EmbedIO.WebApi;
@@ -82,9 +83,17 @@ public class ApiController : WebApiController
 
         Log.Information("Request URL: {URL}", requestUrl);
 
-        if (requestUrl.StartsWith("https://eu2.vrdancing.club/weekend/") && ConfigManager.Config.RedirectVRDancing)
+        if (ConfigManager.Config.RedirectVRDancing && requestUrl.Contains(".vrdancing.club/weekend/"))
         {
-            await HttpContext.SendStringAsync(requestUrl.Replace("eu2", "na2"), "text/plain", Encoding.UTF8);
+            var redirectUrl = string.Empty;
+            var replacePattern = @"https://\w+\.vrdancing\.club";
+            switch (ConfigManager.Config.RedirectVRDancingDestination)
+            {
+                case 0: redirectUrl = Regex.Replace(requestUrl, replacePattern, "https://na2.vrdancing.club"); break;
+                case 1: redirectUrl = Regex.Replace(requestUrl, replacePattern, "https://eu2.vrdancing.club"); break;
+                default: redirectUrl = requestUrl; break;
+            }
+            await HttpContext.SendStringAsync(redirectUrl, "text/plain", Encoding.UTF8);
             return;
         }
 

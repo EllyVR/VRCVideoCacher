@@ -243,6 +243,7 @@ public class ConfigModel
     public bool StartWithSteamVr = true;
     public bool CookieSetupCompleted = false;
     public bool RedirectVRDancing = false;
+    public int RedirectVRDancingDestination = 0;
     public bool ErrorPopups = true;
 
     // Localization

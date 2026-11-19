@@ -114,6 +114,10 @@
   "SettingsSaved": "Beállítások Mentve!",
   "SettingsReset": "Beállítások visszaállnak az utoljára mentett értékekre.",
   "SettingsUnsavedChanges": "Vannak mentetlen változások.",
+  "RedirectVRDancing": "VRDancing átirányítása",
+  "RedirectVRDancingDestination": "Preferált szerver",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Mappa Megnyitás",
   "DeleteAllCache": "Összes gyorsítótár Törlése",

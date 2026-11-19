@@ -113,7 +113,10 @@
   "SettingsSaved": "Preferências salvas!",
   "SettingsReset": "Preferências redefinidas para os últimos valores salvos.",
   "SettingsUnsavedChanges": "Você tem mudanças não salvas.",
-  "RedirectVRDancing": "Redirecionar VRDancing Europeu para Norte-Americano",
+  "RedirectVRDancing": "Redirecionar VRDancing",
+  "RedirectVRDancingDestination": "Servidor preferido",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
 
   "OpenFolder": "Abrir pasta",
   "DeleteAllCache": "Esvaziar o cachê",

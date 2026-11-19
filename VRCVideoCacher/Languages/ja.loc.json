@@ -113,8 +113,11 @@
   "SettingsSaved": "設定を保存しました！",
   "SettingsReset": "設定を最後に保存した値にリセットしました。",
   "SettingsUnsavedChanges": "保存していない変更があります。",
-  "RedirectVRDancing": "EU の VRDancing を NA にリダイレクト",
- 
+  "RedirectVRDancing": "VRDancing をリダイレクト",
+  "RedirectVRDancingDestination": "優先サーバー",
+  "RedirectVRDancingDestinationNA": "NA",
+  "RedirectVRDancingDestinationEU": "EU",
+
  "OpenFolder": "フォルダーを開く",
   "DeleteAllCache": "すべてのキャッシュを削除",
   "SearchVideosWatermark": "動画を検索...",
