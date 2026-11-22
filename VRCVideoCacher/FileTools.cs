@@ -30,7 +30,7 @@ public class FileTools
             resoPath = GetAppLibraryPath(ResoniteAppId, ConfigManager.Config.PatchResonite)?
                 .Select(path => Path.Join(path, "steamapps", "common", "Resonite"))?
                 .Where(Path.Exists)?
-                .First();
+                .FirstOrDefault();
         }
         if (!string.IsNullOrEmpty(resoPath))
         {
