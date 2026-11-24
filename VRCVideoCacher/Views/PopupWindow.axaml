@@ -13,6 +13,7 @@
         <Button Content="OK"
                 Width="80"
                 HorizontalAlignment="Right"
+                HorizontalContentAlignment="Center"
                 Click="OkButton_Click"/>
     </StackPanel>
 </Window>
