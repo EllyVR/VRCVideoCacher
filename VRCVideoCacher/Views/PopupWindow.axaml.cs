@@ -12,7 +12,7 @@ public partial class PopupWindow : Window
     public PopupWindow(string error)
     {
         InitializeComponent();
-        this.FindControl<TextBlock>("ErrorTextBlock")!.Text = error;
+        ErrorTextBlock.Text = error;
     }
 
     private void OkButton_Click(object? sender, RoutedEventArgs e)
