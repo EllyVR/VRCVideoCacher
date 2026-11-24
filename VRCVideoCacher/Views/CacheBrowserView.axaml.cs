@@ -14,6 +14,8 @@ public partial class CacheBrowserView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        (DataContext as CacheBrowserViewModel)?.RefreshCacheCommand.Execute(null);
+
+        if (DataContext is CacheBrowserViewModel viewModel)
+            viewModel.RefreshCacheCommand.Execute(null);
     }
 }

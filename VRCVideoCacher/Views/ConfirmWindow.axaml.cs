@@ -13,10 +13,10 @@ public partial class ConfirmWindow : Window
     public ConfirmWindow(string title, string message, string? confirmText = null)
     {
         InitializeComponent();
-        this.FindControl<TextBlock>("TitleTextBlock")!.Text = title;
-        this.FindControl<TextBlock>("MessageTextBlock")!.Text = message;
-        this.FindControl<Button>("CancelButton")!.Content = Localizer.Get("Cancel");
-        this.FindControl<Button>("ConfirmButton")!.Content = confirmText ?? Localizer.Get("Delete");
+        TitleTextBlock.Text = title;
+        MessageTextBlock.Text = message;
+        CancelButton.Content = Localizer.Get("Cancel");
+        ConfirmButton.Content = confirmText ?? Localizer.Get("Delete");
     }
 
     /// <summary>Shows a modal yes/no dialog; resolves to true only if the danger button was clicked
